@@ -1,0 +1,289 @@
+<div
+  class="admin-layout-root"
+  [class.sidebar-collapsed]="isCollapsed()"
+  [class.sidebar-resizing]="isResizing()"
+  [style.--sidebar-width]="renderedSidebarWidth() + 'px'"
+>
+  <!-- SideNavBar -->
+  <aside class="admin-sidebar" [class.is-collapsed]="isCollapsed()">
+    <div class="admin-sidebar-header">
+      <div class="admin-sidebar-logo-row">
+        <img
+          alt="Nông Thịnh Logo"
+          class="admin-sidebar-logo"
+          src="images/nongthinh_logo.png"
+          onerror="
+            this.onerror = null;
+            this.style.display = 'none';
+          "
+        />
+        <div class="sidebar-brand-copy">
+          <span class="admin-sidebar-brand-name">Nông Thịnh</span>
+          <span class="admin-sidebar-brand-sub">DASHBOARD</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="admin-sidebar-nav" aria-label="Điều hướng quản trị">
+      <div #adminNavInner class="admin-sidebar-nav-inner">
+        <span
+          class="admin-nav-active-indicator"
+          [class.is-visible]="activeIndicatorVisible()"
+          [class.is-ready]="activeIndicatorReady()"
+          [style.height.px]="activeIndicatorHeight()"
+          [style.transform]="'translate3d(0, ' + activeIndicatorTop() + 'px, 0)'"
+          aria-hidden="true"
+        ></span>
+
+        <a
+          routerLink="/admin/dashboard"
+          routerLinkActive="active"
+          class="admin-nav-link"
+          aria-label="Bệnh cây trồng"
+          [attr.title]="isCollapsed() ? 'Bệnh cây trồng' : null"
+        >
+          <span
+            class="nav-icon nav-icon-mask"
+            style="--nav-icon-url: url('/icons/dashboard/plant-diseases.svg')"
+            aria-hidden="true"
+          ></span>
+          <span class="nav-label">Bệnh cây trồng</span>
+        </a>
+
+        <a
+          routerLink="/admin/catalog"
+          routerLinkActive="active"
+          class="admin-nav-link"
+          aria-label="Quản lý danh mục"
+          [attr.title]="isCollapsed() ? 'Quản lý danh mục' : null"
+        >
+          <span
+            class="nav-icon nav-icon-mask"
+            style="--nav-icon-url: url('/icons/dashboard/categories.svg')"
+            aria-hidden="true"
+          ></span>
+          <span class="nav-label">Quản lý danh mục</span>
+        </a>
+
+        <a
+          routerLink="/admin/crop-types"
+          routerLinkActive="active"
+          class="admin-nav-link"
+          aria-label="Quản lý loại cây trồng"
+          [attr.title]="isCollapsed() ? 'Quản lý loại cây trồng' : null"
+        >
+          <span
+            class="nav-icon nav-icon-mask"
+            style="--nav-icon-url: url('/icons/dashboard/crop-types.svg')"
+            aria-hidden="true"
+          ></span>
+          <span class="nav-label">Quản lý loại cây trồng</span>
+        </a>
+
+        <a
+          routerLink="/admin/ai-models"
+          routerLinkActive="active"
+          class="admin-nav-link"
+          aria-label="Quản trị model AI"
+          [attr.title]="isCollapsed() ? 'Quản trị model AI' : null"
+        >
+          <span
+            class="nav-icon nav-icon-mask"
+            style="--nav-icon-url: url('/icons/dashboard/ai-models.svg')"
+            aria-hidden="true"
+          ></span>
+          <span class="nav-label">Model chẩn đoán</span>
+        </a>
+
+        @if (hasAnyPermission(['system:config:read', 'system:config:write'])) {
+          <a
+            routerLink="/admin/params"
+            routerLinkActive="active"
+            class="admin-nav-link"
+            aria-label="Cấu hình hệ thống"
+            [attr.title]="isCollapsed() ? 'Cấu hình hệ thống' : null"
+          >
+            <span
+              class="nav-icon nav-icon-mask"
+              style="--nav-icon-url: url('/icons/dashboard/system-settings.svg')"
+              aria-hidden="true"
+            ></span>
+            <span class="nav-label">Cấu hình hệ thống</span>
+          </a>
+        }
+
+        @if (hasPermission('notification:email:manage')) {
+          <a
+            routerLink="/admin/email-config"
+            routerLinkActive="active"
+            class="admin-nav-link"
+            aria-label="Cấu hình gửi Email"
+            [attr.title]="isCollapsed() ? 'Cấu hình gửi Email' : null"
+          >
+            <span
+              class="nav-icon nav-icon-mask"
+              style="--nav-icon-url: url('/icons/dashboard/email-settings.svg')"
+              aria-hidden="true"
+            ></span>
+            <span class="nav-label">Cấu hình gửi Email</span>
+          </a>
+        }
+
+        @if (hasAnyPermission(['admin:user:read', 'admin:user:write', 'admin:role:manage'])) {
+          <a
+            routerLink="/admin/users"
+            routerLinkActive="active"
+            class="admin-nav-link"
+            aria-label="Quản lý người dùng"
+            [attr.title]="isCollapsed() ? 'Quản lý người dùng' : null"
+          >
+            <span
+              class="nav-icon nav-icon-mask"
+              style="--nav-icon-url: url('/icons/dashboard/users.svg')"
+              aria-hidden="true"
+            ></span>
+            <span class="nav-label">Quản lý người dùng</span>
+          </a>
+        }
+
+        @if (hasPermission('brand:approve')) {
+          <a
+            routerLink="/admin/brands"
+            routerLinkActive="active"
+            class="admin-nav-link"
+            aria-label="Duyệt doanh nghiệp"
+            [attr.title]="isCollapsed() ? 'Duyệt doanh nghiệp' : null"
+          >
+            <span
+              class="nav-icon nav-icon-mask"
+              style="--nav-icon-url: url('/icons/dashboard/brand-approvals.svg')"
+              aria-hidden="true"
+            ></span>
+            <span class="nav-label">Duyệt doanh nghiệp</span>
+          </a>
+        }
+
+        @if (hasPermission('content:moderate')) {
+          <a
+            routerLink="/admin/content"
+            routerLinkActive="active"
+            class="admin-nav-link"
+            aria-label="Quản lý bài viết"
+            [attr.title]="isCollapsed() ? 'Quản lý bài viết' : null"
+          >
+            <span
+              class="nav-icon nav-icon-mask"
+              style="--nav-icon-url: url('/icons/dashboard/articles.svg')"
+              aria-hidden="true"
+            ></span>
+            <span class="nav-label">Quản lý bài viết</span>
+          </a>
+        }
+
+        @if (hasPermission('incident:manage')) {
+          <a
+            routerLink="/admin/logs"
+            routerLinkActive="active"
+            class="admin-nav-link"
+            aria-label="Nhật ký hệ thống"
+            [attr.title]="isCollapsed() ? 'Nhật ký hệ thống' : null"
+          >
+            <span
+              class="nav-icon nav-icon-mask"
+              style="--nav-icon-url: url('/icons/dashboard/system-logs.svg')"
+              aria-hidden="true"
+            ></span>
+            <span class="nav-label">Nhật ký hệ thống</span>
+          </a>
+        }
+      </div>
+    </nav>
+
+    <div class="admin-sidebar-footer">
+      <div class="admin-sidebar-footer-inner">
+        <button
+          type="button"
+          class="admin-logout-btn"
+          aria-label="Đăng xuất"
+          [attr.title]="isCollapsed() ? 'Đăng xuất' : null"
+          (click)="logout()"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+          <span class="logout-label">Đăng xuất</span>
+        </button>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="sidebar-toggle"
+      [attr.aria-label]="isCollapsed() ? 'Mở rộng thanh điều hướng' : 'Thu gọn thanh điều hướng'"
+      [attr.title]="isCollapsed() ? 'Mở rộng sidebar' : 'Thu gọn sidebar'"
+      (click)="toggleCollapsed()"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">
+        {{ isCollapsed() ? 'chevron_right' : 'chevron_left' }}
+      </span>
+    </button>
+
+    <div
+      class="sidebar-resize-handle"
+      role="separator"
+      tabindex="0"
+      aria-label="Điều chỉnh chiều rộng thanh điều hướng"
+      aria-orientation="vertical"
+      aria-valuemin="76"
+      aria-valuemax="420"
+      [attr.aria-valuenow]="renderedSidebarWidth()"
+      [attr.aria-valuetext]="sidebarValueText()"
+      title="Kéo để thay đổi kích thước · nhấn đúp để thu gọn"
+      (dblclick)="toggleCollapsed()"
+      (pointerdown)="startSidebarResize($event)"
+      (keydown)="resizeSidebarWithKeyboard($event)"
+    ></div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="admin-main">
+    <!-- TopNavBar -->
+    <header class="admin-topbar">
+      <div class="admin-topbar-left">
+        <div class="admin-search-wrap">
+          <span class="material-symbols-outlined admin-search-icon">search</span>
+          <input class="admin-search-input" placeholder="Tìm kiếm" type="text" />
+        </div>
+      </div>
+      <div class="admin-topbar-right">
+        <button class="admin-notif-btn">
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="admin-notif-dot"></span>
+        </button>
+        <div class="admin-user-wrap">
+          <div class="admin-user-text">
+            <span class="admin-user-name">{{ currentUser()?.email ?? 'Admin User' }}</span>
+            <span class="admin-user-role">Quyền: {{ adminGroupLabel() }}</span>
+          </div>
+          <div class="admin-avatar">{{ userInitial() }}</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="admin-page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>
+
+@if (logoutDialogOpen()) {
+  <app-confirm-dialog
+    title="Đăng xuất?"
+    message="Bạn có chắc chắn muốn đăng xuất khỏi tài khoản hiện tại?"
+    confirmLabel="Đăng xuất"
+    busyLabel="Đang đăng xuất..."
+    iconName="logout"
+    [busy]="loggingOut()"
+    (confirmed)="confirmLogout()"
+    (dismissed)="cancelLogout()"
+  />
+}

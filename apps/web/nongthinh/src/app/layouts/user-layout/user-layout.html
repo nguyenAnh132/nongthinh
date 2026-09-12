@@ -1,0 +1,127 @@
+<div class="user-layout">
+  <header class="user-header">
+    <div class="user-header__inner">
+      <a
+        [routerLink]="canUseCommunity() ? '/app/community' : '/'"
+        class="brand-link"
+        aria-label="Nông Thịnh"
+      >
+        <img src="images/nongthinh_logo.png" alt="" class="brand-logo" />
+        <span>
+          <strong>Nông Thịnh</strong>
+          <small>Gieo tri thức · Gặt thành công</small>
+        </span>
+      </a>
+
+      @if (canUseCommunity()) {
+        <form class="community-search" role="search" (ngSubmit)="searchCommunity()">
+          <span aria-hidden="true">⌕</span>
+          <label class="sr-only" for="community-search-input">Tìm kiếm cộng đồng</label>
+          <input
+            id="community-search-input"
+            type="search"
+            name="searchTerm"
+            [(ngModel)]="searchTerm"
+            placeholder="Tìm cây trồng, chủ đề, địa phương..."
+          />
+          <button type="submit">Tìm kiếm</button>
+        </form>
+      }
+
+      <nav class="user-nav" aria-label="Điều hướng chính">
+        @if (canUseCommunity()) {
+          <a routerLink="/app/community" routerLinkActive="active">
+            <span
+              class="nav-icon"
+              style="--nav-icon: url('/icons/community/globe.png')"
+              aria-hidden="true"
+            ></span>
+            Cộng đồng
+          </a>
+        }
+        @if (isFarmer()) {
+          <a routerLink="/app/diagnosis" routerLinkActive="active">
+            <span
+              class="nav-icon"
+              style="--nav-icon: url('/icons/community/interactive.png')"
+              aria-hidden="true"
+            ></span>
+            Quét bệnh cây trồng
+          </a>
+        }
+        <a routerLink="/app/profile" routerLinkActive="active">
+          <span
+            class="nav-icon"
+            style="--nav-icon: url('/icons/community/user.png')"
+            aria-hidden="true"
+          ></span>
+          Hồ sơ
+        </a>
+        @if (isBrandActive()) {
+          <a routerLink="/app/operations" routerLinkActive="active">
+            <span
+              class="nav-icon"
+              style="--nav-icon: url('/icons/business/vanhanh.png')"
+              aria-hidden="true"
+            ></span>
+            Vận hành
+          </a>
+        }
+      </nav>
+
+      <div class="user-header-right">
+        <app-notification-popover />
+
+        @if (currentUser(); as user) {
+          <details class="account-menu">
+            <summary aria-label="Mở menu tài khoản">
+              <app-user-avatar [name]="displayName()" [avatarUrl]="avatarUrl()" [size]="38" />
+              <span class="account-copy">
+                <strong>{{ displayName() }}</strong>
+                <small>{{ roleLabel() }}</small>
+              </span>
+              <span class="account-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div class="account-dropdown">
+              <div class="account-dropdown__identity">
+                <strong>{{ displayName() }}</strong>
+                <span>{{ user.email }}</span>
+              </div>
+              <a routerLink="/app/profile">Xem hồ sơ cá nhân</a>
+              <button type="button" (click)="logout()">Đăng xuất</button>
+            </div>
+          </details>
+        } @else {
+          <span class="account-skeleton" aria-label="Đang tải tài khoản"></span>
+        }
+      </div>
+    </div>
+  </header>
+
+  @if (needsBrandAction()) {
+    <div class="pending-banner brand-action-banner">
+      {{ brandBannerText() }}
+    </div>
+  } @else if (isPending()) {
+    <div class="pending-banner">
+      Tài khoản đang chờ quản trị viên duyệt. Một số tính năng có thể bị hạn chế.
+    </div>
+  }
+
+  <main class="user-content">
+    <router-outlet />
+  </main>
+</div>
+
+@if (logoutDialogOpen()) {
+  <app-confirm-dialog
+    title="Đăng xuất?"
+    message="Bạn có chắc chắn muốn đăng xuất khỏi tài khoản hiện tại?"
+    confirmLabel="Đăng xuất"
+    busyLabel="Đang đăng xuất..."
+    iconName="logout"
+    [busy]="loggingOut()"
+    (confirmed)="confirmLogout()"
+    (dismissed)="cancelLogout()"
+  />
+}

@@ -1,0 +1,40 @@
+<div class="confirm-backdrop" role="presentation" (click)="dismissFromBackdrop($event)">
+  <section
+    class="confirm-dialog"
+    [class.confirm-dialog--primary]="tone === 'primary'"
+    role="alertdialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="titleId"
+    [attr.aria-describedby]="descriptionId"
+  >
+    <span class="confirm-dialog__icon" aria-hidden="true">
+      @if (iconUrl) {
+        <img [src]="iconUrl" alt="" />
+      } @else {
+        <span class="material-symbols-outlined">{{ iconName }}</span>
+      }
+    </span>
+
+    <h2 [id]="titleId">{{ title }}</h2>
+    <p [id]="descriptionId">{{ message }}</p>
+
+    @if (error) {
+      <p class="confirm-dialog__error" role="alert">{{ error }}</p>
+    }
+
+    <div class="confirm-dialog__actions">
+      <button type="button" [disabled]="busy" (click)="dismiss()">
+        {{ cancelLabel }}
+      </button>
+      <button
+        type="button"
+        class="confirm-dialog__submit"
+        [disabled]="busy"
+        [attr.aria-busy]="busy"
+        (click)="confirm()"
+      >
+        {{ busy ? busyLabel : confirmLabel }}
+      </button>
+    </div>
+  </section>
+</div>

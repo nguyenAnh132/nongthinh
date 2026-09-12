@@ -1,0 +1,76 @@
+/* ═══════════════════════════════════════════════════════════════
+   USERS — Nông Thịnh Admin
+   ═══════════════════════════════════════════════════════════════ */
+
+:host ::ng-deep .users-card {
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-neutral-200);
+}
+
+.users-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+}
+
+.search-input {
+  width: 320px;
+}
+
+:host ::ng-deep .search-input .ant-input {
+  border-radius: var(--radius-full) !important;
+  border-color: var(--color-neutral-200);
+  padding: 8px 16px;
+}
+
+:host ::ng-deep .search-input .ant-input:focus {
+  border-color: var(--color-primary-500) !important;
+  box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.12) !important;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 12px;
+}
+
+:host ::ng-deep .btn-add-user {
+  background: var(--gradient-green) !important;
+  border: none !important;
+  border-radius: var(--radius-full) !important;
+  font-weight: 600;
+  box-shadow: var(--shadow-green);
+  transition: all var(--transition-base);
+}
+
+:host ::ng-deep .btn-add-user:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-green-lg);
+}
+
+.user-id {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-light);
+  background: var(--color-neutral-100);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+}
+
+/* Table overrides */
+:host ::ng-deep .ant-table {
+  border-radius: var(--radius-lg) !important;
+}
+
+:host ::ng-deep .ant-table-thead > tr > th {
+  background: var(--color-bg-alt) !important;
+  font-weight: 700;
+  color: var(--color-text);
+  border-bottom-color: var(--color-neutral-200);
+}
+
+:host ::ng-deep .ant-table-tbody > tr:hover > td {
+  background: var(--color-primary-50) !important;
+}

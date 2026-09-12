@@ -1,0 +1,129 @@
+================================================================================
+LOCATION SERVICE - API ENDPOINTS
+================================================================================
+
+Base URL (qua API Gateway):  http://localhost:8888/api/v1/location
+Base URL (trực tiếp service): http://localhost:9094/location
+Context path (dev): /location
+Port (dev): 9094
+
+--------------------------------------------------------------------------------
+HEADERS
+--------------------------------------------------------------------------------
+Authorization: Bearer <access_token>   (bắt buộc cho endpoint ghi, tùy SecurityConfig cho đọc)
+Content-Type: application/json         (chỉ bắt buộc khi có request body)
+
+--------------------------------------------------------------------------------
+RESPONSE FORMAT
+--------------------------------------------------------------------------------
+Tất cả endpoint bọc trong ApiResponse:
+{
+  "code": "string | null",
+  "message": "string",
+  "result": <T> | null
+}
+
+HTTP status:
+- GET thành công     : 200 OK
+- POST tạo mới       : 201 Created
+- PUT cập nhật       : 200 OK
+- DELETE             : 200 OK
+
+================================================================================
+1. PROVINCES  (/provinces)
+================================================================================
+
+--- GET /provinces ---
+Mô tả   : Lấy danh sách tất cả tỉnh/thành phố
+Auth    : Public (đọc)
+Body    : Không
+Response: ApiResponse<List<ProvinceView>>
+  result[].id          : String
+  result[].name        : String
+  result[].createdAt   : Instant
+  result[].updatedAt   : Instant
+
+--- GET /provinces/{id} ---
+Mô tả   : Lấy chi tiết tỉnh/thành theo ID
+Auth    : Public (đọc)
+Path    : id (String)
+Response: ApiResponse<ProvinceView>
+
+--- GET /provinces/{provinceId}/communes ---
+Mô tả   : Lấy danh sách xã/phường theo tỉnh/thành
+Auth    : Public (đọc)
+Path    : provinceId (String)
+Response: ApiResponse<List<CommuneView>>
+  result[].id          : UUID
+  result[].name        : String
+  result[].provinceId  : String
+  result[].createdAt   : Instant
+  result[].updatedAt   : Instant
+
+--- POST /provinces ---
+Mô tả   : Tạo tỉnh/thành mới
+Auth    : system:config:write
+Body    : ProvinceCreationRequest { id, name }
+Response: 201 Created, ApiResponse<ProvinceView>
+
+--- PUT /provinces/{id} ---
+Mô tả   : Cập nhật tỉnh/thành
+Auth    : system:config:write
+Path    : id (String)
+Body    : ProvinceUpdateRequest { name }
+Response: ApiResponse<ProvinceView>
+
+--- DELETE /provinces/{id} ---
+Mô tả   : Xóa tỉnh/thành
+Auth    : system:config:write
+Path    : id (String)
+Response: ApiResponse<Void>
+
+================================================================================
+2. COMMUNES  (/communes)
+================================================================================
+
+--- GET /communes/{id} ---
+Mô tả   : Lấy chi tiết xã/phường theo ID
+Auth    : Public (đọc)
+Path    : id (UUID)
+Response: ApiResponse<CommuneView>
+
+--- POST /communes ---
+Mô tả   : Tạo xã/phường mới
+Auth    : system:config:write
+Body    : CommuneCreationRequest { name, provinceId }
+Response: 201 Created, ApiResponse<CommuneView>
+
+--- PUT /communes/{id} ---
+Mô tả   : Cập nhật xã/phường
+Auth    : system:config:write
+Path    : id (UUID)
+Body    : CommuneUpdateRequest { name, provinceId }
+Response: ApiResponse<CommuneView>
+
+--- DELETE /communes/{id} ---
+Mô tả   : Xóa xã/phường
+Auth    : system:config:write
+Path    : id (UUID)
+Response: ApiResponse<Void>
+
+================================================================================
+3. INTERNAL APIs  (/internal/addresses)
+================================================================================
+
+--- GET /internal/addresses/validate ---
+Mô tả   : Kiểm tra tính hợp lệ của provinceId + communeId
+Auth    : ROLE_INTERNAL
+Query   :
+  - provinceId (String, tùy chọn)
+  - communeId  (UUID, tùy chọn)
+Response: ApiResponse<Boolean>
+  result: true nếu địa chỉ hợp lệ
+
+================================================================================
+GHI CHÚ
+================================================================================
+- Endpoint đọc (GET provinces/communes) dùng cho form đăng ký và cập nhật địa chỉ.
+- Endpoint ghi (POST/PUT/DELETE) yêu cầu quyền system:config:write (admin cấu hình hệ thống).
+- Internal validate được auth-service/profile-service gọi khi đăng ký hoặc cập nhật địa chỉ.

@@ -1,0 +1,499 @@
+<main class="brand-profile-page">
+  @if (loading) {
+    <section
+      class="profile-loading"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label="Đang tải hồ sơ thương hiệu"
+    >
+      <span class="visually-hidden">Đang tải hồ sơ thương hiệu...</span>
+
+      <div class="profile-loading__hero" aria-hidden="true">
+        <span class="profile-skeleton-shape profile-loading__cover"></span>
+        <div class="profile-loading__identity">
+          <span class="profile-skeleton-shape profile-loading__avatar"></span>
+          <span class="profile-loading__copy">
+            <i class="profile-skeleton-shape"></i>
+            <i class="profile-skeleton-shape"></i>
+          </span>
+          <span class="profile-skeleton-shape profile-loading__button"></span>
+        </div>
+      </div>
+
+      <div class="profile-loading__about" aria-hidden="true">
+        <span class="profile-skeleton-shape profile-loading__heading"></span>
+        <div class="profile-loading__info-list">
+          @for (item of [0, 1, 2, 3]; track item) {
+            <div class="profile-loading__info-row">
+              <span class="profile-skeleton-shape profile-loading__icon"></span>
+              <span class="profile-loading__info-copy">
+                <i class="profile-skeleton-shape"></i>
+                <i class="profile-skeleton-shape"></i>
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  } @else if (loadError && !profile) {
+    <section class="profile-empty profile-error">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <h1>Không thể tải hồ sơ thương hiệu</h1>
+      <p>{{ loadError }}</p>
+      <button class="btn-primary" type="button" (click)="reload()">Thử lại</button>
+    </section>
+  } @else if (profile; as brand) {
+    <section class="profile-hero">
+      <div class="profile-cover">
+        @if (bannerPreviewUrl || brand.bannerUrl; as bannerUrl) {
+          <img class="cover-image" [src]="bannerUrl" alt="" />
+        }
+        @if (status === 'ACTIVE') {
+          <span class="verified-cover-badge">
+            <span class="material-symbols-outlined" aria-hidden="true">verified</span>
+            Đã xác minh
+          </span>
+        }
+        @if (canEditProfile) {
+          <input
+            #bannerInput
+            class="image-file-input"
+            type="file"
+            [accept]="brandImageAccept"
+            [disabled]="uploadingBanner"
+            (change)="onBannerSelected($event)"
+          />
+          <button
+            class="cover-update-button"
+            type="button"
+            [disabled]="uploadingBanner"
+            (click)="bannerInput.click()"
+          >
+            <span class="edit-icon" aria-hidden="true"></span>
+            {{ uploadingBanner ? 'Đang tải ảnh...' : 'Đổi ảnh bìa' }}
+          </button>
+        }
+      </div>
+
+      <div class="profile-identity">
+        <div class="avatar-shell">
+          <div class="avatar" aria-label="Logo thương hiệu">
+            @if (logoPreviewUrl || brand.logoUrl; as logoUrl) {
+              <img [src]="logoUrl" [alt]="displayName" />
+            } @else {
+              <span>{{ initials }}</span>
+            }
+            @if (uploadingLogo) {
+              <span class="image-upload-state" aria-live="polite">
+                <span class="image-spinner" aria-hidden="true"></span>
+                <span class="visually-hidden">Đang tải logo thương hiệu lên</span>
+              </span>
+            }
+          </div>
+          @if (canEditProfile) {
+            <input
+              #logoInput
+              class="image-file-input"
+              type="file"
+              [accept]="brandImageAccept"
+              [disabled]="uploadingLogo"
+              (change)="onLogoSelected($event)"
+            />
+            <button
+              class="avatar-update-button"
+              type="button"
+              aria-label="Thay logo thương hiệu"
+              title="Thay logo (JPEG, PNG hoặc WebP, tối đa 2 MB)"
+              [disabled]="uploadingLogo"
+              (click)="logoInput.click()"
+            >
+              <span class="avatar-update-icon" aria-hidden="true"></span>
+            </button>
+          }
+        </div>
+
+        <div class="identity-copy">
+          <h1>
+            <span>{{ displayName }}</span>
+            @if (status === 'ACTIVE') {
+              <span
+                class="verified-name-icon material-symbols-outlined"
+                aria-label="Thương hiệu đã xác minh"
+                title="Thương hiệu đã xác minh"
+                >verified</span
+              >
+            }
+          </h1>
+          <p>Thương hiệu · {{ officeLocationLabel }}</p>
+          @if (status !== 'ACTIVE') {
+            <span class="profile-status" [attr.data-tone]="statusTone">{{ statusLabel }}</span>
+          }
+        </div>
+
+        @if (canEditProfile) {
+          <button class="btn-edit" type="button" (click)="startEditing()">
+            <span class="edit-icon" aria-hidden="true"></span>
+            Chỉnh sửa hồ sơ
+          </button>
+        }
+      </div>
+    </section>
+
+    <section class="about-card">
+      <div class="section-heading">
+        <div>
+          <h2>Giới thiệu</h2>
+          @if (brand.description) {
+            <p>{{ brand.description }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="info-list">
+        <div class="info-row">
+          <span
+            class="info-icon"
+            style="--info-icon: url('/icons/profile/land-layer-location.png')"
+            aria-hidden="true"
+          ></span>
+          <div>
+            <span class="info-label">Địa chỉ văn phòng</span>
+            <strong>{{ officeLocationLabel }}</strong>
+            @if (brand.officeAddressDetail) {
+              <small>{{ brand.officeAddressDetail }}</small>
+            }
+          </div>
+        </div>
+        <div class="info-row">
+          <span
+            class="info-icon"
+            style="--info-icon: url('/icons/profile/phone-call.png')"
+            aria-hidden="true"
+          ></span>
+          <div>
+            <span class="info-label">Số điện thoại</span>
+            <strong>{{ brand.phone || 'Chưa cập nhật' }}</strong>
+          </div>
+        </div>
+        <div class="info-row">
+          <span
+            class="info-icon"
+            style="--info-icon: url('/icons/profile/envelope.png')"
+            aria-hidden="true"
+          ></span>
+          <div>
+            <span class="info-label">Email tài khoản</span>
+            <strong>{{ accountEmail || 'Chưa cập nhật' }}</strong>
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-symbol material-symbols-outlined" aria-hidden="true">badge</span>
+          <div>
+            <span class="info-label">Người đại diện</span>
+            <strong>{{ brand.representativeName || 'Chưa cập nhật' }}</strong>
+            @if (brand.representativeEmail) {
+              <small>{{ brand.representativeEmail }}</small>
+            }
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-symbol material-symbols-outlined" aria-hidden="true">receipt_long</span>
+          <div>
+            <span class="info-label">Mã số thuế</span>
+            <strong>{{ brand.taxCode || 'Chưa cập nhật' }}</strong>
+          </div>
+        </div>
+        <div class="info-row">
+          <span class="info-symbol material-symbols-outlined" aria-hidden="true">language</span>
+          <div>
+            <span class="info-label">Website</span>
+            @if (brand.websiteUrl) {
+              <a class="info-link" [href]="brand.websiteUrl" target="_blank" rel="noopener">
+                {{ brand.websiteUrl }}
+              </a>
+            } @else {
+              <strong>Chưa cập nhật</strong>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="verification-card">
+      @if (status !== 'ACTIVE') {
+        <div class="verification-guidance" [attr.data-tone]="statusTone">
+          <span class="guidance-icon material-symbols-outlined" aria-hidden="true">verified</span>
+          <div>
+            <h2>{{ guidanceTitle }}</h2>
+            <p>{{ guidanceMessage }}</p>
+          </div>
+        </div>
+      }
+
+      @if (status === 'NEEDS_REVISION' && brand.rejectionReason) {
+        <nz-alert
+          class="verification-alert"
+          nzType="warning"
+          nzShowIcon
+          nzMessage="Lý do cần bổ sung"
+          [nzDescription]="brand.rejectionReason"
+        ></nz-alert>
+      }
+      @if (status === 'REJECTED' && brand.rejectionReason) {
+        <nz-alert
+          class="verification-alert"
+          nzType="error"
+          nzShowIcon
+          nzMessage="Lý do từ chối"
+          [nzDescription]="brand.rejectionReason"
+        ></nz-alert>
+      }
+
+      <div class="verification-section">
+        <div class="verification-section__head">
+          <div>
+            <span class="section-kicker">Giấy phép kinh doanh</span>
+            <h3>Hồ sơ xác minh</h3>
+          </div>
+          @if (document) {
+            <span class="document-status">{{ docStatusLabel }}</span>
+          }
+        </div>
+
+        @if (document?.businessLicenseUrl) {
+          <a
+            class="document-current"
+            [href]="document!.businessLicenseUrl!"
+            target="_blank"
+            rel="noopener"
+            [attr.aria-label]="'Mở tài liệu ' + documentFileName"
+            [title]="documentFileName"
+          >
+            <span class="document-current__preview">
+              <img src="/icons/business/doc.png" alt="" aria-hidden="true" />
+              <span class="document-current__open" aria-hidden="true">↗</span>
+            </span>
+            <strong>{{ documentFileName }}</strong>
+          </a>
+        } @else if (!canEditAndUpload) {
+          <p class="empty-document">Chưa có giấy phép kinh doanh trên hồ sơ.</p>
+        }
+
+        @if (canEditAndUpload) {
+          <div class="license-upload">
+            <label class="file-picker">
+              <input
+                type="file"
+                [accept]="licenseAccept"
+                [disabled]="uploading"
+                (change)="onFileSelected($event)"
+              />
+              <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+              <span>{{ selectedFile ? selectedFile.name : 'Chọn file giấy phép' }}</span>
+            </label>
+
+            @if (selectedFilePreviewUrl) {
+              <img
+                class="license-preview"
+                [src]="selectedFilePreviewUrl"
+                alt="Xem trước giấy phép"
+              />
+            }
+
+            <div class="license-actions">
+              <button
+                class="btn-primary"
+                type="button"
+                [disabled]="!selectedFile || uploading"
+                (click)="uploadLicense()"
+              >
+                {{ uploading ? 'Đang tải lên...' : 'Tải lên giấy phép' }}
+              </button>
+              @if (selectedFile) {
+                <button
+                  class="btn-secondary"
+                  type="button"
+                  [disabled]="uploading"
+                  (click)="clearSelectedFile()"
+                >
+                  Bỏ chọn
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+
+      @if (canEditAndUpload) {
+        <footer class="verification-submit">
+          <div>
+            <strong>Nộp hồ sơ xét duyệt</strong>
+            <p>Sau khi thông tin và giấy phép đã sẵn sàng, gửi hồ sơ để quản trị viên rà soát.</p>
+            @if (!document?.businessLicenseUrl) {
+              <small>Cần tải lên giấy phép trước khi nộp.</small>
+            } @else if (submittedThisSession) {
+              <small>Đã gửi yêu cầu nộp hồ sơ.</small>
+            }
+          </div>
+          <button
+            class="btn-submit"
+            type="button"
+            [disabled]="!canSubmit || submitting"
+            (click)="submitDocuments()"
+          >
+            {{ submitting ? 'Đang gửi...' : 'Nộp hồ sơ' }}
+          </button>
+        </footer>
+      }
+    </section>
+  } @else {
+    <section class="profile-empty">
+      <span class="material-symbols-outlined" aria-hidden="true">domain_disabled</span>
+      <h1>Chưa có thông tin hồ sơ</h1>
+      <p>Không thể hiển thị hồ sơ thương hiệu ở thời điểm này.</p>
+    </section>
+  }
+</main>
+
+@if (editing && profile) {
+  <div class="dialog-backdrop">
+    <section class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="brand-edit-title">
+      <header class="dialog-header">
+        <div>
+          <h2 id="brand-edit-title">Chỉnh sửa hồ sơ</h2>
+        </div>
+        <button class="btn-close" type="button" aria-label="Đóng" (click)="cancelEditing()">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <form class="profile-form" [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+        <div class="form-grid">
+          <div class="input-group">
+            <label for="brand-name">Tên thương hiệu</label>
+            <input id="brand-name" formControlName="brandName" type="text" />
+            @if (profileForm.get('brandName')?.touched && profileForm.get('brandName')?.invalid) {
+              <small class="field-error">Vui lòng nhập tên thương hiệu.</small>
+            }
+          </div>
+          <div class="input-group">
+            <label for="brand-tax-code">Mã số thuế</label>
+            <input id="brand-tax-code" formControlName="taxCode" type="text" />
+          </div>
+          <div class="input-group">
+            <label for="brand-phone">Số điện thoại doanh nghiệp</label>
+            <input id="brand-phone" formControlName="phone" type="tel" maxlength="10" />
+            @if (profileForm.get('phone')?.touched && profileForm.get('phone')?.invalid) {
+              <small class="field-error">Vui lòng nhập số điện thoại gồm 10 chữ số.</small>
+            }
+          </div>
+          <div class="input-group">
+            <label for="brand-website">Website</label>
+            <input
+              id="brand-website"
+              formControlName="websiteUrl"
+              type="url"
+              placeholder="https://"
+            />
+          </div>
+          <div class="input-group full-width">
+            <label for="brand-description">Mô tả</label>
+            <textarea id="brand-description" formControlName="description" rows="3"></textarea>
+          </div>
+          <div class="input-group">
+            <label for="brand-province">Tỉnh / Thành phố</label>
+            <select
+              id="brand-province"
+              formControlName="officeProvinceId"
+              (change)="onProvinceChange($any($event.target).value)"
+            >
+              <option value="">Chọn tỉnh/thành phố</option>
+              @for (province of provinces; track province.id) {
+                <option [value]="province.id">{{ province.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="input-group">
+            <label for="brand-commune">Phường / Xã</label>
+            <select
+              id="brand-commune"
+              formControlName="officeCommuneId"
+              [disabled]="!profileForm.get('officeProvinceId')?.value || loadingCommunes"
+              [attr.aria-busy]="loadingCommunes"
+            >
+              <option value="">
+                {{ loadingCommunes ? 'Đang tải phường/xã...' : 'Chọn phường/xã' }}
+              </option>
+              @for (commune of communes; track commune.id) {
+                <option [value]="commune.id">{{ commune.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="input-group full-width">
+            <label for="brand-address">Địa chỉ văn phòng (chi tiết)</label>
+            <input
+              id="brand-address"
+              formControlName="officeAddressDetail"
+              type="text"
+              placeholder="Số nhà, đường..."
+            />
+          </div>
+          <div class="input-group">
+            <label for="brand-representative">Người đại diện</label>
+            <input id="brand-representative" formControlName="representativeName" type="text" />
+            @if (
+              profileForm.get('representativeName')?.touched &&
+              profileForm.get('representativeName')?.invalid
+            ) {
+              <small class="field-error">Vui lòng nhập tên người đại diện.</small>
+            }
+          </div>
+          <div class="input-group">
+            <label for="brand-representative-phone">SĐT người đại diện</label>
+            <input
+              id="brand-representative-phone"
+              formControlName="representativePhone"
+              type="tel"
+              maxlength="10"
+            />
+            @if (
+              profileForm.get('representativePhone')?.touched &&
+              profileForm.get('representativePhone')?.invalid
+            ) {
+              <small class="field-error">Vui lòng nhập số điện thoại gồm 10 chữ số.</small>
+            }
+          </div>
+          <div class="input-group full-width">
+            <label for="brand-representative-email">Email người đại diện</label>
+            <input
+              id="brand-representative-email"
+              formControlName="representativeEmail"
+              type="email"
+            />
+            @if (
+              profileForm.get('representativeEmail')?.touched &&
+              profileForm.get('representativeEmail')?.invalid
+            ) {
+              <small class="field-error">Vui lòng nhập địa chỉ email hợp lệ.</small>
+            }
+          </div>
+        </div>
+
+        <footer class="dialog-actions">
+          <button
+            class="btn-secondary"
+            type="button"
+            [disabled]="savingProfile"
+            (click)="cancelEditing()"
+          >
+            Hủy
+          </button>
+          <button class="btn-save" type="submit" [disabled]="savingProfile || loadingCommunes">
+            {{ savingProfile ? 'Đang lưu...' : 'Lưu thay đổi' }}
+          </button>
+        </footer>
+      </form>
+    </section>
+  </div>
+}

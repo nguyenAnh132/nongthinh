@@ -1,0 +1,20 @@
+app:
+  api-prefix: /api/v1
+  cors:
+    allowed-origins:
+      - http://localhost:4200
+
+spring:
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: diagnosis-service-test
+              uri: ${test.upstream-url}
+              predicates:
+                - Path=${app.api-prefix}/diagnoses/**
+              filters:
+                - StripPrefix=2
+                - PrefixPath=/diagnosis
+                - RemoveRequestHeader=X-API-KEY

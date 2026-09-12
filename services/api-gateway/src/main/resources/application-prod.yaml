@@ -1,0 +1,94 @@
+server:
+  port: ${API_GATEWAY_PORT:}
+
+app:
+  cors:
+    allowed-origins-paramname: ${CORS_ALLOWED_ORIGINS_PARAMNAME:}
+  api-prefix: ${API_PREFIX:}
+  internal:
+    bo-portal-api-key: ${BO_PORTAL_INTERNAL_API_KEY:}
+
+client:
+  bo-portal-service:
+    url: ${BO_PORTAL_SERVICE_BASE_URL:}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          routes:
+            - id: auth-service
+              uri: ${AUTH_SERVICE_URL:}
+              predicates:
+                - Path=${app.api-prefix}/auth/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: bo-portal-service
+              uri: ${BO_PORTAL_SERVICE_URL:}
+              predicates:
+                - Path=${app.api-prefix}/bo-portal/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: profile-service
+              uri: ${PROFILE_SERVICE_URL:}
+              predicates:
+                - Path=${app.api-prefix}/profile/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: notification-service
+              uri: ${NOTIFICATION_SERVICE_URL:}
+              predicates:
+                - Path=${app.api-prefix}/notification/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: brand-service
+              uri: ${BRAND_SERVICE_URL:}
+              predicates:
+                - Path=${app.api-prefix}/brand/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: file-service
+              uri: ${FILE_SERVICE_URL:}
+              predicates:
+                - Path=${app.api-prefix}/files/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: rice-disease-diagnosis-service
+              uri: ${RICE_DISEASE_DIAGNOSIS_SERVICE_URL:}
+              predicates:
+                - Path=${app.api-prefix}/diagnoses/**
+              filters:
+                - StripPrefix=2
+                - PrefixPath=/diagnosis
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: agri-catalog-service
+              uri: ${AGRI_CATALOG_SERVICE_URL:}
+              predicates:
+                - Path=${app.api-prefix}/agri-catalog/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: post-service
+              uri: ${POST_SERVICE_URL:}
+              predicates:
+                - Path=${app.api-prefix}/posts/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY

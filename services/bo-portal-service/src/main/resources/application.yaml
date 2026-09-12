@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: bo-portal-service
+  profiles:
+    default: dev

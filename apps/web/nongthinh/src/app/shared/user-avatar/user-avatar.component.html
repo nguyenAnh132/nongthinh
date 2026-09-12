@@ -1,0 +1,13 @@
+<span
+  class="user-avatar"
+  [style.width.px]="size"
+  [style.height.px]="size"
+  [style.font-size.px]="size * 0.38"
+  [attr.aria-label]="alt || name"
+>
+  @if (avatarUrl && !imageFailed) {
+    <img [src]="avatarUrl" [alt]="alt || name" (error)="handleImageError()" />
+  } @else {
+    <span aria-hidden="true">{{ initial }}</span>
+  }
+</span>

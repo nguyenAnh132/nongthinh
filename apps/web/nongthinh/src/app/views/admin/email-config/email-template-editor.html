@@ -1,0 +1,135 @@
+@if (purpose && template) {
+  <div class="template-editor-overlay">
+    @if (loading) {
+      <p class="template-editor-loading">Đang tải...</p>
+    } @else {
+    <header class="template-editor-header">
+      <div class="template-editor-header__text">
+        <h1>{{ pageTitle }}</h1>
+        <p>{{ purpose.configTitle }}</p>
+      </div>
+
+      <button type="button" class="template-editor-close" aria-label="Đóng" (click)="back()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </header>
+
+    <div class="template-editor-content">
+      <div class="template-editor-actions">
+        <div class="status-row">
+          <span class="status-dot" [class.is-active]="template.isActive"></span>
+          <span class="status-text" [class.is-active]="template.isActive">
+            Trạng thái: {{ statusLabel }}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          class="btn-primary"
+          [disabled]="saving"
+          (click)="save()">
+          {{ saveLabel }}
+        </button>
+      </div>
+
+      <div class="template-editor-layout">
+      <section class="editor-column">
+        <h2 class="section-title">Nội dung mẫu</h2>
+
+        <div class="editor-card">
+          <div class="variable-chips">
+            @for (variable of variables; track variable.name) {
+              <div class="variable-chip">
+                <span class="variable-chip__token">{{ '{' }}{{ '{' }}{{ variable.name }}{{ '}' }}{{ '}' }}</span>
+                <span class="variable-chip__label">{{ variable.description }}</span>
+                <span class="variable-chip__badge">
+                  {{ variable.required ? 'bắt buộc' : 'tùy chọn' }}
+                </span>
+              </div>
+            }
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="templateName">Tên mẫu</label>
+            <input id="templateName" class="field-input" type="text" [(ngModel)]="name" />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="templateDescription">Mô tả</label>
+            <textarea
+              id="templateDescription"
+              class="field-input field-textarea"
+              rows="2"
+              [(ngModel)]="description"></textarea>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="templateSubject">Tiêu đề email</label>
+            <input id="templateSubject" class="field-input" type="text" [(ngModel)]="subject" />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="templateHtml">Nội dung HTML</label>
+            <textarea
+              id="templateHtml"
+              class="field-input field-input--mono field-textarea field-textarea--code"
+              rows="12"
+              [(ngModel)]="htmlContent"
+              (ngModelChange)="refreshPreview()"></textarea>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="templateText">
+              Nội dung văn bản thuần
+              <span class="field-label__hint">(Cho các ứng dụng mail không hỗ trợ HTML)</span>
+            </label>
+            <textarea
+              id="templateText"
+              class="field-input field-input--mono field-textarea field-textarea--code"
+              rows="8"
+              [(ngModel)]="textContent"
+              (ngModelChange)="refreshPreview()"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <section class="preview-column">
+        <div class="preview-header">
+          <h2 class="section-title">Xem trước</h2>
+          <button type="button" class="btn-outline" (click)="refreshPreview()">
+            Làm mới xem trước
+          </button>
+        </div>
+
+        <div class="preview-card">
+          <div class="preview-tabs" role="tablist">
+            <button
+              type="button"
+              class="preview-tab"
+              [class.is-active]="previewTab === 'html'"
+              (click)="setPreviewTab('html')">
+              HTML
+            </button>
+            <button
+              type="button"
+              class="preview-tab"
+              [class.is-active]="previewTab === 'text'"
+              (click)="setPreviewTab('text')">
+              Văn bản thuần
+            </button>
+          </div>
+
+          <div class="preview-frame">
+            @if (previewTab === 'html') {
+              <div class="preview-html" [innerHTML]="previewHtml"></div>
+            } @else {
+              <pre class="preview-plain">{{ previewText }}</pre>
+            }
+          </div>
+        </div>
+      </section>
+      </div>
+    </div>
+    }
+  </div>
+}

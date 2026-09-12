@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: file-service
+  profiles:
+    active: dev
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 52MB
+
+app:
+  upload:
+    max-size-bytes:
+      PRODUCT_IMAGE: 5242880
+      DISEASE_IMAGE: 5242880
+      DIAGNOSIS_IMAGE: 5242880
+      POST_IMAGE: 5242880
+      POST_VIDEO: 52428800
+      MODEL_ARTIFACT: 52428800
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}

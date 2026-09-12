@@ -1,0 +1,58 @@
+# File Service Endpoints
+
+Base URL (via API Gateway): /api/v1/files
+Direct service URL: http://localhost:9095/files
+
+## Public (no auth)
+
+GET /public/{fileId}
+  - Serve file content from local storage
+  - publicUrl trả về sau upload trỏ tới endpoint này
+
+## Authenticated (JWT)
+
+--- POST /files/upload ---
+Auth    : JWT (cookie access_token hoặc Authorization Bearer)
+Mô tả   : Upload file multipart qua API Gateway /api/v1/files/upload
+Body    : multipart/form-data — file, purpose=BUSINESS_LICENSE|...
+Response: ApiResponse<FileView> (publicUrl dùng để lưu brand document)
+
+GET /files/{id}
+  - Get file metadata (owner or admin with brand:verify/brand:approve for BUSINESS_LICENSE)
+
+GET /files/me?purpose=AVATAR
+  - List current user's uploaded files by purpose
+
+DELETE /files/{id}
+  - Soft delete + remove from object storage (owner only)
+
+## Internal (X-API-KEY: file)
+
+GET /internal/files/{id}
+  - Get file metadata for service-to-service calls
+
+## File purposes & roles
+
+| Purpose           | Allowed roles      | Max size | Content types                          |
+|-------------------|--------------------|----------|----------------------------------------|
+| AVATAR            | FARMER, ADMIN      | 2 MB     | jpeg, png, webp                        |
+| BRAND_LOGO        | BRAND              | 2 MB     | jpeg, png, webp                        |
+| BRAND_BANNER      | BRAND              | 5 MB     | jpeg, png, webp                        |
+| BUSINESS_LICENSE  | BRAND              | 10 MB    | jpeg, png, webp, pdf                   |
+| PRODUCT_IMAGE     | BRAND, ADMIN       | 5 MB     | jpeg, png, webp                        |
+
+## Integration flow
+
+1. Client uploads file to file-service → receives publicUrl
+2. Client PATCH profile-service with publicUrl:
+   - Farmer/Admin avatar: PATCH /profile/farmer-profiles/me/avatar or /admin-profiles/me/avatar
+   - Brand logo: PATCH /profile/brand-profiles/me/logo
+   - Brand banner: PATCH /profile/brand-profiles/me/banner
+   - Business license: POST brand document API (profile-service) with business_license_url
+   - Product image: POST agri-catalog `/products/{productId}/images` với `fileId`; catalog
+     gọi internal metadata API và tự lấy `publicUrl`, không nhận URL tùy ý từ client.
+
+## Storage (local)
+
+- Files lưu tại `app.storage.base-path` (mặc định `./storage`)
+- Public URL: `app.storage.public-base-url` + `/{fileId}` (mặc định `http://localhost:9095/files/public/{fileId}`)

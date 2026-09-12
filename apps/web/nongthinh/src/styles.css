@@ -1,0 +1,779 @@
+@import "tailwindcss";
+@source "../app/**/*.{html,ts}";
+
+@theme {
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container: #eceef0;
+  --color-secondary-fixed-dim: #ffb77d;
+  --color-primary-fixed: #96f89e;
+  --color-error: #ba1a1a;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #22863a;
+  --color-outline-variant: #becaba;
+  --color-text-main: #1F2937;
+  --color-on-secondary-fixed: #2f1500;
+  --color-on-error: #ffffff;
+  --color-on-secondary: #ffffff;
+  --color-on-tertiary-fixed: #002200;
+  --color-surface-variant: #e0e3e5;
+  --color-inverse-primary: #7bdb84;
+  --color-on-background: #191c1e;
+  --color-on-error-container: #93000a;
+  --color-surface-container-highest: #e0e3e5;
+  --color-inverse-surface: #2d3133;
+  --color-warning-amber: #F2C94C;
+  --color-on-tertiary: #ffffff;
+  --color-surface-dim: #d8dadc;
+  --color-tertiary: #006c05;
+  --color-leaf-green: #22863A;
+  --color-info-blue: #2F80ED;
+  --color-on-tertiary-container: #fafff3;
+  --color-on-secondary-fixed-variant: #6e3900;
+  --color-success-emerald: #27AE60;
+  --color-on-surface: #191c1e;
+  --color-secondary: #904d00;
+  --color-secondary-container: #ffa454;
+  --color-surface-bright: #f8f9fb;
+  --color-error-container: #ffdad6;
+  --color-inverse-on-surface: #eff1f3;
+  --color-on-primary-fixed-variant: #00531c;
+  --color-tertiary-fixed-dim: #79dd68;
+  --color-primary-fixed-dim: #7bdb84;
+  --color-harvest-gold: #F2994A;
+  --color-surface: #f8f9fb;
+  --color-tertiary-fixed: #94fa81;
+  --color-on-primary-container: #f9fff4;
+  --color-surface-container-low: #f2f4f6;
+  --color-text-muted: #6B7280;
+  --color-on-primary-fixed: #002107;
+  --color-on-tertiary-fixed-variant: #005303;
+  --color-surface-tint: #006e28;
+  --color-tertiary-container: #21871c;
+  --color-on-surface-variant: #3f4a3e;
+  --color-outline: #6f7a6d;
+  --color-sidebar-dark: #001529;
+  --color-primary: #006b27;
+  --color-background: #f8f9fb;
+  --color-secondary-fixed: #ffdcc3;
+  --color-on-secondary-container: #713b00;
+  --color-surface-container-high: #e6e8ea;
+  --color-danger-red: #EB5757;
+
+  --spacing-stack-lg: 32px;
+  --spacing-stack-md: 16px;
+  --spacing-gutter: 16px;
+  --spacing-sidebar-width: 256px;
+  --spacing-container-padding: 24px;
+  --spacing-stack-sm: 8px;
+  --spacing-header-height: 64px;
+
+  --font-label-md: "Be Vietnam Pro", sans-serif;
+  --font-headline-lg: "Be Vietnam Pro", sans-serif;
+  --font-body-md: "Be Vietnam Pro", sans-serif;
+  --font-label-sm: "Be Vietnam Pro", sans-serif;
+  --font-headline-md: "Be Vietnam Pro", sans-serif;
+  --font-body-lg: "Be Vietnam Pro", sans-serif;
+  --font-display-lg: "Be Vietnam Pro", sans-serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NÔNG THỊNH — Global Styles & Design System
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── CSS Variables ─────────────────────────────────────────── */
+:root {
+  /* Primary greens — bright, fresh agriculture greens */
+  --color-primary-900: #0a5c2a;
+  --color-primary-800: #0e7a38;
+  --color-primary-700: #1a8a45;
+  --color-primary-600: #22a352;
+  --color-primary-500: #27ae60;
+  --color-primary-400: #2ecc71;
+  --color-primary-300: #6ddb96;
+  --color-primary-200: #a8e6c1;
+  --color-primary-100: #d4f5e2;
+  --color-primary-50: #edfaf3;
+
+  /* Accent gold — warm agriculture accent */
+  --color-accent-600: #e67e22;
+  --color-accent-500: #f39c12;
+  --color-accent-400: #f1c40f;
+  --color-accent-300: #f7dc6f;
+  --color-accent-200: #fbeaa6;
+  --color-accent-100: #fef9e7;
+
+  /* Earth tones */
+  --color-earth-700: #3e2723;
+  --color-earth-600: #4e342e;
+  --color-earth-500: #5d4037;
+  --color-earth-400: #6d4c41;
+  --color-earth-300: #8d6e63;
+  --color-earth-200: #bcaaa4;
+
+  /* Neutrals — clean and modern */
+  --color-neutral-900: #1a2332;
+  --color-neutral-800: #2c3e50;
+  --color-neutral-700: #34495e;
+  --color-neutral-600: #576574;
+  --color-neutral-500: #7f8c8d;
+  --color-neutral-400: #95a5a6;
+  --color-neutral-300: #bdc3c7;
+  --color-neutral-200: #dfe6e9;
+  --color-neutral-100: #ecf0f1;
+  --color-neutral-50: #f8f9fa;
+
+  /* Semantic — white-dominant backgrounds */
+  --color-bg: #ffffff;
+  --color-bg-alt: #f7fcf9;
+  --color-bg-section: #f0faf4;
+  --color-bg-dark: #0a3d1f;
+  --color-text: #2c3e50;
+  --color-text-light: #576574;
+  --color-text-inverse: #ffffff;
+  --color-text-accent: #1a8a45;
+
+  /* Gradients */
+  --gradient-hero: linear-gradient(160deg, #0a5c2a 0%, #1a8a45 40%, #27ae60 100%);
+  --gradient-hero-overlay: linear-gradient(160deg, rgba(10,92,42,0.88) 0%, rgba(26,138,69,0.75) 40%, rgba(39,174,96,0.6) 100%);
+  --gradient-accent: linear-gradient(135deg, #27ae60 0%, #f39c12 100%);
+  --gradient-green: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+  --gradient-card: linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(247,252,249,0.95) 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 100%);
+
+  /* Typography */
+  --font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
+  --font-size-6xl: 3.75rem;
+  --font-size-7xl: 4.5rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Borders & Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Shadows — softer, cleaner */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.08);
+  --shadow-xl: 0 16px 40px rgba(0,0,0,0.1);
+  --shadow-2xl: 0 24px 60px rgba(0,0,0,0.14);
+  --shadow-green: 0 8px 30px rgba(39,174,96,0.2);
+  --shadow-green-lg: 0 12px 40px rgba(39,174,96,0.3);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-index */
+  --z-behind: -1;
+  --z-base: 0;
+  --z-above: 10;
+  --z-nav: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+}
+
+/* ── Reset & Base ──────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary-300);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-500);
+}
+
+/* ── Selection ─────────────────────────────────────────────── */
+::selection {
+  background: var(--color-primary-200);
+  color: var(--color-primary-900);
+}
+
+/* ── Admin shared feedback ─────────────────────────────────── */
+.admin-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
+.admin-success {
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
+.admin-muted {
+  color: #6b7280;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADMIN GLASS THEME — shared by every dashboard route
+   ═══════════════════════════════════════════════════════════════════════════ */
+.admin-layout-root {
+  --admin-glass-border: rgba(255, 255, 255, 0.72);
+  --admin-glass-surface:
+    radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.26), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(207, 235, 217, 0.06));
+  --admin-glass-surface-strong:
+    radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.46), transparent 38%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(226, 241, 231, 0.32));
+  --admin-glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 1px 0 0 rgba(255, 255, 255, 0.36),
+    inset 0 -1px 0 rgba(117, 170, 136, 0.16),
+    0 20px 48px rgba(19, 58, 38, 0.14);
+  --admin-text: #0b2516;
+  --admin-text-heading: #061b0e;
+  --admin-text-muted: #294535;
+}
+
+.admin-page-content {
+  color: var(--admin-text);
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 500;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+/* Page headings */
+.admin-page-content .summary-row,
+.admin-page-content .page-heading,
+.admin-page-content .params-header,
+.admin-page-content .email-config-header,
+.admin-page-content .brand-detail-header,
+.admin-page-content h1.admin-title {
+  padding: 18px 22px;
+  border: 1px solid var(--admin-glass-border) !important;
+  border-radius: 22px;
+  background: var(--admin-glass-surface) !important;
+  box-shadow: var(--admin-glass-shadow);
+  -webkit-backdrop-filter: blur(5px) saturate(118%);
+  backdrop-filter: blur(5px) saturate(118%);
+}
+
+.admin-page-content h1.admin-title,
+.admin-page-content .summary-row h1,
+.admin-page-content .page-heading h1,
+.admin-page-content .params-title,
+.admin-page-content .email-config-title,
+.admin-page-content .brand-detail-header h1 {
+  color: var(--admin-text-heading) !important;
+  font-family: inherit;
+  font-weight: 800 !important;
+  letter-spacing: -0.018em;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.64);
+}
+
+/* One consistent title card for every top-level admin route. */
+.admin-layout-root .admin-page-content .admin-content-header {
+  display: flex !important;
+  width: 100%;
+  height: 82px;
+  min-height: 82px;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap;
+  gap: 20px;
+  margin: 0;
+  padding: 18px 22px !important;
+  border: 1px solid var(--admin-glass-border) !important;
+  border-radius: 22px !important;
+  background: var(--admin-glass-surface) !important;
+  box-shadow: var(--admin-glass-shadow) !important;
+  box-sizing: border-box;
+  -webkit-backdrop-filter: blur(5px) saturate(118%) !important;
+  backdrop-filter: blur(5px) saturate(118%) !important;
+}
+
+.admin-layout-root .admin-page-content .admin-content-header h1,
+.admin-layout-root .admin-page-content h1.admin-content-header {
+  margin: 0 !important;
+  color: var(--admin-text-heading) !important;
+  font-family: inherit !important;
+  font-size: 36px !important;
+  font-weight: 800 !important;
+  line-height: 44px !important;
+  letter-spacing: -0.018em !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.64) !important;
+}
+
+.admin-layout-root .admin-page-content h1.admin-content-header {
+  margin: 0 0 22px !important;
+}
+
+.admin-layout-root .admin-page-content .admin-content-header button,
+.admin-layout-root .admin-page-content .admin-content-header .ant-btn {
+  min-height: 44px !important;
+  padding: 10px 17px !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  line-height: 20px !important;
+}
+
+@media (max-width: 700px) {
+  .admin-layout-root .admin-page-content .admin-content-header {
+    height: auto;
+    min-height: 72px;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px !important;
+  }
+
+  .admin-layout-root .admin-page-content .admin-content-header h1,
+  .admin-layout-root .admin-page-content h1.admin-content-header {
+    font-size: 28px !important;
+    line-height: 36px !important;
+  }
+}
+
+/* Primary cards and panels */
+.admin-page-content .panel,
+.admin-page-content .ant-card,
+.admin-page-content .config-card,
+.admin-page-content .purpose-card,
+.admin-page-content .detail-card,
+.admin-page-content .editor-card,
+.admin-page-content .preview-card,
+.admin-page-content .history-placeholder,
+.admin-page-content .params-status,
+.admin-page-content .template-table,
+.admin-page-content .ticket-box,
+.admin-page-content .model-list-item,
+.admin-page-content .version-card,
+.admin-page-content .mapping-row,
+.admin-page-content .deployment-row,
+.admin-page-content .audit-grid > div,
+.admin-page-content .workflow-guide > div,
+.admin-page-content .log-entry,
+.admin-page-content .variable-row {
+  border: 1px solid var(--admin-glass-border) !important;
+  background: var(--admin-glass-surface) !important;
+  box-shadow: var(--admin-glass-shadow);
+  -webkit-backdrop-filter: blur(5px) saturate(118%);
+  backdrop-filter: blur(5px) saturate(118%);
+}
+
+.admin-page-content .ant-card,
+.admin-page-content .config-card,
+.admin-page-content .purpose-card,
+.admin-page-content .detail-card,
+.admin-page-content .editor-card,
+.admin-page-content .preview-card,
+.admin-page-content .history-placeholder,
+.admin-page-content .template-table {
+  border-radius: 18px !important;
+}
+
+.admin-page-content .ant-card-body,
+.admin-page-content .ant-spin-container {
+  background: transparent !important;
+}
+
+/* Smaller cards and table rows */
+.admin-page-content .crop-type-card,
+.admin-page-content .category-card,
+.admin-page-content .template-table__row,
+.admin-page-content .info-item,
+.admin-page-content .readonly-audit,
+.admin-page-content .deployment-form {
+  border-color: rgba(255, 255, 255, 0.62) !important;
+  background:
+    radial-gradient(circle at 6% 0%, rgba(255, 255, 255, 0.2), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(226, 240, 231, 0.04)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  -webkit-backdrop-filter: blur(3px) saturate(112%);
+  backdrop-filter: blur(3px) saturate(112%);
+}
+
+.admin-page-content .crop-type-card:nth-child(even),
+.admin-page-content .category-card:nth-child(even) {
+  background:
+    radial-gradient(circle at 6% 0%, rgba(255, 255, 255, 0.16), transparent 28%),
+    linear-gradient(135deg, rgba(244, 249, 246, 0.12), rgba(210, 233, 218, 0.02)) !important;
+}
+
+/* Tinted statistic cards */
+.admin-page-content .stat-card,
+.admin-page-content .overview-stat-card {
+  border: 1px solid rgba(220, 255, 232, 0.58) !important;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.2), transparent 38%),
+    linear-gradient(135deg, rgba(6, 73, 39, 0.48), rgba(28, 140, 70, 0.2)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    0 18px 40px rgba(12, 79, 39, 0.22);
+  -webkit-backdrop-filter: blur(5px) saturate(118%);
+  backdrop-filter: blur(5px) saturate(118%);
+}
+
+.admin-page-content .stat-card,
+.admin-page-content .stat-card *,
+.admin-page-content .overview-stat-card,
+.admin-page-content .overview-stat-card * {
+  color: #fff !important;
+  text-shadow:
+    0 2px 8px rgba(2, 36, 15, 0.86),
+    0 1px 1px rgba(2, 36, 15, 0.72);
+}
+
+/* Inputs and select controls */
+.admin-page-content input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']),
+.admin-page-content select,
+.admin-page-content textarea,
+.admin-page-content .ant-input,
+.admin-page-content .ant-input-affix-wrapper,
+.admin-page-content .ant-select-selector {
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  color: #0d2a19 !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(212, 237, 221, 0.34)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 7px 18px rgba(25, 60, 42, 0.1) !important;
+  caret-color: #087235;
+  font-family: inherit !important;
+  font-weight: 600;
+  -webkit-backdrop-filter: blur(5px) saturate(118%);
+  backdrop-filter: blur(5px) saturate(118%);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.admin-page-content input:not([type='checkbox']):not([type='radio']):not([type='file']):hover,
+.admin-page-content select:hover,
+.admin-page-content textarea:hover,
+.admin-page-content .ant-input-affix-wrapper:hover,
+.admin-page-content .ant-select-selector:hover {
+  border-color: rgba(129, 175, 145, 0.82) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(211, 241, 222, 0.48)) !important;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 10px 24px rgba(20, 94, 48, 0.14) !important;
+}
+
+.admin-page-content input:not([type='checkbox']):not([type='radio']):not([type='file']):focus,
+.admin-page-content select:focus,
+.admin-page-content textarea:focus,
+.admin-page-content .ant-input-affix-wrapper-focused,
+.admin-page-content .ant-select-focused .ant-select-selector {
+  border-color: rgba(38, 151, 79, 0.9) !important;
+  outline: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(215, 245, 226, 0.58)) !important;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 0 0 3px rgba(39, 174, 96, 0.18),
+    0 12px 28px rgba(20, 94, 48, 0.16) !important;
+}
+
+.admin-page-content input::placeholder,
+.admin-page-content textarea::placeholder,
+.admin-page-content .ant-input::placeholder {
+  color: #4b6555 !important;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.admin-page-content select option {
+  color: #203c2e;
+  background: #f3f9f5;
+}
+
+/* Buttons */
+.admin-page-content .primary-button,
+.admin-page-content .save-button,
+.admin-page-content .submit-btn,
+.admin-page-content .add-template-btn,
+.admin-page-content .btn-primary,
+.admin-page-content .btn-add-user,
+.admin-page-content .upload-button,
+.admin-page-content .ant-btn-primary {
+  border: 1px solid rgba(210, 255, 226, 0.42) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, rgba(31, 181, 91, 0.96), rgba(0, 107, 39, 0.88)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    0 9px 24px rgba(0, 107, 39, 0.3),
+    0 0 22px rgba(35, 183, 94, 0.12) !important;
+  font-family: inherit !important;
+  font-weight: 800;
+  -webkit-backdrop-filter: blur(5px) saturate(120%);
+  backdrop-filter: blur(5px) saturate(120%);
+}
+
+.admin-page-content .secondary-button,
+.admin-page-content .refresh-button,
+.admin-page-content .action-button:not(.action-button--danger),
+.admin-page-content .btn-outline,
+.admin-page-content .icon-button,
+.admin-page-content .icon-btn,
+.admin-page-content .edit-link,
+.admin-page-content .back-link,
+.admin-page-content .purpose-card__action,
+.admin-page-content .ant-btn-default {
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  color: #17482d !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(212, 237, 221, 0.3)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 7px 18px rgba(25, 60, 42, 0.1) !important;
+  font-family: inherit !important;
+  font-weight: 700;
+  -webkit-backdrop-filter: blur(5px) saturate(118%);
+  backdrop-filter: blur(5px) saturate(118%);
+}
+
+.admin-page-content .danger-button,
+.admin-page-content .confirmation-delete,
+.admin-page-content .action-button--danger {
+  border: 1px solid rgba(255, 220, 220, 0.5) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, rgba(213, 78, 78, 0.94), rgba(151, 39, 39, 0.86)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    0 8px 20px rgba(139, 38, 38, 0.22) !important;
+}
+
+.admin-page-content .primary-button,
+.admin-page-content .secondary-button,
+.admin-page-content .save-button,
+.admin-page-content .submit-btn,
+.admin-page-content .add-template-btn,
+.admin-page-content .btn-primary,
+.admin-page-content .btn-outline,
+.admin-page-content .icon-button,
+.admin-page-content .icon-btn,
+.admin-page-content .ant-btn {
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.admin-page-content button:hover:not(:disabled),
+.admin-page-content .ant-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.admin-page-content button:active:not(:disabled),
+.admin-page-content .ant-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Tabs */
+.admin-page-content .email-config-tabs,
+.admin-page-content .catalog-tabs,
+.admin-page-content .preview-tabs {
+  border: 1px solid rgba(255, 255, 255, 0.64) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(212, 235, 220, 0.06)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(4px) saturate(115%);
+  backdrop-filter: blur(4px) saturate(115%);
+}
+
+.admin-page-content .email-config-tab.is-active,
+.admin-page-content .catalog-tabs button.is-active,
+.admin-page-content .preview-tab.is-active {
+  border-color: rgba(255, 255, 255, 0.76) !important;
+  color: #0b5f30 !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(211, 239, 221, 0.32)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 6px 16px rgba(21, 61, 39, 0.1);
+}
+
+/* Tables and alerts */
+.admin-layout-root .admin-page-content .ant-table,
+.admin-layout-root .admin-page-content .ant-table-container,
+.admin-layout-root .admin-page-content .ant-table-content,
+.admin-layout-root .admin-page-content .ant-table-tbody > tr > td {
+  color: var(--admin-text) !important;
+  background: transparent !important;
+}
+
+.admin-layout-root .admin-page-content .ant-table-thead > tr > th,
+.admin-page-content .crop-type-table-header,
+.admin-page-content .category-table-header,
+.admin-page-content .template-table__head {
+  border-color: rgba(255, 255, 255, 0.66) !important;
+  color: #102d1d !important;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.24), transparent 32%),
+    linear-gradient(135deg, rgba(244, 249, 246, 0.24), rgba(216, 235, 223, 0.06)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  font-weight: 800 !important;
+  -webkit-backdrop-filter: blur(4px) saturate(115%);
+  backdrop-filter: blur(4px) saturate(115%);
+}
+
+.admin-layout-root .admin-page-content .ant-table-tbody > tr:hover > td,
+.admin-page-content .template-table__row:hover {
+  background: rgba(231, 247, 236, 0.26) !important;
+}
+
+.admin-page-content .ant-alert {
+  border: 1px solid rgba(255, 255, 255, 0.68) !important;
+  background: linear-gradient(135deg, rgba(236, 247, 255, 0.44), rgba(214, 237, 222, 0.12)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    0 10px 26px rgba(25, 60, 42, 0.08);
+  -webkit-backdrop-filter: blur(5px) saturate(118%);
+  backdrop-filter: blur(5px) saturate(118%);
+}
+
+/* Shared typography */
+.admin-page-content .panel-heading h2,
+.admin-page-content .panel-heading h3,
+.admin-page-content .list-toolbar h3,
+.admin-page-content .section-title h2,
+.admin-page-content .section-title h3,
+.admin-page-content .config-card__header h2,
+.admin-page-content .config-card__header h3,
+.admin-page-content .purpose-card__title,
+.admin-page-content .brand-name,
+.admin-page-content .form-title {
+  color: var(--admin-text-heading) !important;
+  font-family: inherit;
+  font-weight: 800 !important;
+  letter-spacing: -0.014em;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.58);
+}
+
+.admin-page-content .field,
+.admin-page-content .field > span,
+.admin-page-content .field-label,
+.admin-page-content .toggle-label,
+.admin-page-content .label {
+  color: #102d1d !important;
+  font-family: inherit;
+  font-weight: 700 !important;
+}
+
+.admin-page-content .muted,
+.admin-page-content .empty-hint,
+.admin-page-content .field-help,
+.admin-page-content .purpose-card__description,
+.admin-page-content .template-table__description,
+.admin-page-content .page-heading p,
+.admin-page-content .summary-row p,
+.admin-page-content .panel-heading p,
+.admin-page-content .list-toolbar p,
+.admin-page-content .blocked-copy,
+.admin-page-content .readiness-copy,
+.admin-page-content .empty-copy,
+.admin-page-content .model-list-item small {
+  color: var(--admin-text-muted) !important;
+  font-weight: 500 !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.46);
+}
+
+.admin-page-content .status-badge,
+.admin-page-content .status-label,
+.admin-page-content .ant-tag {
+  border: 1px solid rgba(255, 255, 255, 0.68) !important;
+  border-radius: 999px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 5px 14px rgba(21, 61, 39, 0.1);
+  font-weight: 800 !important;
+  -webkit-backdrop-filter: blur(4px) saturate(115%);
+  backdrop-filter: blur(4px) saturate(115%);
+}

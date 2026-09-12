@@ -1,0 +1,152 @@
+================================================================================
+AGRI CATALOG SERVICE - PRODUCT IMAGE API ENDPOINTS
+================================================================================
+
+Catalog base URL: http://localhost:9098/agri-catalog
+File-service base URL: http://localhost:9095/files
+
+Luồng tích hợp:
+
+1. Client upload file trực tiếp lên file-service:
+
+   POST http://localhost:9095/files/upload
+   Content-Type: multipart/form-data
+   Authorization: Bearer <access_token>
+
+   Form data:
+   - file: ảnh JPEG, PNG hoặc WebP, tối đa 5 MB.
+   - purpose: PRODUCT_IMAGE.
+
+2. File-service trả về FileView gồm id và publicUrl.
+3. Client gửi id đó dưới dạng fileId cho agri-catalog-service.
+4. Agri-catalog-service gọi:
+
+   GET http://localhost:9095/files/internal/files/{fileId}
+   X-API-KEY: file
+
+5. Catalog chỉ lưu liên kết sau khi xác nhận file:
+   - Còn ở trạng thái UPLOADED.
+   - Có purpose PRODUCT_IMAGE.
+   - Có contentType image/*.
+   - Có publicUrl hợp lệ.
+
+Client không được tự truyền imageUrl. imageUrl luôn lấy từ metadata của file-service.
+
+================================================================================
+1. PUBLIC PRODUCT IMAGES
+================================================================================
+
+--- GET /public/products/{productId}/images ---
+Mô tả   : Lấy danh sách ảnh của một sản phẩm đang public.
+Auth    : Public.
+Path    : productId (UUID).
+Điều kiện:
+  - Sản phẩm tồn tại, chưa soft delete.
+  - publicationStatus=PUBLISHED.
+  - moderationStatus=NORMAL.
+Sắp xếp : displayOrder tăng dần, sau đó createdAt tăng dần.
+Response: 200 OK, ApiResponse<List<ProductImageView>>
+
+Sản phẩm không public được xử lý như không tồn tại và trả về 404.
+
+================================================================================
+2. ADMIN PRODUCT IMAGES
+================================================================================
+
+GET, PUT và DELETE trong phần này yêu cầu ROLE_ADMIN.
+Riêng POST gắn ảnh sản phẩm dành cho ROLE_BRAND.
+
+--- GET /products/{productId}/images ---
+Mô tả   : Lấy tất cả ảnh chưa soft delete của sản phẩm.
+Response: 200 OK, ApiResponse<List<ProductImageView>>
+
+--- GET /products/{productId}/images/{imageId} ---
+Mô tả   : Lấy một ảnh thuộc đúng sản phẩm.
+Response: 200 OK, ApiResponse<ProductImageView>
+
+--- POST /products/{productId}/images ---
+Mô tả   : Gắn file đã upload vào sản phẩm.
+Auth    : ROLE_BRAND.
+Body:
+{
+  "fileId": "UUID",
+  "altText": "string | null",
+  "displayOrder": 0,
+  "primary": false
+}
+Quy tắc:
+  - fileId bắt buộc và chưa được gắn vào ProductImage active khác.
+  - File phải hợp lệ theo luồng kiểm tra file-service ở trên.
+  - altText tối đa 255 ký tự.
+  - displayOrder không âm.
+  - Ảnh đầu tiên luôn tự động trở thành primary.
+  - Nếu primary=true, ảnh primary hiện tại được hạ xuống trước.
+Response: 201 Created, ApiResponse<ProductImageView>
+
+--- PUT /products/{productId}/images/{imageId} ---
+Mô tả   : Thay file hoặc cập nhật metadata ảnh.
+Body:
+{
+  "fileId": "UUID",
+  "altText": "string | null",
+  "displayOrder": 0,
+  "primary": true
+}
+Quy tắc:
+  - File mới được xác thực lại với file-service.
+  - primary=true sẽ chuyển primary sang ảnh này.
+  - primary=false không hạ ảnh hiện đang primary để tránh sản phẩm có ảnh nhưng không có primary.
+    Muốn đổi primary, cập nhật một ảnh khác với primary=true.
+Response: 200 OK, ApiResponse<ProductImageView>
+
+--- DELETE /products/{productId}/images/{imageId} ---
+Mô tả   : Soft delete liên kết ProductImage.
+Quy tắc:
+  - Không xóa file vật lý ở file-service.
+  - Nếu xóa ảnh primary, ảnh còn lại có displayOrder nhỏ nhất tự động thành primary.
+  - Nếu không còn ảnh, thumbnailUrl của Product được đặt về null.
+Response: 200 OK, ApiResponse<Void>
+
+ProductImageView:
+{
+  "id": "UUID",
+  "productId": "UUID",
+  "fileId": "UUID",
+  "imageUrl": "string",
+  "altText": "string | null",
+  "displayOrder": 0,
+  "primary": true,
+  "createdAt": "Instant",
+  "createdBy": "UUID",
+  "updatedAt": "Instant",
+  "updatedBy": "UUID"
+}
+
+================================================================================
+3. DOMAIN AND DATABASE INVARIANTS
+================================================================================
+
+- Mỗi fileId active chỉ được gắn vào tối đa một ProductImage.
+- Mỗi Product có tối đa một ảnh primary active.
+- Product.thumbnailUrl luôn bằng imageUrl của ảnh primary.
+- Khi tạo ảnh đầu tiên, ảnh tự động thành primary.
+- Khi xóa Product, tất cả ProductImage của Product cũng được soft delete.
+- Soft delete ProductImage không tự xóa StoredFile; owner vẫn quản lý file lifecycle tại file-service.
+
+================================================================================
+4. ERROR CODES
+================================================================================
+
+NOT_FOUND_PRODUCT_NOT_FOUND
+NOT_FOUND_PRODUCT_IMAGE_NOT_FOUND
+NOT_FOUND_FILE_NOT_FOUND
+
+BUS_PRODUCT_IMAGE_FILE_ALREADY_USED
+BUS_PRODUCT_IMAGE_FILE_INVALID
+
+INF_FILE_SERVICE_UNAVAILABLE
+
+VAL_PRODUCT_IMAGE_FILE_ID_REQUIRED
+VAL_PRODUCT_IMAGE_ALT_TEXT_TOO_LONG
+VAL_PRODUCT_IMAGE_DISPLAY_ORDER_INVALID
+VAL_PRODUCT_IMAGE_PRIMARY_REQUIRED

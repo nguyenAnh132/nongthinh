@@ -1,0 +1,343 @@
+{
+  "info": {
+    "name": "Profile Service",
+    "description": "CRUD APIs cho Farmer, Admin, Brand profiles.\n\nBase URL bao gom context-path `/profile` → `http://localhost:9092/profile`.\n\n- POST create endpoints: PUBLIC (khong can JWT).\n- Cac endpoint GET/PUT/PATCH: yeu cau Bearer JWT (Keycloak).\n- provinceId la chuoi (vd. `HN`, `HCM`), communeId la UUID — phai ton tai o location-service (validate qua Feign internal call).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:9092/profile" },
+    { "key": "accessToken", "value": "" },
+    { "key": "userId", "value": "a1b2c3d4-e5f6-7890-abcd-ef1234567890" },
+    { "key": "farmerProfileId", "value": "" },
+    { "key": "adminProfileId", "value": "" },
+    { "key": "brandProfileId", "value": "" },
+    { "key": "provinceId", "value": "HN" },
+    { "key": "communeId", "value": "8fb35749-976d-49da-9f31-9d85a8bfa705" },
+    { "key": "departmentId", "value": "c3d4e5f6-a7b8-9012-cdef-123456789abc" },
+    { "key": "positionId", "value": "d4e5f6a7-b8c9-0123-def0-234567890bcd" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Farmer Profile",
+      "item": [
+        {
+          "name": "Create Farmer Profile (public)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"firstName\": \"Nguyen\",\n  \"lastName\": \"Van An\",\n  \"gender\": \"MALE\",\n  \"phone\": \"0912345678\",\n  \"provinceId\": \"{{provinceId}}\",\n  \"communeId\": \"{{communeId}}\",\n  \"addressDetail\": \"123 Pho Hang Bong\",\n  \"avatarUrl\": \"https://cdn.example.com/avatars/farmer-001.jpg\"\n}"
+            },
+            "url": "{{baseUrl}}/farmer-profiles"
+          }
+        },
+        {
+          "name": "Get Farmer Profile By User ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const id = pm.response.json()?.result?.id;",
+                  "    if (id) pm.collectionVariables.set('farmerProfileId', id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/farmer-profiles/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Get Farmer Profile By ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/farmer-profiles/{{farmerProfileId}}"
+          }
+        },
+        {
+          "name": "Update Farmer Profile (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Nguyen\",\n  \"lastName\": \"Van Anh\",\n  \"gender\": \"MALE\"\n}"
+            },
+            "url": "{{baseUrl}}/farmer-profiles/{{farmerProfileId}}"
+          }
+        },
+        {
+          "name": "Update Farmer Phone (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0987654321\"\n}"
+            },
+            "url": "{{baseUrl}}/farmer-profiles/{{farmerProfileId}}/phone"
+          }
+        },
+        {
+          "name": "Update Farmer Avatar (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://cdn.example.com/avatars/farmer-001.jpg\"\n}"
+            },
+            "url": "{{baseUrl}}/farmer-profiles/{{farmerProfileId}}/avatar"
+          }
+        },
+        {
+          "name": "Update Farmer Address (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provinceId\": \"{{provinceId}}\",\n  \"communeId\": \"{{communeId}}\",\n  \"addressDetail\": \"456 Pho Hue\"\n}"
+            },
+            "url": "{{baseUrl}}/farmer-profiles/{{farmerProfileId}}/address"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Profile",
+      "item": [
+        {
+          "name": "Create Admin Profile (public)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"firstName\": \"Nguyen\",\n  \"lastName\": \"Van Admin\",\n  \"phone\": \"0912345678\",\n  \"departmentId\": \"{{departmentId}}\",\n  \"positionId\": \"{{positionId}}\",\n  \"avatarUrl\": \"https://cdn.example.com/avatars/admin-001.jpg\"\n}"
+            },
+            "url": "{{baseUrl}}/admin-profiles"
+          }
+        },
+        {
+          "name": "Get Admin Profile By User ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const id = pm.response.json()?.result?.id;",
+                  "    if (id) pm.collectionVariables.set('adminProfileId', id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin-profiles/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Get Admin Profile By ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin-profiles/{{adminProfileId}}"
+          }
+        },
+        {
+          "name": "Update Admin Profile (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Nguyen\",\n  \"lastName\": \"Van Admin\",\n  \"departmentId\": \"{{departmentId}}\",\n  \"positionId\": \"{{positionId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/admin-profiles/{{adminProfileId}}"
+          }
+        },
+        {
+          "name": "Update Admin Phone (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0987654321\"\n}"
+            },
+            "url": "{{baseUrl}}/admin-profiles/{{adminProfileId}}/phone"
+          }
+        },
+        {
+          "name": "Update Admin Avatar (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://cdn.example.com/avatars/admin-001.jpg\"\n}"
+            },
+            "url": "{{baseUrl}}/admin-profiles/{{adminProfileId}}/avatar"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brand Profile",
+      "item": [
+        {
+          "name": "Create Brand Profile (public)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"brandName\": \"Nong Thinh Organic\",\n  \"description\": \"Thuong hieu nong san huu co\",\n  \"phone\": \"0241234567\",\n  \"officeProvinceId\": \"{{provinceId}}\",\n  \"officeCommuneId\": \"{{communeId}}\",\n  \"officeAddressDetail\": \"123 Pho Hang Bong\",\n  \"representativeName\": \"Le Van C\",\n  \"representativePhone\": \"0909123456\",\n  \"representativeEmail\": \"contact@nongthinh.vn\",\n  \"logoUrl\": \"https://cdn.example.com/brands/logo.png\",\n  \"bannerUrl\": \"https://cdn.example.com/brands/banner.png\",\n  \"websiteUrl\": \"https://nongthinh.vn\"\n}"
+            },
+            "url": "{{baseUrl}}/brand-profiles"
+          }
+        },
+        {
+          "name": "Get Brand Profile By User ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const id = pm.response.json()?.result?.id;",
+                  "    if (id) pm.collectionVariables.set('brandProfileId', id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/brand-profiles/users/{{userId}}"
+          }
+        },
+        {
+          "name": "Get Brand Profile By ID",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/brand-profiles/{{brandProfileId}}"
+          }
+        },
+        {
+          "name": "Update Brand Profile (PUT)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brandName\": \"Nong Thinh Organic\",\n  \"description\": \"Mo ta moi cap nhat\",\n  \"representativeName\": \"Le Van Cuong\"\n}"
+            },
+            "url": "{{baseUrl}}/brand-profiles/{{brandProfileId}}"
+          }
+        },
+        {
+          "name": "Update Brand Phone (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0249876543\"\n}"
+            },
+            "url": "{{baseUrl}}/brand-profiles/{{brandProfileId}}/phone"
+          }
+        },
+        {
+          "name": "Update Brand Logo (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://cdn.example.com/brands/logo.png\"\n}"
+            },
+            "url": "{{baseUrl}}/brand-profiles/{{brandProfileId}}/logo"
+          }
+        },
+        {
+          "name": "Update Brand Banner (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://cdn.example.com/brands/banner.png\"\n}"
+            },
+            "url": "{{baseUrl}}/brand-profiles/{{brandProfileId}}/banner"
+          }
+        },
+        {
+          "name": "Update Brand Website (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://nongthinh.vn\"\n}"
+            },
+            "url": "{{baseUrl}}/brand-profiles/{{brandProfileId}}/website"
+          }
+        },
+        {
+          "name": "Update Brand Representative Phone (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"0911222333\"\n}"
+            },
+            "url": "{{baseUrl}}/brand-profiles/{{brandProfileId}}/representative-phone"
+          }
+        },
+        {
+          "name": "Update Brand Representative Email (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"rep@nongthinh.vn\"\n}"
+            },
+            "url": "{{baseUrl}}/brand-profiles/{{brandProfileId}}/representative-email"
+          }
+        },
+        {
+          "name": "Update Brand Office Address (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"provinceId\": \"{{provinceId}}\",\n  \"communeId\": \"{{communeId}}\",\n  \"addressDetail\": \"789 Pho Trang Tien\"\n}"
+            },
+            "url": "{{baseUrl}}/brand-profiles/{{brandProfileId}}/office-address"
+          }
+        }
+      ]
+    }
+  ]
+}

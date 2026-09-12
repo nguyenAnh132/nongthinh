@@ -1,0 +1,118 @@
+:host {
+  display: block;
+  position: sticky;
+  top: 92px;
+  align-self: start;
+  max-height: calc(100vh - 112px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.community-sidebar {
+  position: static;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 5px;
+}
+
+.sidebar-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: #445249;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.sidebar-item:hover {
+  background: #e8f5eb;
+  color: #155f32;
+}
+
+.sidebar-item:focus-visible {
+  outline: 3px solid rgba(39, 174, 96, 0.25);
+  outline-offset: 1px;
+}
+
+.sidebar-item.active {
+  background: #dff3e5;
+  color: #075b28;
+  font-weight: 700;
+}
+
+.sidebar-item.active .item-icon {
+  background: #0f7437;
+  color: #fff;
+}
+
+.item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--color-primary-700);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.community-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  -webkit-mask: var(--community-icon) center / contain no-repeat;
+  mask: var(--community-icon) center / contain no-repeat;
+}
+
+.item-badge {
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #fff;
+  color: #14733a;
+  font-size: 11px;
+  text-align: center;
+}
+
+@media (max-width: 1023px) {
+  :host {
+    top: 82px;
+    max-height: calc(100vh - 92px);
+  }
+
+  .sidebar-item > span:not(.item-icon) {
+    display: none;
+  }
+
+  .sidebar-nav {
+    justify-items: center;
+  }
+
+  .sidebar-item {
+    display: flex;
+    justify-content: center;
+    width: 50px;
+    padding: 7px;
+  }
+}
+
+@media (max-width: 767px) {
+  :host {
+    display: none;
+  }
+}

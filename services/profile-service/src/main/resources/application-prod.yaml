@@ -1,0 +1,16 @@
+cookie:
+  secure: ${COOKIE_SECURE:true}
+  http-only: ${COOKIE_HTTP_ONLY:true}
+  access-token-name: ${COOKIE_ACCESS_TOKEN_NAME:access_token}
+  refresh-token-name: ${COOKIE_REFRESH_TOKEN_NAME:refresh_token}
+  same-site: ${COOKIE_SAME_SITE:Lax}
+  access-path: ${COOKIE_ACCESS_PATH:/}
+  refresh-path: ${COOKIE_REFRESH_PATH:/}
+
+keycloak:
+  url: ${KEYCLOAK_URL:}
+  realm: ${KEYCLOAK_REALM:}
+
+spring:
+  application:
+    name: profile-service

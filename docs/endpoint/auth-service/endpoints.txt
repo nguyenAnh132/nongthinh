@@ -1,0 +1,201 @@
+================================================================================
+AUTH SERVICE - API ENDPOINTS
+================================================================================
+
+Base URL (qua API Gateway):  http://localhost:8888/api/v1/auth
+Base URL (trực tiếp service): http://localhost:9090/auth
+Context path (dev): /auth
+Port (dev): 9090
+
+>>> Giai đoạn hiện tại: frontend thường gọi trực tiếp auth-service (không qua gateway) <<<
+
+Cookie auth (HttpOnly, SameSite=Lax, dev secure=false):
+  - access_token  : JWT access token
+  - refresh_token : refresh token (dùng cho POST /refresh)
+
+Header khuyến nghị từ frontend:
+  - X-Client-Type: WEB
+  - withCredentials: true (bắt buộc để gửi/nhận cookie cross-origin 4200 → 9090)
+
+--------------------------------------------------------------------------------
+HEADERS
+--------------------------------------------------------------------------------
+Authorization: Bearer <access_token>   (hoặc dùng cookie access_token)
+Content-Type: application/json         (chỉ bắt buộc khi có request body)
+
+--------------------------------------------------------------------------------
+RESPONSE FORMAT
+--------------------------------------------------------------------------------
+Hầu hết endpoint bọc trong ApiResponse:
+{
+  "code": "string | null",
+  "message": "string",
+  "result": <T> | null
+}
+
+Một số endpoint đăng ký/OTP trả về body rỗng (201 Created hoặc 200 OK).
+
+================================================================================
+1. OAUTH2 / ĐĂNG NHẬP (Spring Security + Keycloak)
+================================================================================
+
+--- GET /login ---
+Mô tả   : Redirect sang Keycloak login
+Auth    : Public
+Response: 302 → /oauth2/authorization/keycloak
+
+--- GET /oauth2/authorization/keycloak ---
+Mô tả   : Bắt đầu OAuth2 Authorization Code flow với Keycloak
+Auth    : Public (Spring Security tự cấu hình)
+Response: 302 → Keycloak login page
+
+--- GET /login/oauth2/code/keycloak ---
+Mô tả   : Callback sau khi Keycloak xác thực thành công
+Auth    : Public (Spring Security xử lý)
+Response: Set cookie access_token + refresh_token → redirect frontend
+Ghi chú : Không gọi trực tiếp từ frontend
+
+================================================================================
+2. PHIÊN ĐĂNG NHẬP (AuthController)
+================================================================================
+
+--- GET /me ---
+Mô tả   : Lấy thông tin người dùng hiện tại
+Auth    : Authenticated (JWT từ cookie hoặc Authorization header)
+Response: 200 ApiResponse<MeView>
+  result.userId       : UUID
+  result.email        : String
+  result.isEnabled    : boolean
+  result.role         : String (ROLE_FARMER | ROLE_BRAND | ROLE_ADMIN)
+  result.permissions  : Set<String>
+  result.profile      : ProfileView { profileId, type, displayName, avatarUrl, bannerUrl, status }
+  result.flags        : MeFlags { requiresEmailVerification, requiresProfileCompletion }
+
+--- POST /refresh ---
+Mô tả   : Làm mới access token bằng refresh_token cookie
+Auth    : Public (đọc refresh_token từ cookie)
+Body    : Không
+Response: 200 ApiResponse<Void> + set lại cookie access_token và refresh_token
+
+--- GET /logout ---
+Mô tả   : Đăng xuất, xóa cookie access_token và refresh_token
+Auth    : Authenticated
+Body    : Không
+Response: 200 ApiResponse<Void>
+
+================================================================================
+3. XÁC THỰC EMAIL OTP (AuthController)
+================================================================================
+
+--- GET /otp/config ---
+Mô tả   : Lấy cấu hình OTP công khai (độ dài + cooldown gửi lại)
+Auth    : Public
+Response: 200 ApiResponse<OtpConfigView>
+  result.otpLength             : int  // từ OTP_LENGTH, mặc định 6
+  result.resendCooldownSeconds : int  // từ OTP_RESEND_COOLDOWN_SECONDS, mặc định 60
+
+--- POST /otp/verify ---
+Mô tả   : Xác thực OTP email sau đăng ký
+Auth    : Public
+Body    :
+{
+  "email": "string",   // email hợp lệ
+  "otp": "string"      // 4–8 chữ số
+}
+Response: 200 (body rỗng)
+
+--- POST /otp/resend ---
+Mô tả   : Gửi lại OTP email (chặn nếu chưa hết cooldown OTP_RESEND_COOLDOWN_SECONDS)
+Auth    : Public
+Body    :
+{
+  "email": "string"    // email hợp lệ
+}
+Response: 200 ApiResponse<OtpResendCooldownView>
+  result.resendCooldownSeconds : int
+Lỗi thường gặp:
+  BUS_OTP_RESEND_TOO_FREQUENT  — gửi lại quá sớm
+  BUS_OTP_RESEND_LIMIT_EXCEEDED — vượt số lần gửi lại
+
+================================================================================
+4. ĐĂNG KÝ NGƯỜI DÙNG
+================================================================================
+
+--- POST /farmers ---
+Mô tả   : Đăng ký tài khoản nông dân (tạo user Keycloak + DB + profile event + gửi OTP)
+Auth    : Public
+Body    :
+{
+  "email": "string",
+  "password": "string",
+  "temporary": boolean,
+  "enabled": boolean,
+  "firstName": "string",       // 1–255 ký tự
+  "lastName": "string",        // 3–255 ký tự
+  "gender": "MALE | FEMALE | OTHER",
+  "phone": "string",           // 10 chữ số
+  "provinceId": "string",      // tùy chọn, tối đa 10 ký tự
+  "communeId": "UUID",         // tùy chọn
+  "addressDetail": "string",   // tùy chọn, tối đa 500 ký tự
+  "avatarUrl": "string"        // tùy chọn, URL
+}
+Response: 201 Created (body rỗng)
+
+--- POST /brands ---
+Mô tả   : Đăng ký tài khoản thương hiệu (tạo user + profile event + gửi OTP)
+Auth    : Public
+Body    :
+{
+  "email": "string",
+  "password": "string",
+  "temporary": boolean,
+  "enabled": boolean,
+  "brandName": "string",               // 1–200 ký tự
+  "description": "string",             // tùy chọn, tối đa 1000 ký tự
+  "phone": "string",                   // 10 chữ số
+  "officeProvinceId": "string",        // tùy chọn
+  "officeCommuneId": "UUID",           // tùy chọn
+  "officeAddressDetail": "string",     // tùy chọn, tối đa 500 ký tự
+  "representativeName": "string",      // 1–255 ký tự
+  "representativePhone": "string",     // 10 chữ số
+  "representativeEmail": "string",
+  "logoUrl": "string",                 // tùy chọn
+  "bannerUrl": "string",               // tùy chọn
+  "websiteUrl": "string"               // tùy chọn
+}
+Response: 201 Created (body rỗng)
+
+--- POST /admins ---
+Mô tả   : Tạo tài khoản admin
+Auth    : JWT + quyền admin:role:manage
+Body    :
+{
+  "email": "string",
+  "password": "string",
+  "temporary": boolean,
+  "enabled": boolean,
+  "firstName": "string",       // 1–255 ký tự
+  "lastName": "string",        // 3–255 ký tự
+  "phone": "string",           // 10 chữ số
+  "departmentId": "UUID",
+  "positionId": "UUID",
+  "avatarUrl": "string"        // tùy chọn
+}
+Response: 201 Created (body rỗng)
+
+================================================================================
+5. TEST / OBSERVABILITY
+================================================================================
+
+--- GET /test/trace ---
+Mô tả   : Endpoint test logging/tracing
+Auth    : Theo SecurityConfig
+Response: 200 (body rỗng)
+
+================================================================================
+GHI CHÚ
+================================================================================
+- Lỗi xác thực JWT: 401 Unauthorized
+- Feign client nội bộ (KeycloakClient, ProfileClient, BoPortalClient) không phải
+  public API — không gọi từ frontend.
+- Khi triển khai gateway: StripPrefix=2 → /api/v1/auth/me → http://localhost:9090/auth/me

@@ -1,0 +1,104 @@
+<div class="params-page" [class.params-page--embedded]="embedded">
+  <div class="params-header admin-content-header">
+    @if (!embedded) {
+      <div class="params-title-wrap">
+        <h1 class="params-title">
+          Cấu hình tham số
+          <span class="params-title-hint" title="Tinh chỉnh các tham số kỹ thuật và bảo mật của hệ thống.">?</span>
+        </h1>
+      </div>
+    } @else {
+      <div></div>
+    }
+
+    <button
+      class="save-button"
+      type="button"
+      [class.is-saving]="saving"
+      [disabled]="loading || saving"
+      (click)="saveAll()">
+      {{ saving ? 'Đang lưu...' : 'Lưu thay đổi' }}
+    </button>
+  </div>
+
+  @if (loading) {
+    <div class="params-status">Đang tải cấu hình...</div>
+  }
+
+  @if (!loading && paramGroups.length === 0) {
+    <div class="params-status">Chưa có nhóm tham số nào.</div>
+  }
+
+  @if (!loading && paramGroups.length > 0) {
+    <div class="params-grid">
+      <div class="params-main">
+        @for (group of paramGroups; track group.id) {
+          <section class="config-card" [id]="sectionId(group)">
+            <div class="config-card__header">
+              <h2>{{ group.name }}</h2>
+              @if (group.description) {
+                <p>{{ group.description }}</p>
+              }
+            </div>
+
+            <div class="field-list">
+              @for (param of group.params; track param.name) {
+                @if (param.dataType === 'BOOLEAN') {
+                  <div class="toggle-row">
+                    <div class="toggle-label">
+                      {{ param.name }}
+                      @if (param.description) {
+                        <span class="field-help" [title]="param.description">?</span>
+                      }
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" [(ngModel)]="param.editBoolean" />
+                      <span class="switch-track" [class.is-off]="!param.editBoolean"></span>
+                    </label>
+                  </div>
+                } @else {
+                  <div class="field-group">
+                    <label class="field-label" [for]="param.name">
+                      {{ param.name }}
+                      @if (param.description) {
+                        <span class="field-help" [title]="param.description">?</span>
+                      }
+                    </label>
+
+                    @if (isLongValue(param)) {
+                      <textarea
+                        [id]="param.name"
+                        class="field-input field-textarea"
+                        [(ngModel)]="param.editValue"></textarea>
+                    } @else {
+                      <input
+                        [id]="param.name"
+                        class="field-input"
+                        [type]="param.dataType === 'INTEGER' ? 'number' : 'text'"
+                        [(ngModel)]="param.editValue" />
+                    }
+                  </div>
+                }
+              }
+            </div>
+          </section>
+        }
+      </div>
+
+      <aside class="params-aside">
+        <div class="params-aside__inner">
+          <p class="params-aside__title">Danh sách cấu hình</p>
+          <nav class="params-anchor-nav">
+            @for (group of paramGroups; track group.id) {
+              <a
+                [href]="'#' + sectionId(group)"
+                (click)="scrollToSection(sectionId(group), $event)">
+                {{ group.name }}
+              </a>
+            }
+          </nav>
+        </div>
+      </aside>
+    </div>
+  }
+</div>

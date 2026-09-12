@@ -1,0 +1,514 @@
+/* Layout styles — exact match Stitch "Cấu hình biến hệ thống" design */
+
+/* ── Root layout container ─────────────────────────────────── */
+.admin-layout-root {
+  --sidebar-width: 256px;
+  --sidebar-background: #22863a;
+
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  background-color: #f8f9fb;
+}
+
+.admin-layout-root.sidebar-resizing {
+  cursor: col-resize;
+}
+
+.admin-layout-root.sidebar-resizing * {
+  user-select: none;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────── */
+.admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  height: 100%;
+  z-index: 40;
+  display: flex;
+  overflow: visible;
+  flex-direction: column;
+  background-color: var(--sidebar-background);
+  color: #ffffff;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border-right: 0;
+  transition: width 0.22s ease;
+}
+
+.sidebar-resizing .admin-sidebar,
+.sidebar-resizing .admin-main {
+  transition: none;
+}
+
+/* Sidebar header */
+.admin-sidebar-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+
+.admin-sidebar-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.admin-sidebar-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  object-fit: cover;
+  flex-shrink: 0;
+  transition:
+    width 0.22s ease,
+    height 0.22s ease;
+}
+
+.sidebar-brand-copy {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.admin-sidebar-brand-name {
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  display: block;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+.admin-sidebar-brand-sub {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  display: block;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+/* Sidebar nav */
+.admin-sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin-top: 24px;
+}
+
+.admin-sidebar-nav-inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0 8px;
+  gap: 4px;
+}
+
+.admin-nav-active-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 16px;
+  z-index: 0;
+  border-radius: 999px 0 0 999px;
+  background: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform, height;
+}
+
+.admin-nav-active-indicator.is-visible {
+  opacity: 1;
+}
+
+.admin-nav-active-indicator.is-ready {
+  transition:
+    transform 440ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 180ms ease;
+}
+
+.admin-nav-active-indicator::before,
+.admin-nav-active-indicator::after {
+  position: absolute;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  content: '';
+}
+
+.admin-nav-active-indicator::before {
+  top: -16px;
+  background: radial-gradient(circle at 0 0, var(--sidebar-background) 0 15px, #ffffff 16px);
+}
+
+.admin-nav-active-indicator::after {
+  bottom: -16px;
+  background: radial-gradient(circle at 0 100%, var(--sidebar-background) 0 15px, #ffffff 16px);
+}
+
+.admin-nav-link {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  margin: 0 8px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    margin 0.22s ease,
+    padding 0.22s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+.admin-nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.admin-nav-link.active {
+  background: transparent;
+  color: #006b27;
+  box-shadow: none;
+}
+
+.nav-icon {
+  flex: 0 0 auto;
+}
+
+.nav-icon-mask {
+  --nav-icon-url: none;
+
+  display: block;
+  width: 24px;
+  height: 24px;
+  background-color: currentColor;
+  -webkit-mask: var(--nav-icon-url) center / contain no-repeat;
+  mask: var(--nav-icon-url) center / contain no-repeat;
+}
+
+.nav-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Sidebar footer */
+.admin-sidebar-footer {
+  padding: 24px;
+}
+
+.admin-sidebar-footer-inner {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 16px;
+}
+
+.admin-logout-btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+.admin-logout-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -5px;
+  z-index: 2;
+  width: 10px;
+  height: 100%;
+  outline: none;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.sidebar-resize-handle::after {
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  width: 3px;
+  height: 52px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0);
+  content: '';
+  transform: translateY(-50%);
+  transition:
+    width 0.18s ease,
+    background 0.18s ease;
+}
+
+.sidebar-resize-handle:hover::after,
+.sidebar-resize-handle:focus-visible::after,
+.sidebar-resizing .sidebar-resize-handle::after {
+  width: 4px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.sidebar-toggle {
+  position: absolute;
+  top: 78px;
+  right: -15px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(0, 107, 39, 0.2);
+  border-radius: 50%;
+  outline: none;
+  background: #ffffff;
+  color: #006b27;
+  box-shadow: 0 5px 16px rgba(17, 59, 36, 0.2);
+  cursor: pointer;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.sidebar-toggle:hover,
+.sidebar-toggle:focus-visible {
+  background: #eaf6ee;
+  transform: scale(1.06);
+}
+
+.sidebar-toggle .material-symbols-outlined {
+  font-size: 19px;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar-header {
+  padding: 20px 12px;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar-logo-row {
+  justify-content: center;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar-logo {
+  width: 44px;
+  height: 44px;
+}
+
+.admin-sidebar.is-collapsed .sidebar-brand-copy,
+.admin-sidebar.is-collapsed .nav-label,
+.admin-sidebar.is-collapsed .logout-label {
+  display: none;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar-nav {
+  margin-top: 18px;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar-nav-inner {
+  padding: 0 6px;
+}
+
+.admin-sidebar.is-collapsed .admin-nav-active-indicator {
+  left: 10px;
+}
+
+.admin-sidebar.is-collapsed .admin-nav-link {
+  justify-content: center;
+  margin: 0 4px;
+  padding: 14px 0;
+}
+
+.admin-sidebar.is-collapsed .admin-sidebar-footer {
+  padding: 16px 10px;
+}
+
+.admin-sidebar.is-collapsed .admin-logout-btn {
+  justify-content: center;
+  padding: 12px 0;
+}
+
+.admin-sidebar.is-collapsed .sidebar-toggle {
+  top: 68px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-nav-active-indicator.is-ready {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* ── Main content ───────────────────────────────────────────── */
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-left: var(--sidebar-width);
+  transition: margin-left 0.22s ease;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────── */
+.admin-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 64px;
+  padding: 0 24px;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(190, 202, 186, 0.5);
+}
+
+.admin-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.admin-search-wrap {
+  position: relative;
+}
+
+.admin-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6f7a6d;
+  font-size: 20px;
+}
+
+.admin-search-input {
+  padding: 9px 24px 9px 48px;
+  width: 320px;
+  background: #f2f4f6;
+  border-radius: 12px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: #191c1e;
+  transition: all 0.2s;
+}
+
+.admin-search-input:focus {
+  background: #eceef0;
+}
+
+.admin-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-notif-btn {
+  position: relative;
+  padding: 10px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #becaba;
+  transition: all 0.2s;
+}
+
+.admin-notif-btn:hover {
+  background: rgba(34, 134, 58, 0.08);
+  color: #006b27;
+}
+
+.admin-notif-dot {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 8px;
+  height: 8px;
+  background: #eb5757;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.admin-user-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 16px;
+  border-left: 1px solid rgba(190, 202, 186, 0.3);
+}
+
+.admin-user-text {
+  text-align: right;
+}
+
+.admin-user-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #191c1e;
+  display: block;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+.admin-user-role {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #6f7a6d;
+  display: block;
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+.admin-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0f8a34 0%, #006b27 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+  border: 1px solid rgba(190, 202, 186, 0.3);
+  font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+/* ── Page content ───────────────────────────────────────────── */
+.admin-page-content {
+  flex: 1;
+  padding: 24px;
+  background:
+    linear-gradient(rgba(248, 249, 251, 0.36), rgba(248, 249, 251, 0.36)),
+    url('/images/dashboard_bg.jpg') center / cover fixed;
+}

@@ -1,0 +1,227 @@
+<section class="ai-model-page">
+  <header class="page-heading admin-content-header">
+    <div>
+      <h1>Model chẩn đoán cây trồng</h1>
+    </div>
+    <button class="primary-button" type="button" (click)="openCreateModel()">
+      <span class="material-symbols-outlined">add</span> Tạo model
+    </button>
+  </header>
+
+  @if (loadError) {
+    <div class="state state--error"><span>{{ loadError }}</span><button type="button" (click)="loadWorkspace()">Thử lại</button></div>
+  }
+
+  <div class="workspace-grid">
+    <aside class="panel model-sidebar" aria-label="Danh sách model">
+      <div class="panel-heading compact-heading">
+        <div><h2>Models</h2><p>{{ models.length }} model</p></div>
+        <button class="icon-button" type="button" title="Tải lại" [disabled]="loading" (click)="loadWorkspace()">
+          <span class="material-symbols-outlined">refresh</span>
+        </button>
+      </div>
+      @if (loading) {
+        <p class="empty-copy">Đang tải models...</p>
+      } @else {
+        <div class="model-list">
+          @for (model of models; track model.id) {
+            <button type="button" class="model-list-item" [class.is-selected]="selectedModelId === model.id" (click)="selectModel(model.id)">
+              <span class="model-list-item__title">{{ model.name }}</span>
+              <code>{{ model.code }}</code>
+              <small>{{ model.cropCoverageType === 'ALL_CROPS' ? 'Tất cả cây trồng' : model.cropTypeIds.length + ' cây trồng' }}</small>
+              <span class="status-badge status-badge--{{ model.status.toLowerCase() }}">{{ model.status }}</span>
+            </button>
+          } @empty {
+            <p class="empty-copy">Chưa có model. Tạo model đầu tiên để bắt đầu workflow.</p>
+          }
+        </div>
+      }
+    </aside>
+
+    <main class="workspace-main">
+      @if (selectedModel; as model) {
+        <section class="panel model-overview">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">MODEL</p>
+              <h2>{{ model.name }} <code>{{ model.code }}</code></h2>
+              <p>{{ model.description || 'Chưa có mô tả.' }}</p>
+            </div>
+            <div class="header-actions">
+              <button class="secondary-button" type="button" (click)="openEditModel(model)">Chỉnh sửa</button>
+              <button class="danger-button" type="button" [disabled]="!!actionId" (click)="retireModel(model)">Ngừng sử dụng model</button>
+            </div>
+          </div>
+          <div class="audit-grid">
+            <div><span>Task</span><strong>Phát hiện bệnh</strong></div>
+            <div><span>Coverage</span><strong>{{ model.cropCoverageType === 'ALL_CROPS' ? 'Tất cả cây trồng' : 'Cây trồng được chọn' }}</strong></div>
+            <div><span>Người tạo</span><strong>{{ model.createdBy }}</strong></div>
+            <div><span>Cập nhật</span><strong>{{ model.updatedAt | date: 'dd/MM/yyyy HH:mm' }}</strong></div>
+          </div>
+        </section>
+
+        <section class="workflow-guide" aria-label="Quy trình đưa model vào phục vụ">
+          <div><span>1</span><strong>Tạo phiên bản</strong><small>Upload ONNX và khai báo đúng class.</small></div>
+          <div><span>2</span><strong>Kiểm tra ONNX</strong><small>Server xác minh checksum, input và output.</small></div>
+          <div><span>3</span><strong>Mapping & cho phép</strong><small>Gắn mọi class bệnh với danh mục rồi chuyển READY.</small></div>
+          <div><span>4</span><strong>Đưa vào phục vụ</strong><small>Tạo deployment và chuyển model an toàn.</small></div>
+        </section>
+
+        <section class="panel version-creation">
+          <div class="panel-heading">
+            <div>
+              <h2>Thêm phiên bản ONNX</h2>
+              <p>Bước 1 · Tạo bản nháp kỹ thuật. Phiên bản đã tạo không sửa được artifact hoặc manifest.</p>
+            </div>
+          </div>
+          <form [formGroup]="versionForm" (ngSubmit)="createVersion()">
+            <div class="form-grid">
+              <label class="field"><span>Version <b>*</b></span><input formControlName="version" placeholder="v2026.08.1" /></label>
+              <label class="field"><span>Input width <b>*</b></span><input type="number" formControlName="inputWidth" min="1" /></label>
+              <label class="field"><span>Input height <b>*</b></span><input type="number" formControlName="inputHeight" min="1" /></label>
+              <div class="field artifact-field">
+                <span>Artifact ONNX <b>*</b></span>
+                <label class="upload-button" [class.is-disabled]="uploadingArtifact">
+                  <input type="file" accept=".onnx,application/octet-stream" [disabled]="uploadingArtifact" (change)="uploadArtifact($event)" />
+                  {{ uploadingArtifact ? 'Đang tải artifact...' : artifactFileName || 'Chọn .onnx' }}
+                </label>
+                @if (versionForm.controls.artifactFileId.value) {
+                  <small>File ID: <code>{{ versionForm.controls.artifactFileId.value }}</code></small>
+                  <small>SHA-256: <code>{{ versionForm.controls.artifactSha256.value }}</code></small>
+                }
+              </div>
+            </div>
+
+            <div class="manifest-section">
+              <div class="section-title"><div><h3>Danh sách nhãn model</h3><p>Thứ tự index phải khớp chính xác output của file ONNX.</p></div><button class="secondary-button" type="button" (click)="addClass()">Thêm nhãn</button></div>
+              <div formArrayName="classes" class="class-list">
+                @for (classControl of classControls.controls; track $index; let index = $index) {
+                  <div class="class-row" [formGroupName]="index">
+                    <input type="number" min="0" formControlName="classIndex" aria-label="Class index" />
+                    <input formControlName="classCode" placeholder="RICE_BLAST" aria-label="Class code" />
+                    <input formControlName="displayName" placeholder="Tên hiển thị" aria-label="Tên hiển thị" />
+                    <select formControlName="classKind" aria-label="Loại class"><option value="DISEASE">DISEASE</option><option value="HEALTHY">HEALTHY</option></select>
+                    <button class="icon-button" type="button" [disabled]="classControls.length === 1" (click)="removeClass(index)" title="Xoá class"><span class="material-symbols-outlined">delete</span></button>
+                  </div>
+                }
+              </div>
+            </div>
+            <button class="primary-button" type="submit" [disabled]="savingVersion || uploadingArtifact">{{ savingVersion ? 'Đang tạo...' : 'Tạo bản nháp phiên bản' }}</button>
+          </form>
+        </section>
+
+        <section class="panel versions-panel">
+          <div class="panel-heading"><div><h2>Kiểm tra và cho phép triển khai</h2><p>Bước 2–3 · Chọn một phiên bản để xem mapping và trạng thái sẵn sàng.</p></div></div>
+          @if (loadingVersions) {
+            <p class="empty-copy">Đang tải phiên bản...</p>
+          } @else {
+            <div class="version-list">
+              @for (version of versions; track version.id) {
+                <article class="version-card" [class.is-selected]="selectedVersionId === version.id">
+                  <button class="version-select" type="button" (click)="selectVersion(version.id)">
+                    <span><strong>{{ version.version }}</strong><small>{{ version.inputWidth }} × {{ version.inputHeight }} · {{ version.classes.length }} classes</small></span>
+                    <span class="status-badge status-badge--{{ version.status.toLowerCase() }}">{{ version.status }}</span>
+                  </button>
+                  <p class="readiness-copy">{{ readinessHint(version) }}</p>
+                  <div class="readonly-audit">
+                    <span>Artifact: <code>{{ version.artifactFileId }}</code></span>
+                    <span>Checksum: <code>{{ version.artifactSha256 }}</code></span>
+                    <span>Validated: {{ version.validatedAt ? (version.validatedAt | date: 'dd/MM/yyyy HH:mm') : 'Chưa validate' }}</span>
+                  </div>
+                  @if (version.validationReport) { <pre>{{ version.validationReport }}</pre> }
+                  <div class="inline-actions">
+                    @if (version.status === 'DRAFT') { <button class="secondary-button" type="button" [disabled]="!!actionId" (click)="validateVersion(version)">Kiểm tra file ONNX</button> }
+                    @if (version.status === 'VALIDATED') {
+                      <button class="primary-button" type="button" [disabled]="!!actionId || !canMarkReady(version)" (click)="markVersionReady(version)">Cho phép triển khai</button>
+                      @if (!canMarkReady(version)) { <small class="blocked-copy">Chọn phiên bản này và mapping đủ {{ requiredMappingCount(version) }} mục trước.</small> }
+                    }
+                    @if (version.status !== 'RETIRED' && version.status !== 'ACTIVE') { <button class="text-danger" type="button" [disabled]="!!actionId" (click)="retireVersion(version)">Ngừng sử dụng phiên bản</button> }
+                  </div>
+                </article>
+              } @empty {
+                <p class="empty-copy">Chưa có phiên bản nào cho model này.</p>
+              }
+            </div>
+          }
+        </section>
+
+        @if (selectedVersion; as version) {
+          <section class="panel mapping-panel">
+            <div class="panel-heading">
+              <div><h2>Mapping nhãn bệnh</h2><p>Bước 3 · Đã hoàn tất {{ completedMappingCount(version) }}/{{ requiredMappingCount(version) }} mapping bắt buộc.</p></div>
+              <label class="compact-select"><span>Loại cây</span><select [value]="mappingCropTypeId" (change)="changeMappingCrop($any($event.target).value)"><option value="" disabled>Chọn loại cây</option>@for (crop of coveredCropTypes(); track crop.id) { <option [value]="crop.id">{{ crop.name }}</option> }</select></label>
+            </div>
+            @if (loadingMappings) {
+              <p class="empty-copy">Đang tải mapping và bệnh theo crop...</p>
+            } @else if (!mappingCropTypeId) {
+              <p class="state state--warning">Hãy chọn crop để quản lý mapping class sang disease.</p>
+            } @else {
+              <div class="mapping-list">
+                @for (modelClass of diseaseClasses; track modelClass.id) {
+                  <label class="mapping-row">
+                    <span><strong>{{ modelClass.displayName }}</strong><code>{{ modelClass.classCode }}</code></span>
+                    <select
+                      [ngModel]="mappingDiseaseId(modelClass.id)"
+                      [ngModelOptions]="{ standalone: true }"
+                      [disabled]="actionId === 'mapping-' + modelClass.id"
+                      (ngModelChange)="saveMapping(modelClass, $event)">
+                      <option value="">Chưa mapping</option>
+                      @for (disease of diseases; track disease.id) { <option [value]="disease.id">{{ disease.name }}</option> }
+                    </select>
+                  </label>
+                } @empty {
+                  <p class="empty-copy">Version này không có DISEASE class cần mapping.</p>
+                }
+              </div>
+            }
+          </section>
+
+          <section class="panel deployment-panel">
+            <div class="panel-heading"><div><h2>Đưa model vào phục vụ</h2><p>Bước 4 · Chuyển phiên bản sẽ warm-up trước, sau đó thay deployment hiện tại trong cùng phạm vi.</p></div></div>
+            <form class="deployment-form" [formGroup]="deploymentForm" (ngSubmit)="createDeployment()">
+              <div class="field"><span>Phiên bản</span><strong class="readonly-field">{{ version.version }} · {{ version.status }}</strong></div>
+              <div class="field"><span>Phạm vi</span><strong class="readonly-field">{{ model.cropCoverageType === 'ALL_CROPS' ? 'Tất cả cây trồng' : 'Theo loại cây' }}</strong></div>
+              @if (deploymentForm.controls.deploymentScope.value === 'CROP') { <label class="field"><span>Loại cây <b>*</b></span><select formControlName="cropTypeId"><option value="">Chọn loại cây</option>@for (crop of coveredCropTypes(); track crop.id) { <option [value]="crop.id">{{ crop.name }}</option> }</select></label> }
+              <label class="field"><span>Mức ưu tiên</span><input type="number" min="0" formControlName="priority" /><small>0 là cao nhất. Cùng phạm vi và ưu tiên sẽ được thay thế khi chuyển version.</small></label>
+              <button class="secondary-button" type="submit" [disabled]="savingDeployment || !canCreateDeployment()">{{ savingDeployment ? 'Đang tạo...' : 'Tạo cấu hình triển khai' }}</button>
+            </form>
+            <div class="deployment-list">
+              @for (deployment of deploymentsForSelectedModel(); track deployment.id) {
+                <article class="deployment-row">
+                  <div><strong>{{ cropName(deployment.cropTypeId) }}</strong><small>Ưu tiên {{ deployment.priority }} · phiên bản {{ versionFor(deployment.modelVersionId)?.version || deployment.modelVersionId }}</small></div>
+                  <span class="status-badge status-badge--{{ deployment.status.toLowerCase() }}">{{ deployment.status }}</span>
+                  <div class="inline-actions">
+                    @if (deployment.status === 'INACTIVE') { <button class="primary-button" type="button" [disabled]="!canActivate(deployment) || !!actionId" (click)="activateDeployment(deployment)">{{ activationLabel(deployment) }}</button> }
+                    @if (deployment.status === 'ACTIVE') { <button class="secondary-button" type="button" [disabled]="!!actionId" (click)="deactivateDeployment(deployment)">Tạm dừng phục vụ</button> }
+                    @if (deployment.status === 'INACTIVE' && !canActivate(deployment)) { <small class="blocked-copy">Phiên bản phải ở trạng thái READY hoặc ACTIVE.</small> }
+                  </div>
+                </article>
+              } @empty { <p class="empty-copy">Chưa có cấu hình triển khai cho model này.</p> }
+            </div>
+          </section>
+        }
+      } @else {
+        <section class="panel empty-workspace"><span class="material-symbols-outlined">neurology</span><h2>Chọn hoặc tạo model</h2><p>Workflow quản trị sẽ hiện phiên bản, mapping và deployment tại đây.</p></section>
+      }
+    </main>
+  </div>
+
+  @if (modelEditorOpen) {
+    <div class="editor-backdrop" (click)="closeModelEditor()">
+      <form class="panel model-editor" [formGroup]="modelForm" (click)="$event.stopPropagation()" (ngSubmit)="saveModel()">
+        <div class="panel-heading"><div><h2>{{ editingModelId ? 'Chỉnh sửa model' : 'Tạo model mới' }}</h2><p>Model chỉ chứa metadata và coverage; Farmer không có quyền chọn model.</p></div><button class="icon-button" type="button" (click)="closeModelEditor()"><span class="material-symbols-outlined">close</span></button></div>
+        <div class="form-grid">
+          <label class="field"><span>Code <b>*</b></span><input formControlName="code" [readonly]="!!editingModelId" placeholder="RICE_DISEASE_DETECTOR" /></label>
+          <label class="field"><span>Tên model <b>*</b></span><input formControlName="name" placeholder="Rice disease detector" /></label>
+          <label class="field field--wide"><span>Mô tả</span><textarea rows="3" formControlName="description"></textarea></label>
+          <label class="field"><span>Task</span><input value="DISEASE_DETECTION" readonly /></label>
+          <label class="field"><span>Coverage</span><select formControlName="cropCoverageType"><option value="SELECTED_CROPS">Các crop được chọn</option><option value="ALL_CROPS">Tất cả crop</option></select></label>
+          @if (modelForm.controls.cropCoverageType.value === 'SELECTED_CROPS') {
+            <label class="field field--wide"><span>Crop áp dụng <b>*</b></span><select multiple formControlName="cropTypeIds" size="5">@for (crop of cropTypes; track crop.id) { <option [value]="crop.id">{{ crop.name }} ({{ crop.code }})</option> }</select><small>Giữ Ctrl/Cmd để chọn nhiều crop.</small></label>
+          }
+        </div>
+        <div class="editor-actions"><button class="secondary-button" type="button" (click)="closeModelEditor()">Huỷ</button><button class="primary-button" type="submit" [disabled]="savingModel">{{ savingModel ? 'Đang lưu...' : 'Lưu model' }}</button></div>
+      </form>
+    </div>
+  }
+</section>

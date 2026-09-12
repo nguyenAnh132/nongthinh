@@ -1,0 +1,454 @@
+<!-- ═══════════════════════════════════════════════════════════
+     NÔNG THỊNH — Landing Page — Nông nghiệp Xanh & Môi trường
+     Inspired by EnviShare template
+     ═══════════════════════════════════════════════════════════ -->
+
+<!-- ══════ NAVBAR ══════ -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <a class="nav-logo" href="#">
+      <span class="nav-logo-icon">
+        <img src="images/nongthinh_logo.png" alt="Nông Thịnh Logo"
+          style="width: 100%; height: 100%; object-fit: contain;" />
+      </span>
+      <span class="nav-logo-text">Nông Thịnh</span>
+    </a>
+
+    <div class="nav-links" id="nav-links">
+      <a href="#hero">Trang chủ</a>
+      <a href="#benefits">Dịch vụ</a>
+      <a href="#expert-advice">Chuyên gia</a>
+      <a href="#projects">Dự án</a>
+      <a href="#why-us">Về chúng tôi</a>
+    </div>
+
+    <div class="nav-actions">
+      <button class="btn btn-login" id="btn-login" (click)="login()">Đăng nhập</button>
+      <button class="btn btn-primary" id="btn-register" routerLink="/register">Đăng ký</button>
+    </div>
+
+    <button class="nav-mobile-toggle" id="mobile-toggle" aria-label="Menu" (click)="toggleMobileMenu()">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobile-menu" [class.open]="mobileMenuOpen">
+    <a href="#hero" (click)="closeMobileMenu()">Trang chủ</a>
+    <a href="#benefits" (click)="closeMobileMenu()">Dịch vụ</a>
+    <a href="#expert-advice" (click)="closeMobileMenu()">Chuyên gia</a>
+    <a href="#projects" (click)="closeMobileMenu()">Dự án</a>
+    <a href="#why-us" (click)="closeMobileMenu()">Về chúng tôi</a>
+    <button class="btn btn-outline"
+      style="margin-top: var(--space-4); width: 100%; border-color: var(--color-primary-500); color: var(--color-primary-500);"
+      (click)="login()">Đăng nhập</button>
+    <button class="btn btn-primary" style="margin-top: var(--space-2); width: 100%;" routerLink="/register">Đăng
+      ký</button>
+  </div>
+</nav>
+
+<!-- ══════ HERO SECTION ══════ -->
+<section class="hero section-reveal" id="hero">
+  <div class="hero-bg">
+    <video autoplay muted loop playsinline class="hero-bg-img">
+      <source src="videos/videolua.mp4" type="video/mp4" />
+    </video>
+    <div class="hero-bg-overlay"></div>
+    <div class="hero-bg-pattern"></div>
+  </div>
+
+  <!-- Floating shapes inspired by EnviShare -->
+  <div class="hero-particles">
+    @for (p of heroParticles; track p.id) {
+    <div class="particle {{ p.class }}" [style.left.%]="p.x" [style.top.%]="p.y" [style.width.px]="p.size"
+      [style.height.px]="p.size"></div>
+    }
+  </div>
+
+  <!-- Decorative floating shapes -->
+  <div class="hero-shape hero-shape--1">
+    <svg viewBox="0 0 200 200" fill="none">
+      <circle cx="100" cy="100" r="80" fill="rgba(46,204,113,0.08)" />
+      <circle cx="100" cy="100" r="50" fill="rgba(46,204,113,0.06)" />
+    </svg>
+  </div>
+  <div class="hero-shape hero-shape--2">
+    <svg viewBox="0 0 150 150" fill="none">
+      <path d="M75 10 L140 75 L75 140 L10 75 Z" fill="rgba(243,156,18,0.06)" />
+    </svg>
+  </div>
+  <div class="hero-shape hero-shape--3">
+    <svg viewBox="0 0 100 100" fill="none">
+      <circle cx="50" cy="50" r="40" fill="rgba(255,255,255,0.05)" />
+    </svg>
+  </div>
+
+  <div class="hero-content">
+
+    <h1 class="hero-title">
+      <span class="hero-title-line">Nông nghiệp Xanh</span>
+      <span class="hero-title-line hero-title-accent">Tương lai Bền vững</span>
+    </h1>
+
+    <p class="hero-subtitle">
+      Nông Thịnh kết nối nông dân với trí tuệ nhân tạo chẩn đoán bệnh lá lúa,
+      đặt lịch phun thuốc, mua bán đất nông nghiệp và tối ưu hóa năng suất canh tác.
+    </p>
+
+    <div class="hero-actions">
+      <button class="btn btn-accent btn-lg" id="btn-explore">
+        Khám phá ngay
+      </button>
+      <button class="btn btn-hero-outline btn-lg" id="btn-download">
+        Tải ứng dụng
+      </button>
+    </div>
+
+  </div>
+
+  <div class="hero-scroll-indicator">
+    <div class="scroll-mouse"></div>
+    <span>Cuộn xuống</span>
+  </div>
+</section>
+
+<!-- ══════ BENEFITS / FEATURES SECTION ══════ -->
+<section class="section benefits section-reveal" id="benefits">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Giải pháp <span class="text-green">toàn diện</span> cho nông dân</h2>
+      <p class="section-desc">
+        Nông Thịnh cung cấp đầy đủ công cụ giúp nông dân quản lý mùa vụ hiệu quả,
+        từ AI phân tích bệnh lúa đến giao dịch đất nông nghiệp.
+      </p>
+    </div>
+
+    <div class="benefits-grid">
+      @for (benefit of benefits; track benefit.title) {
+      <div class="benefit-card">
+        <div class="benefit-icon {{ benefit.iconClass }}">
+          {{ benefit.icon }}
+        </div>
+        <h3>{{ benefit.title }}</h3>
+        <p>{{ benefit.desc }}</p>
+        <a href="#" class="benefit-link">Tìm hiểu thêm →</a>
+      </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ══════ SUPPORT STATS SECTION (EnviShare-inspired) ══════ -->
+<section class="section support-stats section-reveal" id="support-stats">
+  <img src="images/rural-vietnam.png" alt="Nông thôn Việt Nam" class="support-stats-bg" />
+  <div class="support-stats-overlay"></div>
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title section-title--light">
+        Hơn <span class="text-accent-light">10.000 nông dân</span> đã tin tưởng sử dụng Nông Thịnh
+      </h2>
+    </div>
+    <div class="stats-grid">
+      @for (stat of stats; track stat.label) {
+      <div class="stat-card stat-card--glass">
+        <div class="stat-icon">{{ stat.icon }}</div>
+        <div class="stat-number">
+          <span class="count-num" [attr.data-target]="stat.value">0</span>{{ stat.suffix }}
+        </div>
+        <div class="stat-label">{{ stat.label }}</div>
+      </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ══════ EXPERT ADVICE SECTION ══════ -->
+<section class="section expert-advice section-reveal" id="expert-advice">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Lời khuyên từ <span class="text-green">chuyên gia hàng đầu</span></h2>
+      <p class="section-desc">
+        Đội ngũ chuyên gia nông nghiệp dày dặn kinh nghiệm luôn sẵn sàng đồng hành cùng bà con.
+      </p>
+    </div>
+
+    <div class="advice-grid">
+      @for (advice of expertAdvices; track advice.name) {
+      <div class="advice-card">
+        <div class="advice-card-img">
+          <div [style.width.%]="100" [style.height.%]="100" [style.background]="advice.imgBg"></div>
+          <span class="advice-card-category">{{ advice.category }}</span>
+        </div>
+        <div class="advice-card-body">
+          <h3>{{ advice.title }}</h3>
+          <p>{{ advice.content }}</p>
+          <div class="advice-card-author">
+            <div class="advice-card-avatar">{{ advice.avatar }}</div>
+            <div class="advice-card-author-info">
+              <div class="advice-card-author-name">{{ advice.name }}</div>
+              <div class="advice-card-author-role">{{ advice.role }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ══════ FEATURED PROJECTS SECTION (EnviShare-inspired) ══════ -->
+<section class="section projects section-reveal" id="projects">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Dự án <span class="text-green">nông nghiệp công nghệ cao</span></h2>
+      <p class="section-desc">
+        Các dự án đột phá kết hợp công nghệ hiện đại với truyền thống canh tác Việt Nam.
+      </p>
+    </div>
+
+    @for (project of projects; track project.title; let i = $index) {
+    <div class="project-item" [class.project-item--reverse]="i % 2 !== 0">
+      <div class="project-thumb">
+        <img [src]="project.image" [alt]="project.title" />
+      </div>
+      <div class="project-content">
+        <div class="project-meta">
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z" />
+            </svg> {{ project.category }}</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+            </svg> {{ project.location }}</span>
+        </div>
+        <h3>{{ project.title }}</h3>
+        <p>{{ project.desc }}</p>
+        <a href="#" class="btn btn-green">Xem chi tiết →</a>
+      </div>
+    </div>
+    }
+  </div>
+</section>
+
+<!-- ══════ TESTIMONIALS SECTION (EnviShare-inspired) ══════ -->
+<section class="section testimonials section-reveal" id="testimonials">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Nông dân <span class="text-green">nói gì về chúng tôi</span></h2>
+      <p class="section-desc">
+        Hàng nghìn nông dân đã trải nghiệm và tin tưởng Nông Thịnh.
+      </p>
+    </div>
+
+    <div class="testimonials-slider" id="testimonials-slider">
+      <div class="testimonials-track" id="testimonials-track">
+        @for (testimonial of testimonials; track testimonial.name) {
+        <div class="testimonial-card">
+          <div class="testimonial-header">
+            <div class="testimonial-avatar-wrap">
+              <div class="testimonial-avatar" [style.background]="testimonial.avatarBg">
+                {{ testimonial.initials }}
+              </div>
+            </div>
+            <div class="testimonial-info">
+              <h4>{{ testimonial.name }}</h4>
+              <p>{{ testimonial.role }}</p>
+            </div>
+            <div class="testimonial-quote-icon">❝</div>
+          </div>
+          <div class="testimonial-body">
+            <p>{{ testimonial.content }}</p>
+            <div class="testimonial-stars">
+              @for (star of [1,2,3,4,5]; track star) {
+              <span class="star" [class.star--filled]="star <= testimonial.rating">★</span>
+              }
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="testimonials-dots">
+      @for (testimonial of testimonials; track testimonial.name; let i = $index) {
+      <button class="testimonial-dot" [class.active]="i === activeTestimonial" (click)="goToTestimonial(i)"></button>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ══════ TOP PESTICIDES SECTION ══════ -->
+<section class="section pesticides section-reveal" id="pesticides">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Top thuốc <span class="text-green">bảo vệ thực vật</span> được tin dùng</h2>
+      <p class="section-desc">
+        Những sản phẩm thuốc BVTV chất lượng cao, được hàng nghìn nông dân tin tưởng sử dụng.
+      </p>
+    </div>
+
+    <div class="pesticides-grid">
+      @for (product of pesticides; track product.name) {
+      <div class="pesticide-card">
+        @if (product.badge) {
+        <span class="pesticide-card-badge">{{ product.badge }}</span>
+        }
+        <div class="pesticide-card-visual" [style.background]="product.bgGradient">
+          <div class="pesticide-card-icon">{{ product.icon }}</div>
+        </div>
+        <div class="pesticide-card-body">
+          <h3>{{ product.name }}</h3>
+          <div class="pesticide-card-brand">{{ product.brand }}</div>
+          <p class="pesticide-card-desc">{{ product.desc }}</p>
+          <div class="pesticide-rating">
+            <div class="pesticide-rating-bar">
+              <div class="rating-fill" [style.width.%]="0" [attr.data-rating]="product.rating"></div>
+            </div>
+            <span class="pesticide-rating-value">{{ product.rating }}%</span>
+          </div>
+          <div class="pesticide-trust">
+            Được tin dùng bởi <strong>{{ product.users }}</strong> nông dân
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ══════ WHY CHOOSE US SECTION ══════ -->
+<section class="section why-us section-reveal" id="why-us">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title section-title--light">
+        Nông Thịnh — <span class="text-accent-light">Đồng hành cùng nông dân</span>
+      </h2>
+      <p class="section-desc section-desc--light">
+        Chúng tôi không chỉ là nền tảng công nghệ, mà còn là người bạn đồng hành
+        đáng tin cậy của hàng nghìn nông dân Việt Nam.
+      </p>
+    </div>
+
+    <div class="features-grid">
+      @for (feature of features; track feature.title) {
+      <div class="feature-card">
+        <div class="feature-card-icon">{{ feature.icon }}</div>
+        <h3>{{ feature.title }}</h3>
+        <p>{{ feature.desc }}</p>
+      </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ══════ CTA SECTION ══════ -->
+<section class="section cta-section" id="cta">
+  <div class="container">
+    <div class="cta-content">
+      <h2>Sẵn sàng nâng tầm canh tác?</h2>
+      <p>Đăng ký miễn phí ngay hôm nay và trải nghiệm nền tảng nông nghiệp thông minh hàng đầu Việt Nam.</p>
+      <div class="cta-actions">
+        <button class="btn btn-accent btn-lg">Tham gia ngay</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ FOOTER ══════ -->
+<footer class="footer" id="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <!-- Brand -->
+      <div class="footer-col">
+        <a class="nav-logo footer-logo" href="#">
+          <span class="nav-logo-icon">
+            <img src="images/nongthinh_logo.png" alt="Nông Thịnh Logo"
+              style="width: 100%; height: 100%; object-fit: contain;" />
+          </span>
+          <span class="nav-logo-text">Nông Thịnh</span>
+        </a>
+        <p class="footer-brand-desc">
+          Nền tảng nông nghiệp thông minh hàng đầu Việt Nam, kết nối nông dân với công nghệ
+          AI tiên tiến để nâng cao năng suất và chất lượng canh tác.
+        </p>
+        <div class="footer-socials">
+          <a class="footer-social" href="#" aria-label="Facebook">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12c0-5.523-4.477-10-10-10z" />
+            </svg>
+          </a>
+          <a class="footer-social" href="#" aria-label="Phone">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+            </svg>
+          </a>
+          <a class="footer-social" href="#" aria-label="Email">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path
+                d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="footer-col">
+        <h4>Liên kết nhanh</h4>
+        <div class="footer-links">
+          <a href="#">Trang chủ</a>
+          <a href="#">Về chúng tôi</a>
+          <a href="#">Liên hệ</a>
+          <a href="#">Điều khoản sử dụng</a>
+          <a href="#">Chính sách bảo mật</a>
+        </div>
+      </div>
+
+      <!-- Services -->
+      <div class="footer-col">
+        <h4>Dịch vụ</h4>
+        <div class="footer-links">
+          <a href="#">Tư vấn cây trồng</a>
+          <a href="#">Đặt lịch phun thuốc</a>
+          <a href="#">AI phân tích bệnh lúa</a>
+          <a href="#">Mua bán đất nông nghiệp</a>
+          <a href="#">Công cụ cân lúa</a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4>Liên hệ</h4>
+        <div class="footer-contact-item">
+          <span class="footer-contact-icon"></span>
+          <div class="footer-contact-text">
+            <strong>Email</strong>
+            nongthinh.official&#64;gmail.com
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer bottom -->
+    <div class="footer-bottom">
+      <div class="footer-copyright">
+        © 2026 Nông Thịnh. Bảo lưu mọi quyền.
+      </div>
+      <div class="footer-bottom-links">
+        <a href="#">Điều khoản</a>
+        <a href="#">Bảo mật</a>
+        <a href="#">Sitemap</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ══════ SCROLL TO TOP ══════ -->
+<button class="scroll-to-top" id="scroll-to-top" (click)="scrollToTop()" aria-label="Cuộn lên đầu trang">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 15l-6-6-6 6" />
+  </svg>
+</button>

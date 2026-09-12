@@ -1,0 +1,20 @@
+spring:
+  security:
+    api-key:
+      header-name: X-API-KEY
+      current-service-key: ${AGRI_CATALOG_SERVICE_API_KEY:agri-catalog}
+      clients:
+        file-service:
+          url: ${FILE_SERVICE_URL:http://file-service:9095/files}
+          api-key: ${FILE_SERVICE_API_KEY:file}
+        rice-disease-diagnosis-service:
+          url: ${RICE_DISEASE_DIAGNOSIS_SERVICE_URL:http://rice-disease-diagnosis-service:9099/diagnosis}
+          api-key: ${RICE_DISEASE_DIAGNOSIS_SERVICE_API_KEY:diagnosis}
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: ${INTERNAL_CLIENT_CONNECT_TIMEOUT_MS:2000}
+            readTimeout: ${INTERNAL_CLIENT_READ_TIMEOUT_MS:10000}
+            followRedirects: false

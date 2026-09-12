@@ -1,0 +1,314 @@
+================================================================================
+PROFILE SERVICE - API ENDPOINTS
+================================================================================
+
+Base URL (qua API Gateway):  http://localhost:8888/api/v1/profile
+Base URL (trực tiếp service): http://localhost:9092/profile
+Context path (dev): /profile
+Port (dev): 9092
+
+--------------------------------------------------------------------------------
+HEADERS
+--------------------------------------------------------------------------------
+Authorization: Bearer <access_token>
+Content-Type: application/json    (chỉ bắt buộc khi có request body)
+
+--------------------------------------------------------------------------------
+COOKIES
+--------------------------------------------------------------------------------
+Không bắt buộc. Service dùng OAuth2 Resource Server (JWT qua header Authorization).
+
+--------------------------------------------------------------------------------
+RESPONSE FORMAT
+--------------------------------------------------------------------------------
+Tất cả endpoint bọc trong ApiResponse:
+{
+  "code": "string | null",
+  "message": "string",
+  "result": <T> | null
+}
+
+HTTP status:
+- GET thành công     : 200 OK
+- POST tạo mới       : 201 Created
+- PATCH cập nhật     : 200 OK
+
+================================================================================
+1. FARMER PROFILES  (/farmer-profiles)
+================================================================================
+
+--- GET /farmer-profiles/me ---
+Mô tả   : Lấy profile nông dân của user hiện tại
+Auth    : ROLE_FARMER
+Response: ApiResponse<FarmerProfileView>
+
+--- POST /farmer-profiles/me ---
+Mô tả   : Tạo profile nông dân cho user hiện tại
+Auth    : ROLE_FARMER
+Body    : MyFarmerProfileCreationRequest
+Response: 201 Created, ApiResponse<Void>
+
+--- PATCH /farmer-profiles/me ---
+Mô tả   : Cập nhật thông tin profile nông dân
+Auth    : ROLE_FARMER
+Body    : MyFarmerProfileUpdateRequest
+Response: ApiResponse<FarmerProfileView>
+
+--- PATCH /farmer-profiles/me/phone ---
+Mô tả   : Cập nhật số điện thoại
+Auth    : ROLE_FARMER
+Body    : { "phone": "string" }   // 10 chữ số
+Response: ApiResponse<FarmerProfileView>
+
+--- PATCH /farmer-profiles/me/avatar ---
+Mô tả   : Cập nhật avatar URL (upload file qua file-service trước)
+Auth    : ROLE_FARMER
+Body    : { "url": "string" }
+Response: ApiResponse<FarmerProfileView>
+
+--- PATCH /farmer-profiles/me/address ---
+Mô tả   : Cập nhật địa chỉ
+Auth    : ROLE_FARMER
+Body    : AddressUpdateRequest { provinceId, communeId, addressDetail }
+Response: ApiResponse<FarmerProfileView>
+
+--- GET /farmer-profiles/users/{userId} ---
+Mô tả   : Lấy profile công khai theo userId
+Auth    : Public (theo SecurityConfig)
+Path    : userId (UUID)
+Response: ApiResponse<FarmerProfilePublicView>
+
+--- GET /farmer-profiles/{id} ---
+Mô tả   : Lấy profile công khai theo profile ID
+Auth    : Public
+Path    : id (UUID)
+Response: ApiResponse<FarmerProfilePublicView>
+
+================================================================================
+2. BRAND PROFILES  (/brand-profiles)
+================================================================================
+
+--- GET /brand-profiles/me ---
+Mô tả   : Lấy profile thương hiệu của user hiện tại
+Auth    : ROLE_BRAND
+Response: ApiResponse<BrandProfileView>
+
+--- POST /brand-profiles/me ---
+Mô tả   : Tạo profile thương hiệu
+Auth    : ROLE_BRAND
+Body    : MyBrandProfileCreationRequest
+Response: 201 Created, ApiResponse<Void>
+
+--- PATCH /brand-profiles/me ---
+Mô tả   : Cập nhật thông tin profile thương hiệu
+Auth    : ROLE_BRAND
+Body    : MyBrandProfileUpdateRequest
+Response: ApiResponse<BrandProfileView>
+
+--- PATCH /brand-profiles/me/phone ---
+Auth    : ROLE_BRAND
+Body    : { "phone": "string" }
+Response: ApiResponse<BrandProfileView>
+
+--- PATCH /brand-profiles/me/logo ---
+Auth    : ROLE_BRAND
+Body    : { "url": "string" }
+Response: ApiResponse<BrandProfileView>
+
+--- PATCH /brand-profiles/me/banner ---
+Auth    : ROLE_BRAND
+Body    : { "url": "string" }
+Response: ApiResponse<BrandProfileView>
+
+--- PATCH /brand-profiles/me/website ---
+Auth    : ROLE_BRAND
+Body    : { "url": "string" }
+Response: ApiResponse<BrandProfileView>
+
+--- PATCH /brand-profiles/me/office-address ---
+Auth    : ROLE_BRAND
+Body    : AddressUpdateRequest
+Response: ApiResponse<BrandProfileView>
+
+--- PATCH /brand-profiles/me/representative-phone ---
+Auth    : ROLE_BRAND
+Body    : { "phone": "string" }
+Response: ApiResponse<BrandProfileView>
+
+--- PATCH /brand-profiles/me/representative-email ---
+Auth    : ROLE_BRAND
+Body    : { "email": "string" }
+Response: ApiResponse<BrandProfileView>
+
+--- GET /brand-profiles/me/documents ---
+Mô tả   : Lấy giấy phép kinh doanh mới nhất của thương hiệu hiện tại
+Auth    : ROLE_BRAND
+Response: ApiResponse<BrandDocumentView>  (result = null nếu chưa upload)
+
+--- POST /brand-profiles/me/documents ---
+Mô tả   : Upload giấy phép kinh doanh (URL từ file-service)
+Auth    : ROLE_BRAND
+Body    : { "businessLicenseUrl": "string" }
+Response: ApiResponse<BrandDocumentView>
+
+--- POST /brand-profiles/me/documents-submitted ---
+Mô tả   : Nộp hồ sơ xét duyệt thương hiệu
+Auth    : ROLE_BRAND
+Response: ApiResponse<Void>
+
+--- GET /brand-profiles/users/{userId} ---
+Mô tả   : Lấy profile công khai theo userId
+Path    : userId (UUID)
+Response: ApiResponse<BrandProfilePublicView>
+
+--- GET /brand-profiles/{id} ---
+Mô tả   : Lấy profile công khai theo profile ID
+Path    : id (UUID)
+Response: ApiResponse<BrandProfilePublicView>
+
+================================================================================
+3. ADMIN PROFILES  (/admin-profiles)
+================================================================================
+
+--- GET /admin-profiles/me ---
+Auth    : ROLE_ADMIN
+Response: ApiResponse<AdminProfileView>
+
+--- POST /admin-profiles/me ---
+Auth    : ROLE_ADMIN
+Body    : MyAdminProfileCreationRequest
+Response: 201 Created, ApiResponse<Void>
+
+--- PATCH /admin-profiles/me ---
+Auth    : ROLE_ADMIN
+Body    : MyAdminProfileUpdateRequest
+Response: ApiResponse<AdminProfileView>
+
+--- PATCH /admin-profiles/me/phone ---
+Auth    : ROLE_ADMIN
+Body    : { "phone": "string" }
+Response: ApiResponse<AdminProfileView>
+
+--- PATCH /admin-profiles/me/avatar ---
+Auth    : ROLE_ADMIN
+Body    : { "url": "string" }
+Response: ApiResponse<AdminProfileView>
+
+--- GET /admin-profiles/users/{userId} ---
+Auth    : ROLE_ADMIN
+Path    : userId (UUID)
+Response: ApiResponse<AdminProfilePublicView>
+
+--- GET /admin-profiles/{id} ---
+Auth    : ROLE_ADMIN
+Path    : id (UUID)
+Response: ApiResponse<AdminProfilePublicView>
+
+================================================================================
+4. ADMIN — QUẢN LÝ PROFILE  (/admin)
+================================================================================
+
+Tất cả endpoint yêu cầu ROLE_ADMIN.
+
+--- PATCH /admin/farmer-profiles/{id}/status ---
+Mô tả   : Cập nhật trạng thái profile nông dân
+Path    : id (UUID)
+Body    : ProfileStatusUpdateRequest
+Response: ApiResponse<FarmerProfileView>
+
+--- PATCH /admin/brand-profiles/{id}/status ---
+Mô tả   : Cập nhật trạng thái profile thương hiệu
+Path    : id (UUID)
+Body    : BrandProfileStatusUpdateRequest
+Response: ApiResponse<BrandProfileView>
+
+--- PATCH /admin/admin-profiles/{id}/status ---
+Mô tả   : Cập nhật trạng thái profile admin
+Path    : id (UUID)
+Body    : ProfileStatusUpdateRequest
+Response: ApiResponse<AdminProfileView>
+
+================================================================================
+5. ADMIN — XÉT DUYỆT THƯƠNG HIỆU  (/admin/brand-profiles)
+================================================================================
+
+--- GET /admin/brand-profiles ---
+Mô tả   : Danh sách profile thương hiệu (lọc theo status)
+Auth    : brand:approve hoặc user:read
+Query   : status (tùy chọn, phân tách bằng dấu phẩy)
+          Mặc định: PENDING_APPROVAL, UNDER_REVIEW, NEEDS_REVISION, READY_FOR_FINAL_REVIEW
+Response: ApiResponse<List<BrandProfileView>>
+
+--- GET /admin/brand-profiles/pending ---
+Mô tả   : Danh sách hồ sơ đang chờ xét duyệt
+Auth    : brand:approve
+Response: ApiResponse<List<BrandProfileView>>
+
+--- GET /admin/brand-profiles/{id} ---
+Mô tả   : Chi tiết hồ sơ thương hiệu (admin view)
+Auth    : brand:approve hoặc user:read
+Path    : id (UUID)
+Response: ApiResponse<AdminBrandProfileDetailView>
+
+--- POST /admin/brand-profiles/{id}/reject-early ---
+Mô tả   : Từ chối sớm hồ sơ thương hiệu
+Auth    : brand:approve
+Path    : id (UUID)
+Body    : { "rejectionReason": "string" }
+Response: ApiResponse<BrandProfileView>
+
+--- POST /admin/brand-profiles/{id}/verifications ---
+Mô tả   : Ghi log xác minh điện thoại thương hiệu
+Auth    : brand:verify
+Path    : id (UUID)
+Body    :
+{
+  "phoneCalled": "string",
+  "result": "string",
+  "note": "string"
+}
+Response: ApiResponse<BrandVerificationLogView>
+
+================================================================================
+6. INTERNAL APIs  (service-to-service, ROLE_INTERNAL)
+================================================================================
+
+--- GET /internal/farmer-profiles/users/{userId} ---
+Response: ApiResponse<FarmerProfileView>
+
+--- GET /internal/admin-profiles/users/{userId} ---
+Response: ApiResponse<AdminProfileView>
+
+--- GET /internal/brand-profiles/{id} ---
+Response: ApiResponse<BrandProfileView>
+
+--- GET /internal/brand-profiles/users/{userId} ---
+Response: ApiResponse<BrandProfileView>
+
+--- GET /internal/brand-profiles/{id}/detail ---
+Response: ApiResponse<AdminBrandProfileDetailView>
+
+--- PATCH /internal/brand-profiles/{id}/status ---
+Body    : BrandProfileStatusUpdateRequest
+Response: ApiResponse<BrandProfileView>
+
+--- POST /internal/brand-profiles/{id}/verifications ---
+Body    : InternalCreateBrandVerificationRequest
+          { adminUserId, phoneCalled, result, note }
+Response: ApiResponse<BrandVerificationLogView>
+
+--- POST /internal/brand-profiles/{id}/documents-requested ---
+Body    : { "actorUserId": "UUID" }
+Response: ApiResponse<Void>
+
+--- POST /internal/brand-profiles/{id}/documents/review ---
+Body    : InternalReviewBrandDocumentRequest
+          { adminUserId, documentsOk, revisionReason }
+Response: ApiResponse<BrandProfileView>
+
+================================================================================
+GHI CHÚ
+================================================================================
+- Upload avatar/logo/banner: upload qua file-service trước, sau đó PATCH URL tương ứng.
+- Internal API dùng JWT ROLE_INTERNAL hoặc X-API-KEY (tùy cấu hình service caller).
+- API Gateway strip header X-API-KEY khi route từ client.

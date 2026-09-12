@@ -1,0 +1,19 @@
+:host { position: relative; display: inline-flex; }
+button { font: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: .5; }
+button:focus-visible { outline: 2px solid #15803d; outline-offset: 3px; }
+.notification-button { position: relative; display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid #e2e8e4; border-radius: 50%; background: white; }
+.bell { width: 21px; height: 21px; background: #286440; mask: url('/icons/community/bell.png') center / contain no-repeat; }
+i { position: absolute; right: -5px; top: -5px; min-width: 19px; padding: 2px 4px; border-radius: 12px; color: white; background: #d94444; font: 600 11px sans-serif; }
+.notification-panel { position: absolute; right: 0; top: 52px; width: min(370px, calc(100vw - 24px)); border: 1px solid #dfe8e1; border-radius: 16px; background: white; box-shadow: 0 12px 40px #173d2426; z-index: 100; overflow: hidden; }
+header { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid #edf0ed; }
+header button, .load-more, .mark-read { border: 0; background: transparent; color: #247440; }
+.notification-list { max-height: min(460px, 65vh); overflow-y: auto; }
+article { display: flex; border-bottom: 1px solid #edf0ed; }
+.unread { background: #f0f8f1; }
+.notification-content { display: grid; gap: 8px; flex: 1; text-align: left; padding: 16px; background: transparent; border: 0; color: #243b2a; line-height: 1.5; }
+time { font-size: 12px; color: #697a6d; }
+.mark-read { padding: 12px; }
+p { margin: 0; padding: 18px; font-size: 14px; color: #617166; }
+.load-more { width: 100%; padding: 14px; }
+.skeleton { margin: 16px; height: 48px; border-radius: 8px; background: linear-gradient(90deg, #edf1ed, #f7f9f7, #edf1ed); }

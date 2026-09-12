@@ -1,0 +1,677 @@
+<article class="post-card" [class.post-card--categorized]="post.category !== null" [class.post-card--clickable]="!detailMode" (click)="onCardClick($event)">
+  @if (post.category) {
+    <span class="category-tag" [attr.data-category]="post.category">
+      {{ categoryLabel() }}
+    </span>
+  }
+
+  <header class="post-header">
+    <app-user-avatar [name]="post.author.name" [avatarUrl]="post.author.avatarUrl" [size]="46" />
+    <div class="author-copy">
+      <div class="author-name-row">
+        <strong>{{ post.author.name }}</strong>
+        @if (post.author.verified) {
+          <span
+            class="verified"
+            role="img"
+            aria-label="Thương hiệu đã xác minh"
+            title="Thương hiệu đã xác minh"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+              <circle cx="10" cy="10" r="10" fill="currentColor" />
+              <path
+                d="m5.7 10.2 2.7 2.7 5.9-6"
+                fill="none"
+                stroke="white"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+            </svg>
+          </span>
+        }
+      </div>
+      @if (post.author.location || post.author.roleLabel) {
+        <span class="author-meta">
+          @if (post.author.location) {
+            {{ post.author.location }}
+          }
+          @if (post.author.location && post.author.roleLabel) {
+            <i aria-hidden="true">·</i>
+          }
+          @if (post.author.roleLabel) {
+            {{ post.author.roleLabel }}
+          }
+        </span>
+      }
+      <a class="post-detail-link" [href]="'/app/community/' + post.id" (click)="openDetails($event)" aria-label="Xem chi tiết bài viết">
+        <small>{{ post.createdAt }} <i aria-hidden="true">·</i> Công khai</small>
+      </a>
+    </div>
+    <div class="post-menu">
+      <button
+        class="post-menu-trigger"
+        type="button"
+        aria-label="Mở tùy chọn bài viết"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="postMenuOpen()"
+        [attr.aria-controls]="'post-menu-' + post.id"
+        (click)="togglePostMenu()"
+      >
+        <span aria-hidden="true">•••</span>
+      </button>
+
+      @if (postMenuOpen()) {
+        <div [id]="'post-menu-' + post.id" class="post-menu__panel" role="menu">
+          @if (canDeletePost()) {
+            <button
+              class="delete-post-button"
+              type="button"
+              role="menuitem"
+              [disabled]="post.deletePending"
+              [attr.aria-busy]="post.deletePending"
+              (click)="openDeleteDialog()"
+            >
+              <img src="/icons/community/trash.png" alt="" aria-hidden="true" />
+              <span>{{ post.deletePending ? 'Đang xóa...' : 'Xóa bài viết' }}</span>
+            </button>
+          } @else {
+            <button
+              class="report-post-button"
+              type="button"
+              role="menuitem"
+              [disabled]="!canReportPost() || post.reportPending"
+              (click)="openReportDialog()"
+            >
+              <img src="/icons/community/hexagon-exclamation.png" alt="" aria-hidden="true" />
+              <span>{{ post.reported ? 'Đã báo cáo' : 'Báo cáo bài viết' }}</span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </header>
+
+  <div class="post-content">
+    <p>
+      @if (post.topic) {
+        <span class="topic-tag"># {{ post.topic }}</span>
+      }
+      <span class="post-content-text">{{ post.content }}</span>
+    </p>
+  </div>
+
+  @if (post.imageUrls.length) {
+    <div
+      class="post-image-grid"
+      [attr.data-count]="post.imageUrls.length >= 4 ? 4 : post.imageUrls.length"
+    >
+      @for (imageUrl of visibleImageUrls(); track $index; let index = $index; let last = $last) {
+        <button
+          class="post-image-cell"
+          type="button"
+          [attr.aria-label]="'Mở ảnh ' + (index + 1) + ' trong ' + post.imageUrls.length + ' ảnh'"
+          title="Bấm để phóng to ảnh"
+          (click)="openImage(index)"
+        >
+          <img
+            [src]="imageUrl"
+            [alt]="
+              post.topic
+                ? 'Ảnh ' + (index + 1) + ' về ' + post.topic
+                : 'Ảnh bài viết ' + (index + 1)
+            "
+          />
+          @if (last && remainingImageCount() > 0) {
+            <span class="post-image-more" aria-hidden="true"> +{{ remainingImageCount() }} </span>
+          }
+        </button>
+      }
+    </div>
+  }
+
+  @if (post.videoUrl) {
+    <div class="post-video-wrap">
+      <video [src]="post.videoUrl" controls preload="metadata">
+        Trình duyệt của bạn không hỗ trợ phát video.
+      </video>
+    </div>
+  }
+
+  <div class="post-stats">
+    <button type="button" class="reaction-summary" [disabled]="post.reactionTotal === 0" (click)="reactionUsersRequested.emit()" aria-label="Xem danh sách người bày tỏ cảm xúc">
+      @if (post.reactionTotal > 0) {
+        <span class="reaction-symbols" aria-hidden="true">
+          @for (reaction of activeReactions(); track reaction.type) {
+            <i [title]="reaction.label + ': ' + post.reactionCounts[reaction.type]">
+              {{ reaction.icon }}
+            </i>
+          }
+        </span>
+        {{ post.reactionTotal }} lượt bày tỏ
+      } @else {
+        Chưa có cảm xúc
+      }
+    </button>
+    <span> {{ post.commentRootTotal }} luồng bình luận · {{ post.shares }} lượt chia sẻ </span>
+  </div>
+
+  <div class="post-actions" aria-label="Tương tác bài viết">
+    <div
+      class="reaction-menu"
+      [class.active]="post.currentReaction"
+      [class.disabled]="!interactionsEnabled || post.reactionPending"
+    >
+      <button
+        type="button"
+        class="reaction-trigger"
+        [disabled]="!interactionsEnabled || post.reactionPending"
+        [attr.aria-label]="
+          (post.currentReaction
+            ? 'Bỏ cảm xúc ' + reactionLabel(post.currentReaction)
+            : 'Thích bài viết') + '. Nhấn giữ để chọn cảm xúc khác.'
+        "
+        [attr.aria-busy]="post.reactionPending"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="reactionPickerOpen()"
+        title="Nhấn để thích, nhấn giữ để chọn cảm xúc"
+        (pointerdown)="onReactionPointerDown($event)"
+        (pointerup)="onReactionPointerEnd()"
+        (pointercancel)="onReactionPointerEnd()"
+        (pointerleave)="onReactionPointerEnd()"
+        (contextmenu)="$event.preventDefault()"
+        (click)="onReactionClick($event)"
+      >
+        @if (post.currentReaction) {
+          <span aria-hidden="true">{{ reactionIcon(post.currentReaction) }}</span>
+        } @else {
+          <span
+            class="community-icon post-action-icon"
+            style="--community-icon: url('/icons/community/social-network.png')"
+            aria-hidden="true"
+          ></span>
+        }
+        {{ reactionLabel(post.currentReaction) }}
+      </button>
+      @if (reactionPickerOpen()) {
+        <div class="reaction-picker" role="menu" aria-label="Chọn cảm xúc">
+          @for (reaction of reactionOptions; track reaction.type) {
+            <button
+              type="button"
+              role="menuitemradio"
+              [class.active]="post.currentReaction === reaction.type"
+              [attr.aria-checked]="post.currentReaction === reaction.type"
+              [title]="
+                post.currentReaction === reaction.type
+                  ? 'Bỏ ' + reaction.label.toLocaleLowerCase('vi-VN')
+                  : reaction.label
+              "
+              (click)="selectReaction(reaction.type)"
+            >
+              <span aria-hidden="true">{{ reaction.icon }}</span>
+              <small>{{ reaction.label }}</small>
+            </button>
+          }
+        </div>
+      }
+    </div>
+    <button
+      type="button"
+      [disabled]="!interactionsEnabled"
+      [attr.aria-expanded]="commentsExpanded"
+      (click)="toggleComments()"
+    >
+      <span
+        class="community-icon post-action-icon"
+        style="--community-icon: url('/icons/community/comment-alt.png')"
+        aria-hidden="true"
+      ></span>
+      Bình luận
+    </button>
+    <button
+      type="button"
+      class="share-action"
+      [disabled]="!interactionsEnabled || post.sharePending"
+      [attr.aria-busy]="post.sharePending"
+      (click)="shareRequested.emit()"
+    >
+      <span
+        class="community-icon post-action-icon"
+        style="--community-icon: url('/icons/community/paper-plane.png')"
+        aria-hidden="true"
+      ></span>
+      {{ post.sharePending ? 'Đang chia sẻ' : 'Chia sẻ' }}
+    </button>
+    <button
+      type="button"
+      class="save-action"
+      [class.active]="post.saved"
+      [attr.aria-pressed]="post.saved"
+      [attr.aria-label]="post.saved ? 'Bỏ lưu bài viết' : 'Lưu bài viết'"
+      [attr.aria-busy]="post.bookmarkPending"
+      [disabled]="!interactionsEnabled || post.bookmarkPending"
+      (click)="bookmarkToggled.emit()"
+    >
+      <span
+        class="community-icon post-action-icon"
+        style="--community-icon: url('/icons/community/bookmark.png')"
+        aria-hidden="true"
+      ></span>
+      <span class="save-label">{{ post.saved ? 'Đã lưu' : 'Lưu' }}</span>
+    </button>
+  </div>
+
+  @if (post.reactionError) {
+    <p class="interaction-error" role="alert">{{ post.reactionError }}</p>
+  }
+
+  @if (post.shareError) {
+    <p class="interaction-error" role="alert">{{ post.shareError }}</p>
+  }
+
+  @if (post.bookmarkError) {
+    <p class="interaction-error" role="alert">{{ post.bookmarkError }}</p>
+  }
+
+  @if (commentsExpanded) {
+    <section class="comments" [attr.aria-label]="'Bình luận bài viết của ' + post.author.name">
+      @if (detailMode) {
+        <h2 class="comments-title">Bình luận ({{ post.commentRootTotal }})</h2>
+      }
+      @if (post.commentsLoading && !post.commentsLoaded) {
+        <div class="comments-state" role="status">Đang tải bình luận...</div>
+      } @else {
+        @if (post.commentsError) {
+          <div class="comments-state comments-state--error" role="alert">
+            <span>{{ post.commentsError }}</span>
+            <button type="button" (click)="retryComments()">Thử lại</button>
+          </div>
+        }
+
+        @for (comment of post.comments; track comment.id) {
+          <div class="comment-thread">
+            <div class="comment-row">
+              <app-user-avatar
+                [name]="comment.author.name"
+                [avatarUrl]="comment.author.avatarUrl"
+                [size]="32"
+              />
+              <div class="comment-copy">
+                <div class="comment-bubble">
+                  <strong>
+                    {{ comment.author.name }}
+                  </strong>
+                  @if (editingCommentId === comment.id) {
+                    <form class="inline-comment-form" (ngSubmit)="submitEdit(comment.id)">
+                      <input
+                        type="text"
+                        [name]="'edit-' + comment.id"
+                        [(ngModel)]="editText"
+                        maxlength="2000"
+                        [disabled]="post.commentMutationPending"
+                        aria-label="Sửa bình luận"
+                      />
+                      <button type="submit" [disabled]="!editText.trim()">Lưu</button>
+                      <button type="button" (click)="cancelEdit()">Hủy</button>
+                    </form>
+                  } @else {
+                    <p>{{ comment.content }}</p>
+                    <small>
+                      {{ comment.createdAt }}
+                      @if (comment.edited) {
+                        · đã sửa
+                      }
+                    </small>
+                  }
+                </div>
+                <div class="comment-actions">
+                  <button
+                    type="button"
+                    [disabled]="post.commentMutationPending"
+                    (click)="startReply(comment)"
+                  >
+                    Trả lời
+                  </button>
+                  @if (isOwn(comment)) {
+                    <button
+                      type="button"
+                      [disabled]="post.commentMutationPending"
+                      (click)="startEdit(comment)"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      type="button"
+                      [disabled]="post.commentMutationPending"
+                      (click)="requestDelete(comment)"
+                    >
+                      Xóa
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+
+            @for (reply of comment.replies; track reply.id) {
+              <div class="comment-row comment-row--reply">
+                <app-user-avatar
+                  [name]="reply.author.name"
+                  [avatarUrl]="reply.author.avatarUrl"
+                  [size]="28"
+                />
+                <div class="comment-copy">
+                  <div class="comment-bubble">
+                    <strong>
+                      {{ reply.author.name }}
+                    </strong>
+                    @if (editingCommentId === reply.id) {
+                      <form class="inline-comment-form" (ngSubmit)="submitEdit(reply.id)">
+                        <input
+                          type="text"
+                          [name]="'edit-' + reply.id"
+                          [(ngModel)]="editText"
+                          maxlength="2000"
+                          [disabled]="post.commentMutationPending"
+                          aria-label="Sửa phản hồi"
+                        />
+                        <button type="submit" [disabled]="!editText.trim()">Lưu</button>
+                        <button type="button" (click)="cancelEdit()">Hủy</button>
+                      </form>
+                    } @else {
+                      <p>{{ reply.content }}</p>
+                      <small>
+                        {{ reply.createdAt }}
+                        @if (reply.edited) {
+                          · đã sửa
+                        }
+                      </small>
+                    }
+                  </div>
+                  @if (isOwn(reply)) {
+                    <div class="comment-actions">
+                      <button
+                        type="button"
+                        [disabled]="post.commentMutationPending"
+                        (click)="startEdit(reply)"
+                      >
+                        Sửa
+                      </button>
+                      <button
+                        type="button"
+                        [disabled]="post.commentMutationPending"
+                        (click)="requestDelete(reply)"
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (replyingTo === comment.id) {
+              <form class="reply-composer" (ngSubmit)="submitReply(comment.id)">
+                <label class="sr-only" [for]="'reply-' + comment.id">Viết phản hồi</label>
+                <input
+                  [id]="'reply-' + comment.id"
+                  type="text"
+                  [name]="'reply-' + comment.id"
+                  [(ngModel)]="replyText"
+                  maxlength="2000"
+                  [disabled]="post.commentMutationPending"
+                  [placeholder]="'Trả lời ' + comment.author.name + '...'"
+                  autofocus
+                />
+                <button type="submit" [disabled]="!replyText.trim()">Gửi</button>
+                <button type="button" (click)="cancelReply()">Hủy</button>
+              </form>
+            }
+          </div>
+        } @empty {
+          @if (post.commentsLoaded) {
+            <div class="comments-state">Chưa có bình luận. Hãy bắt đầu cuộc trò chuyện.</div>
+          }
+        }
+
+        @if (post.commentsHasNext) {
+          <button
+            type="button"
+            class="more-comments"
+            [disabled]="post.commentsLoading"
+            (click)="loadMoreComments()"
+          >
+            {{ post.commentsLoading ? 'Đang tải...' : 'Xem thêm bình luận' }}
+          </button>
+        }
+
+        @if (post.commentsLoaded) {
+          @if (post.commentMutationError) {
+            <p class="interaction-error interaction-error--comment" role="alert">
+              {{ post.commentMutationError }}
+            </p>
+          }
+
+          <form class="comment-composer" (ngSubmit)="submitComment()">
+            <app-user-avatar
+              [name]="currentUserName"
+              [avatarUrl]="currentUserAvatarUrl"
+              [size]="34"
+            />
+            <label class="sr-only" [for]="'comment-' + post.id">Viết bình luận</label>
+            <input
+              [id]="'comment-' + post.id"
+              type="text"
+              name="commentText"
+              [(ngModel)]="commentText"
+              [disabled]="!interactionsEnabled || post.commentMutationPending"
+              maxlength="2000"
+              placeholder="Viết bình luận hữu ích..."
+            />
+            <button
+              type="submit"
+              [disabled]="!commentText.trim() || post.commentMutationPending"
+              aria-label="Gửi bình luận"
+            >
+              @if (post.commentMutationPending) {
+                <span aria-hidden="true">…</span>
+              } @else {
+                <span
+                  class="community-icon send-icon"
+                  style="--community-icon: url('/icons/community/paper-plane.png')"
+                  aria-hidden="true"
+                ></span>
+              }
+            </button>
+          </form>
+        }
+      }
+    </section>
+  }
+
+  @if (deleteDialogOpen()) {
+    <app-confirm-dialog
+      title="Xóa bài viết?"
+      message="Bài viết sẽ bị xóa. Bạn sẽ không thể hoàn tác."
+      confirmLabel="Xóa bài viết"
+      busyLabel="Đang xóa..."
+      iconUrl="/icons/community/trash.png"
+      [busy]="post.deletePending"
+      [error]="post.deleteError"
+      (confirmed)="confirmDelete()"
+      (dismissed)="closeDeleteDialog()"
+    />
+  }
+
+  @if (activeImageUrl(); as imageUrl) {
+    <div class="image-lightbox-backdrop" (click)="closeImage()">
+      <section
+        #imageLightbox
+        class="image-lightbox"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="'post-image-lightbox-title-' + post.id"
+        tabindex="-1"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="image-lightbox__header">
+          <div>
+            <strong [id]="'post-image-lightbox-title-' + post.id">Ảnh bài viết</strong>
+            <span>
+              Ảnh {{ (activeImageIndex ?? 0) + 1 }}/{{ post.imageUrls.length }} ·
+              {{ imageZoomPercent() }}%
+            </span>
+          </div>
+          <div class="image-lightbox__controls">
+            <button
+              type="button"
+              [disabled]="imageZoom <= 1"
+              aria-label="Thu nhỏ ảnh"
+              (click)="zoomImageOut()"
+            >
+              −
+            </button>
+            <button type="button" (click)="resetImageZoom()">Đặt lại</button>
+            <button
+              type="button"
+              [disabled]="imageZoom >= 4"
+              aria-label="Phóng to ảnh"
+              (click)="zoomImageIn()"
+            >
+              +
+            </button>
+            <button type="button" aria-label="Đóng ảnh" (click)="closeImage()">×</button>
+          </div>
+        </header>
+
+        <div class="image-lightbox__body">
+          @if (post.imageUrls.length > 1) {
+            <button
+              class="image-lightbox__nav image-lightbox__nav--previous"
+              type="button"
+              aria-label="Xem ảnh trước"
+              (click)="showPreviousImage()"
+            >
+              ‹
+            </button>
+          }
+
+          <div class="image-lightbox__viewport" (wheel)="onImageWheel($event)">
+            <div
+              class="image-lightbox__stage"
+              [style.width.%]="imageZoomPercent()"
+              [style.height.%]="imageZoomPercent()"
+            >
+              <img
+                [src]="imageUrl"
+                [alt]="
+                  post.topic
+                    ? 'Ảnh ' + ((activeImageIndex ?? 0) + 1) + ' về ' + post.topic
+                    : 'Ảnh bài viết ' + ((activeImageIndex ?? 0) + 1)
+                "
+              />
+            </div>
+          </div>
+
+          @if (post.imageUrls.length > 1) {
+            <button
+              class="image-lightbox__nav image-lightbox__nav--next"
+              type="button"
+              aria-label="Xem ảnh tiếp theo"
+              (click)="showNextImage()"
+            >
+              ›
+            </button>
+          }
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (reportDialogOpen()) {
+    <div
+      class="report-backdrop"
+      role="presentation"
+      (click)="closeReportDialogFromBackdrop($event)"
+    >
+      <form
+        class="report-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-dialog-title"
+        (ngSubmit)="submitReport()"
+      >
+        <div class="report-dialog__header">
+          <div>
+            <span class="report-dialog__eyebrow">An toàn cộng đồng</span>
+            <h2 id="report-dialog-title">Báo cáo bài viết</h2>
+            <p>Hãy cho chúng tôi biết vấn đề trong bài viết của {{ post.author.name }}.</p>
+          </div>
+          <button
+            type="button"
+            class="report-dialog__close"
+            aria-label="Đóng biểu mẫu báo cáo"
+            [disabled]="post.reportPending"
+            (click)="closeReportDialog()"
+          >
+            ×
+          </button>
+        </div>
+
+        <fieldset class="report-reasons">
+          <legend>Lý do báo cáo <span aria-hidden="true">*</span></legend>
+          @for (option of reportReasonOptions; track option.value) {
+            <label [class.is-selected]="reportReason === option.value">
+              <input
+                type="radio"
+                name="reportReason"
+                [value]="option.value"
+                [(ngModel)]="reportReason"
+                [disabled]="post.reportPending"
+              />
+              <span>
+                <strong>{{ option.label }}</strong>
+                <small>{{ option.description }}</small>
+              </span>
+            </label>
+          }
+        </fieldset>
+
+        <label class="report-detail" for="report-detail-{{ post.id }}">
+          <span>Thông tin bổ sung <small>(không bắt buộc)</small></span>
+          <textarea
+            id="report-detail-{{ post.id }}"
+            name="reportDetail"
+            [(ngModel)]="reportDetail"
+            maxlength="10000"
+            rows="4"
+            [disabled]="post.reportPending"
+            placeholder="Mô tả ngắn gọn nội dung cần được xem xét..."
+          ></textarea>
+          <small>{{ reportDetail.length }}/10.000 ký tự</small>
+        </label>
+
+        @if (post.reportError) {
+          <p class="report-dialog__error" role="alert">{{ post.reportError }}</p>
+        }
+
+        <div class="report-dialog__notice">
+          <span aria-hidden="true">i</span>
+          Báo cáo sẽ được gửi tới quản trị viên. Tác giả bài viết không biết ai đã gửi báo cáo.
+        </div>
+
+        <div class="report-dialog__actions">
+          <button type="button" [disabled]="post.reportPending" (click)="closeReportDialog()">
+            Hủy
+          </button>
+          <button
+            type="submit"
+            class="report-submit"
+            [disabled]="!reportReason || post.reportPending"
+          >
+            {{ post.reportPending ? 'Đang gửi...' : 'Gửi báo cáo' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</article>

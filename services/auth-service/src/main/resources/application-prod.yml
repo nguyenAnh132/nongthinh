@@ -1,0 +1,32 @@
+server:
+  port: ${SERVER_PORT:}
+  servlet:
+    context-path: ${AUTH_CONTEXT_PATH:}
+
+spring:
+  datasource:
+    url: ${DATABASE_URL:}
+    username: ${DATABASE_USERNAME:}
+    password: ${DATABASE_PASSWORD:}
+  data:
+    redis:
+      host: ${REDIS_HOST:}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: ${REDIS_TIMEOUT:3000}
+  security:
+    api-key:
+      header-name: ${API_KEY_HEADER_NAME:X-API-KEY}
+      current-service-key: ${AUTH_API_KEY:}
+      clients:
+        bo-portal-service:
+          url: ${BO_PORTAL_SERVICE_URL:}
+          api-key: ${BO_PORTAL_API_KEY:}
+
+keycloak:
+  url: ${KEYCLOAK_URL:}
+  realm: ${KEYCLOAK_REALM:}
+
+app:
+  system-param:
+    cache-ttl-seconds: ${SYSTEM_PARAM_CACHE_TTL_SECONDS:60}

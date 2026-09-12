@@ -1,0 +1,205 @@
+================================================================================
+NOTIFICATION SERVICE - API ENDPOINTS
+================================================================================
+
+Base URL (qua API Gateway):  http://localhost:8888/api/v1/notification
+Base URL (trực tiếp service): http://localhost:9093/notification
+
+Tất cả endpoint dưới đây yêu cầu xác thực JWT với role ADMIN.
+
+--------------------------------------------------------------------------------
+HEADERS (bắt buộc)
+--------------------------------------------------------------------------------
+Authorization: Bearer <access_token>
+Content-Type: application/json    (chỉ bắt buộc khi có request body)
+
+--------------------------------------------------------------------------------
+COOKIES
+--------------------------------------------------------------------------------
+Không bắt buộc. Service dùng OAuth2 Resource Server (JWT qua header Authorization).
+Cookie access_token (từ auth-service) chưa được resolve tự động ở notification-service;
+client nên gửi JWT qua header Authorization.
+
+--------------------------------------------------------------------------------
+RESPONSE FORMAT
+--------------------------------------------------------------------------------
+- Email History: trả về mảng JSON trực tiếp (không bọc ApiResponse).
+- Các endpoint còn lại: bọc trong ApiResponse { code, message, result }.
+
+================================================================================
+1. EMAIL TEMPLATE PURPOSES  (/email-template-purposes)
+================================================================================
+
+--- GET /email-template-purposes ---
+Mô tả   : Lấy danh sách tất cả mục đích email template.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Body    : Không
+Response: ApiResponse<List<EmailTemplatePurposeView>>
+  result[].id              : Long
+  result[].code            : String
+  result[].name            : String
+  result[].description     : String
+  result[].systemDefined   : boolean
+  result[].createdAt       : Instant (ISO-8601)
+  result[].updatedAt       : Instant (ISO-8601)
+
+--- GET /email-template-purposes/{id} ---
+Mô tả   : Lấy chi tiết một mục đích theo ID.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : id (Long) - ID mục đích
+Body    : Không
+Response: ApiResponse<EmailTemplatePurposeView>
+
+--- GET /email-template-purposes/{id}/email-templates ---
+Mô tả   : Lấy danh sách template thuộc một mục đích.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : id (Long) - ID mục đích
+Body    : Không
+Response: ApiResponse<List<EmailTemplateView>>
+  result[].id           : Long
+  result[].purposeId    : Long
+  result[].name         : String
+  result[].description  : String
+  result[].subject      : String
+  result[].htmlContent  : String
+  result[].textContent  : String
+  result[].active       : boolean
+  result[].createdAt    : Instant
+  result[].updatedAt    : Instant
+
+--- POST /email-template-purposes/{id}/email-templates ---
+Mô tả   : Tạo email template mới cho một mục đích.
+Headers : Authorization (bắt buộc), Content-Type: application/json
+Cookie  : Không
+Path    : id (Long) - ID mục đích
+Body    :
+{
+  "name": "string",          // bắt buộc
+  "description": "string",   // tùy chọn
+  "subject": "string",       // bắt buộc
+  "htmlContent": "string",   // tùy chọn
+  "textContent": "string"    // tùy chọn
+}
+Response: 201 Created - ApiResponse<EmailTemplateView>
+
+--- POST /email-template-purposes/{id}/email-templates/preview ---
+Mô tả   : Xem trước nội dung template nháp (chưa lưu) theo mục đích.
+Headers : Authorization (bắt buộc), Content-Type: application/json
+Cookie  : Không
+Path    : id (Long) - ID mục đích
+Body    :
+{
+  "subject": "string",       // bắt buộc
+  "htmlContent": "string",   // tùy chọn
+  "textContent": "string"    // tùy chọn
+}
+Response: ApiResponse<PreviewEmailTemplateView>
+  result.subject      : String
+  result.htmlContent  : String
+  result.textContent  : String
+
+--- GET /email-template-purposes/{id}/variables ---
+Mô tả   : Lấy danh sách biến template theo mục đích.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : id (Long) - ID mục đích
+Body    : Không
+Response: ApiResponse<List<EmailTemplateVariableView>>
+  result[].variableName  : String
+  result[].description   : String
+  result[].exampleValue  : String
+  result[].required      : boolean
+
+================================================================================
+2. EMAIL TEMPLATES  (/email-templates)
+================================================================================
+
+--- GET /email-templates/{id} ---
+Mô tả   : Lấy chi tiết một email template theo ID.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : id (Long) - ID template
+Body    : Không
+Response: ApiResponse<EmailTemplateView>
+
+--- PUT /email-templates/{id} ---
+Mô tả   : Cập nhật toàn bộ nội dung email template.
+Headers : Authorization (bắt buộc), Content-Type: application/json
+Cookie  : Không
+Path    : id (Long) - ID template
+Body    :
+{
+  "name": "string",          // bắt buộc
+  "description": "string",   // tùy chọn
+  "subject": "string",       // bắt buộc
+  "htmlContent": "string",   // tùy chọn
+  "textContent": "string"    // tùy chọn
+}
+Response: ApiResponse<EmailTemplateView>
+
+--- PATCH /email-templates/{id}/activation ---
+Mô tả   : Kích hoạt template (đặt làm template active của mục đích).
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : id (Long) - ID template
+Body    : Không
+Response: ApiResponse<Void>
+
+--- POST /email-templates/{id}/preview ---
+Mô tả   : Xem trước nội dung template đã lưu theo ID.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : id (Long) - ID template
+Body    : Không
+Response: ApiResponse<PreviewEmailTemplateView>
+
+================================================================================
+3. EMAIL HISTORY  (/email-history)
+================================================================================
+
+--- GET /email-history ---
+Mô tả   : Lấy toàn bộ lịch sử gửi email.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Body    : Không
+Response: List<EmailHistoryView> (mảng JSON trực tiếp)
+  [].id          : Long
+  [].userId      : UUID
+  [].templateId  : Long
+  [].purposeId   : Long
+  [].status      : String
+  [].sendAt      : Instant
+
+--- GET /email-history/users/{userId} ---
+Mô tả   : Lấy lịch sử gửi email theo user.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : userId (UUID)
+Body    : Không
+Response: List<EmailHistoryView>
+
+--- GET /email-history/templates/{templateId} ---
+Mô tả   : Lấy lịch sử gửi email theo template.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : templateId (Long)
+Body    : Không
+Response: List<EmailHistoryView>
+
+--- GET /email-history/purposes/{purposeId} ---
+Mô tả   : Lấy lịch sử gửi email theo mục đích.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : purposeId (Long)
+Body    : Không
+Response: List<EmailHistoryView>
+
+================================================================================
+GHI CHÚ
+================================================================================
+- Endpoint /internal/** (service-to-service, ví dụ gửi OTP) dùng header X-API-KEY,
+  không nằm trong nhóm endpoint admin ở trên.
+- API Gateway strip header X-API-KEY khi route tới notification-service từ client.

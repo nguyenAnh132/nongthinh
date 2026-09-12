@@ -1,0 +1,177 @@
+================================================================================
+BO-PORTAL SERVICE - API ENDPOINTS
+================================================================================
+
+Base URL (qua API Gateway):  http://localhost:8888/api/v1/bo-portal
+Base URL (trực tiếp service): http://localhost:9096/bo-portal
+
+Các endpoint trong SystemParamController và SystemParamTypeController yêu cầu
+xác thực JWT với quyền ADMIN.
+
+Đánh giá REST: Các endpoint hiện tại đã tuân thủ chuẩn RESTful (resource name
+dạng số nhiều, đúng HTTP method, dùng path variable làm identifier). Không cần
+điều chỉnh controller.
+
+--------------------------------------------------------------------------------
+HEADERS (bắt buộc)
+--------------------------------------------------------------------------------
+Authorization: Bearer <access_token>
+Content-Type: application/json    (chỉ bắt buộc khi có request body)
+
+--------------------------------------------------------------------------------
+COOKIES
+--------------------------------------------------------------------------------
+Không bắt buộc. Service dùng OAuth2 Resource Server (JWT qua header Authorization).
+Cookie access_token (từ auth-service) chưa được resolve tự động ở bo-portal-service;
+client nên gửi JWT qua header Authorization.
+
+--------------------------------------------------------------------------------
+RESPONSE FORMAT
+--------------------------------------------------------------------------------
+Tất cả endpoint bọc trong ApiResponse:
+{
+  "code": "1000",
+  "message": "string",
+  "result": <T> | null
+}
+
+HTTP status:
+- GET thành công     : 200 OK
+- POST tạo mới       : 201 Created
+- PUT cập nhật       : 200 OK
+- DELETE             : 200 OK (kèm message, result = null)
+
+================================================================================
+1. SYSTEM PARAMS  (/system-params)
+================================================================================
+
+--- GET /system-params ---
+Mô tả   : Lấy danh sách tất cả system parameter.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Body    : Không
+Response: ApiResponse<List<SystemParamView>>
+  result[].id            : Long
+  result[].name          : String
+  result[].value         : String
+  result[].description   : String | null
+  result[].dataType      : String (STRING | INTEGER | BOOLEAN)
+  result[].systemDefined : boolean
+  result[].typeId        : Long | null
+  result[].typeName      : String | null
+  result[].createdAt     : Instant (ISO-8601)
+  result[].updatedAt     : Instant (ISO-8601)
+
+--- GET /system-params/{name} ---
+Mô tả   : Lấy chi tiết một system parameter theo tên.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : name (String) - tên tham số, ví dụ OTP_TTL
+Body    : Không
+Response: ApiResponse<SystemParamView>
+
+--- POST /system-params ---
+Mô tả   : Tạo system parameter mới.
+Headers : Authorization (bắt buộc), Content-Type: application/json
+Cookie  : Không
+Body    :
+{
+  "name": "string",         // bắt buộc
+  "value": "string",        // bắt buộc; phải hợp lệ theo dataType
+  "description": "string",  // tùy chọn
+  "dataType": "string",     // bắt buộc: STRING | INTEGER | BOOLEAN
+  "typeId": 1               // tùy chọn; ID nhóm system-param-type
+}
+Response: 201 Created, ApiResponse<SystemParamView>
+
+--- PUT /system-params/{name} ---
+Mô tả   : Cập nhật value và description của system parameter.
+Headers : Authorization (bắt buộc), Content-Type: application/json
+Cookie  : Không
+Path    : name (String) - tên tham số cần cập nhật
+Body    :
+{
+  "value": "string",        // bắt buộc; phải hợp lệ theo dataType hiện tại
+  "description": "string"   // tùy chọn
+}
+Response: ApiResponse<SystemParamView>
+
+--- PUT /system-params/{name}/type ---
+Mô tả   : Gán hoặc đổi nhóm (type) cho system parameter.
+Headers : Authorization (bắt buộc), Content-Type: application/json
+Cookie  : Không
+Path    : name (String) - tên tham số cần gán type
+Body    :
+{
+  "typeId": 1               // bắt buộc; ID system-param-type
+}
+Response: ApiResponse<SystemParamView>
+
+--- DELETE /system-params/{name} ---
+Mô tả   : Xóa system parameter theo tên.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : name (String) - tên tham số cần xóa
+Body    : Không
+Response: ApiResponse<Void> (result = null)
+
+================================================================================
+2. SYSTEM PARAM TYPES  (/system-param-types)
+================================================================================
+
+--- GET /system-param-types ---
+Mô tả   : Lấy danh sách tất cả nhóm system parameter.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Body    : Không
+Response: ApiResponse<List<SystemParamTypeView>>
+  result[].id            : Long
+  result[].name          : String
+  result[].description   : String | null
+  result[].systemDefined : boolean
+  result[].createdAt     : Instant (ISO-8601)
+  result[].updatedAt     : Instant (ISO-8601)
+
+--- GET /system-param-types/grouped ---
+Mô tả   : Lấy danh sách nhóm kèm các system parameter thuộc từng nhóm.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Body    : Không
+Response: ApiResponse<List<SystemParamTypeGroupView>>
+  result[].id            : Long
+  result[].name          : String
+  result[].description   : String | null
+  result[].systemDefined : boolean
+  result[].createdAt     : Instant
+  result[].updatedAt     : Instant
+  result[].params        : List<SystemParamView> (cùng cấu trúc như trên)
+
+--- GET /system-param-types/{id} ---
+Mô tả   : Lấy chi tiết một nhóm system parameter theo ID.
+Headers : Authorization (bắt buộc)
+Cookie  : Không
+Path    : id (Long) - ID nhóm
+Body    : Không
+Response: ApiResponse<SystemParamTypeView>
+
+--- POST /system-param-types ---
+Mô tả   : Tạo nhóm system parameter mới.
+Headers : Authorization (bắt buộc), Content-Type: application/json
+Cookie  : Không
+Body    :
+{
+  "name": "string",         // bắt buộc, tối đa 100 ký tự
+  "description": "string"   // tùy chọn
+}
+Response: 201 Created, ApiResponse<SystemParamTypeView>
+
+================================================================================
+GHI CHÚ
+================================================================================
+- Identifier của system-params dùng name (String) thay vì id — phù hợp vì name
+  là business key và đã được dùng ở frontend (/api/v1/bo-portal/system-params/{name}).
+- PUT /system-params/{name}/type là sub-resource update hợp lệ trong REST.
+- GET /system-param-types/grouped là collection view; path "grouped" được khai báo
+  trước {id} nên không xung đột routing.
+- Endpoint nội bộ /internal/system-params/{name} (X-API-KEY, ROLE_INTERNAL) nằm ở
+  InternalSystemParamController, không thuộc phạm vi hai controller trên.

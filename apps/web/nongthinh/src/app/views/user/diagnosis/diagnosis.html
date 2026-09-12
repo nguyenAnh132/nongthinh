@@ -1,0 +1,522 @@
+<section class="diagnosis-page">
+  <header class="page-heading">
+    <h1>Chẩn đoán bệnh cây trồng</h1>
+  </header>
+
+  <div class="diagnosis-layout">
+    <div class="diagnosis-main">
+      <section class="panel scan-panel">
+        @if (cropLoadError) {
+          <div class="inline-state inline-state--error">
+            <span>{{ cropLoadError }}</span>
+            <button type="button" (click)="loadCropTypes()">Thử lại</button>
+          </div>
+        }
+
+        @if (loadingCrops) {
+          <div
+            class="scan-skeleton"
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+            aria-label="Đang tải biểu mẫu chẩn đoán"
+          >
+            <span class="sr-only">Đang tải danh sách cây trồng...</span>
+            <div class="scan-skeleton__field" aria-hidden="true">
+              <span class="diagnosis-skeleton-shape"></span>
+              <span class="diagnosis-skeleton-shape"></span>
+            </div>
+            <div class="scan-skeleton__upload" aria-hidden="true">
+              <span class="diagnosis-skeleton-shape scan-skeleton__upload-button"></span>
+              <span class="diagnosis-skeleton-shape scan-skeleton__upload-copy"></span>
+            </div>
+            <span class="diagnosis-skeleton-shape scan-skeleton__submit" aria-hidden="true"></span>
+          </div>
+        } @else {
+          <form [formGroup]="scanForm" (ngSubmit)="scan()" novalidate>
+            <label class="field">
+              <span>Loại cây trồng <b>*</b></span>
+              <select
+                formControlName="cropTypeId"
+                [disabled]="loadingCrops || scanning || !cropTypes.length"
+              >
+                <option value="" disabled>Chọn loại cây trồng</option>
+                @for (crop of cropTypes; track crop.id) {
+                  <option [value]="crop.id">{{ crop.name }}</option>
+                }
+              </select>
+            </label>
+
+            <div class="upload-zone">
+              <label class="upload-button" [class.is-disabled]="scanning || previews.length >= 5">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  [disabled]="scanning || previews.length >= 5"
+                  (change)="onFilesSelected($event)"
+                />
+                <img
+                  class="upload-button__icon"
+                  src="/icons/diagnosis/camera.png"
+                  alt=""
+                  aria-hidden="true"
+                />
+                Chọn ảnh
+              </label>
+              <div class="upload-meta">
+                <span>{{ previews.length }}/5 ảnh · JPEG, PNG hoặc WebP · tối đa 5 MB/ảnh</span>
+                @if (previews.length) {
+                  <button
+                    class="text-button"
+                    type="button"
+                    [disabled]="scanning"
+                    (click)="clearSelectedFiles()"
+                  >
+                    Bỏ tất cả
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (previews.length) {
+              <div class="preview-grid" aria-label="Ảnh xem trước cục bộ">
+                @for (preview of previews; track preview.url; let index = $index) {
+                  <article class="preview-card">
+                    <img [src]="preview.url" [alt]="preview.file.name" />
+                    <div>
+                      <strong>{{ preview.file.name }}</strong>
+                      <span>{{ formatBytes(preview.file.size) }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      [disabled]="scanning"
+                      (click)="removePreview(index)"
+                      [attr.aria-label]="'Bỏ ' + preview.file.name"
+                    >
+                      ×
+                    </button>
+                  </article>
+                }
+              </div>
+            }
+
+            @if (scanError) {
+              <div class="inline-state inline-state--error">{{ scanError }}</div>
+            }
+
+            <button
+              class="primary-button"
+              type="submit"
+              [disabled]="scanning || loadingCrops || !cropTypes.length"
+            >
+              {{ scanning ? 'Đang tải ảnh và chẩn đoán...' : 'Bắt đầu chẩn đoán' }}
+            </button>
+          </form>
+        }
+      </section>
+
+      @if (result; as diagnosis) {
+        <section
+          #resultPanel
+          class="panel result-panel"
+          aria-labelledby="result-title"
+          aria-live="polite"
+        >
+          <header class="history-modal__header result-panel__header">
+            <div class="history-modal__title">
+              <p class="eyebrow">KẾT QUẢ CHẨN ĐOÁN</p>
+              <h2 id="result-title">Cây trồng: {{ cropName(diagnosis.cropTypeId) }}</h2>
+            </div>
+            <span class="status-badge status-badge--{{ diagnosis.status.toLowerCase() }}">
+              {{ statusLabel(diagnosis.status) }}
+            </span>
+          </header>
+
+          <div class="history-modal__body result-panel__body">
+            <ng-container
+              *ngTemplateOutlet="diagnosisSnapshot; context: { diagnosis: diagnosis }"
+            />
+          </div>
+        </section>
+      }
+    </div>
+
+    @if (diseaseModalOpen) {
+      <div class="disease-modal-backdrop" (click)="closeDiseaseDetail()">
+        <section
+          #diseaseModal
+          class="disease-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="disease-modal-title"
+          tabindex="-1"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="disease-modal__header">
+            <div>
+              <p class="eyebrow">THÔNG TIN BỆNH</p>
+              <h2 id="disease-modal-title">Bệnh và gợi ý xử lý</h2>
+            </div>
+            <button
+              class="modal-close"
+              type="button"
+              aria-label="Đóng thông tin bệnh"
+              (click)="closeDiseaseDetail()"
+            >
+              ×
+            </button>
+          </div>
+          <div class="disease-modal__body" aria-live="polite">
+            @if (loadingDisease) {
+              <p class="empty-copy">Đang tải chi tiết bệnh và khuyến nghị...</p>
+            } @else if (diseaseDetailError) {
+              <p class="inline-state inline-state--error">{{ diseaseDetailError }}</p>
+            } @else if (selectedDisease; as disease) {
+              <article class="disease-detail-copy">
+                <h3>{{ disease.name }}</h3>
+                @if (disease.scientificName) {
+                  <p>
+                    <em>{{ disease.scientificName }}</em>
+                  </p>
+                }
+                <p>
+                  {{ disease.shortDescription || disease.description || 'Chưa có mô tả chi tiết.' }}
+                </p>
+                @if (disease.symptoms) {
+                  <p><strong>Triệu chứng:</strong> {{ disease.symptoms }}</p>
+                }
+                @if (disease.causes) {
+                  <p><strong>Nguyên nhân:</strong> {{ disease.causes }}</p>
+                }
+                @if (disease.preventionMethod) {
+                  <p><strong>Phòng ngừa:</strong> {{ disease.preventionMethod }}</p>
+                }
+                @if (disease.treatmentGuideline) {
+                  <p><strong>Hướng dẫn xử lý:</strong> {{ disease.treatmentGuideline }}</p>
+                }
+              </article>
+              <div class="recommendation-list">
+                <h3>Sản phẩm tham khảo</h3>
+                @for (recommendation of recommendations; track recommendation.product.id) {
+                  <article>
+                    <strong>{{ recommendation.product.name }}</strong>
+                    <span>{{
+                      recommendation.treatment.effectivenessLevel || 'Chưa xếp hạng hiệu quả'
+                    }}</span>
+                    @if (recommendation.treatment.dosage) {
+                      <p>{{ recommendation.treatment.dosage }}</p>
+                    }
+                  </article>
+                } @empty {
+                  <p class="empty-copy">Chưa có sản phẩm được đề xuất cho bệnh này.</p>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      </div>
+    }
+
+    <aside class="diagnosis-sidebar">
+      <section class="panel history-panel" aria-labelledby="history-title">
+        <div class="history-panel__header">
+          <div class="history-panel__title">
+            <h2 id="history-title">Lịch sử chẩn đoán</h2>
+          </div>
+          <button
+            class="history-refresh"
+            type="button"
+            [disabled]="loadingHistory"
+            (click)="loadHistory()"
+            aria-label="Tải lại lịch sử chẩn đoán"
+            title="Tải lại"
+          >
+            {{ loadingHistory ? 'Đang tải...' : 'Tải lại' }}
+          </button>
+        </div>
+        @if (historyLoadError) {
+          <p class="inline-state inline-state--error">{{ historyLoadError }}</p>
+        }
+        @if (loadingHistory && !history.length) {
+          <div
+            class="history-skeleton"
+            role="status"
+            aria-live="polite"
+            aria-busy="true"
+            aria-label="Đang tải lịch sử chẩn đoán"
+          >
+            <span class="sr-only">Đang tải lịch sử...</span>
+            @for (item of [0, 1, 2]; track item) {
+              <article class="history-skeleton__card" aria-hidden="true">
+                <span class="diagnosis-skeleton-shape history-skeleton__cover"></span>
+                <span class="history-skeleton__body">
+                  <i class="diagnosis-skeleton-shape"></i>
+                  <i class="diagnosis-skeleton-shape"></i>
+                  <i class="diagnosis-skeleton-shape"></i>
+                </span>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="history-list">
+            @for (item of history; track item.id) {
+              <article class="history-card" [class.is-selected]="selectedHistoryId === item.id">
+                <div class="history-card__cover">
+                  @if (historyThumbnailUrl(item.id); as thumbnailUrl) {
+                    <img
+                      [src]="thumbnailUrl"
+                      [alt]="'Ảnh chẩn đoán ' + cropName(item.cropTypeId)"
+                    />
+                  } @else {
+                    <div
+                      class="history-card__placeholder"
+                      [class.is-loading]="isHistoryThumbnailLoading(item.id)"
+                    >
+                      {{ isHistoryThumbnailLoading(item.id) ? 'Đang tải ảnh...' : 'Không có ảnh' }}
+                    </div>
+                  }
+                </div>
+                <div class="history-card__body">
+                  <h3>{{ cropName(item.cropTypeId) }}</h3>
+                  <time [attr.datetime]="item.createdAt">
+                    {{ item.createdAt | date: 'HH:mm · dd/MM/yyyy' }}
+                  </time>
+                  <button
+                    type="button"
+                    [attr.aria-label]="'Xem chi tiết chẩn đoán ' + cropName(item.cropTypeId)"
+                    aria-haspopup="dialog"
+                    (click)="selectHistory(item)"
+                    [disabled]="loadingHistoryDetail"
+                  >
+                    Xem chi tiết
+                  </button>
+                </div>
+              </article>
+            } @empty {
+              <div class="history-empty">
+                <strong>Chưa có lịch sử chẩn đoán</strong>
+                <span>Kết quả sau khi chẩn đoán sẽ xuất hiện tại đây.</span>
+              </div>
+            }
+          </div>
+        }
+      </section>
+    </aside>
+  </div>
+
+  <ng-template #diagnosisSnapshot let-diagnosis="diagnosis">
+    <div class="result-image-grid">
+      @for (image of diagnosis.images; track image.file.id) {
+        <article class="result-image-card">
+          <div class="annotated-preview" [style.aspect-ratio]="image.width + ' / ' + image.height">
+            @if (imageUrlForFile(image.file.id); as imageUrl) {
+              <button
+                class="annotated-preview__trigger"
+                type="button"
+                (click)="openHistoryImage(image)"
+                [attr.aria-label]="'Phóng to ảnh ' + image.file.originalFileName"
+                title="Bấm để phóng to ảnh"
+              >
+                <img [src]="imageUrl" [alt]="image.file.originalFileName" />
+                <svg
+                  [attr.viewBox]="'0 0 ' + image.width + ' ' + image.height"
+                  preserveAspectRatio="xMidYMid meet"
+                  aria-label="Vùng nhận diện"
+                >
+                  @for (
+                    detection of image.detections;
+                    track detection.classCode + detection.boundingBox.x + detection.boundingBox.y
+                  ) {
+                    <rect
+                      [attr.x]="detection.boundingBox.x"
+                      [attr.y]="detection.boundingBox.y"
+                      [attr.width]="detection.boundingBox.width"
+                      [attr.height]="detection.boundingBox.height"
+                      [class.healthy-box]="detection.classKind === 'HEALTHY'"
+                    />
+                  }
+                </svg>
+              </button>
+            } @else if (isHistoryImageLoading(image.file.id)) {
+              <div class="expired-preview">
+                <span class="material-symbols-outlined">progress_activity</span>
+                Đang tải ảnh chẩn đoán...
+              </div>
+            } @else {
+              <div class="expired-preview">
+                <span class="material-symbols-outlined">image_not_supported</span>
+                Ảnh đã hết hạn hoặc không thể tải
+              </div>
+            }
+          </div>
+        </article>
+      } @empty {
+        <p class="empty-copy">Kết quả không có thông tin ảnh.</p>
+      }
+    </div>
+
+    <section class="history-findings" aria-label="Bệnh được phát hiện">
+      <h3>Bệnh được phát hiện</h3>
+      <div class="history-findings__list">
+        @for (group of diagnosis.groups; track group.status + group.classCode) {
+          <article class="history-finding history-finding--{{ group.status.toLowerCase() }}">
+            <div class="history-finding__identity">
+              <h4>{{ group.disease?.displayName || group.displayName }}</h4>
+              <p>{{ group.detectionCount }} vùng nhận diện trên {{ group.fileIds.length }} ảnh</p>
+            </div>
+
+            @if (group.detectionCount) {
+              <div class="history-finding__confidence">
+                <span>Độ tin cậy</span>
+                <div>
+                  @for (image of diagnosis.images; track image.file.id) {
+                    @for (detection of image.detections; track $index) {
+                      @if (detection.classCode === group.classCode) {
+                        <span> {{ detection.confidence * 100 | number: '1.0-1' }}% </span>
+                      }
+                    }
+                  }
+                </div>
+              </div>
+            }
+
+            @if (group.disease) {
+              <button type="button" [disabled]="loadingDisease" (click)="showDiseaseDetail(group)">
+                Tìm hiểu thêm
+              </button>
+            }
+          </article>
+        } @empty {
+          <p class="empty-copy">Không có bệnh hoặc dấu hiệu đủ độ tin cậy.</p>
+        }
+      </div>
+    </section>
+  </ng-template>
+
+  @if (historyModalOpen) {
+    <div class="history-modal-backdrop" (click)="closeHistoryDetail()">
+      <section
+        #historyModal
+        class="history-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="history-modal-title"
+        tabindex="-1"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="history-modal__header">
+          <div class="history-modal__title">
+            <h2 id="history-modal-title">
+              Cây trồng:
+              {{ selectedHistory ? cropName(selectedHistory.cropTypeId) : 'Đang tải...' }}
+            </h2>
+            @if (selectedHistory) {
+              <time [attr.datetime]="selectedHistory.createdAt">
+                {{ selectedHistory.createdAt | date: 'HH:mm · dd/MM/yyyy' }}
+              </time>
+            }
+          </div>
+          <button
+            class="modal-close"
+            type="button"
+            aria-label="Đóng chi tiết lịch sử"
+            (click)="closeHistoryDetail()"
+          >
+            ×
+          </button>
+        </header>
+
+        <div class="history-modal__body" aria-live="polite">
+          @if (loadingHistoryDetail) {
+            <div class="history-modal-state">
+              <strong>Đang mở kết quả chẩn đoán</strong>
+              <span>Vui lòng chờ trong giây lát...</span>
+            </div>
+          } @else if (historyDetailError) {
+            <div class="history-modal-state history-modal-state--error">
+              <strong>Không thể mở kết quả</strong>
+              <span>{{ historyDetailError }}</span>
+              <button type="button" (click)="retryHistoryDetail()">Thử lại</button>
+            </div>
+          } @else if (historyDetail; as detail) {
+            <ng-container
+              *ngTemplateOutlet="diagnosisSnapshot; context: { diagnosis: detail.snapshot }"
+            />
+          }
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (zoomedHistoryImage; as zoomedImage) {
+    <div class="image-lightbox-backdrop" (click)="closeHistoryImage()">
+      <section
+        #imageLightbox
+        class="image-lightbox"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="image-lightbox-title"
+        tabindex="-1"
+        (click)="$event.stopPropagation()"
+      >
+        <header class="image-lightbox__header">
+          <div>
+            <strong id="image-lightbox-title">Ảnh chẩn đoán</strong>
+            <span>{{ imageZoom * 100 | number: '1.0-0' }}%</span>
+          </div>
+          <div class="image-lightbox__controls">
+            <button
+              type="button"
+              [disabled]="imageZoom <= 1"
+              aria-label="Thu nhỏ ảnh"
+              (click)="zoomHistoryImageOut()"
+            >
+              −
+            </button>
+            <button type="button" (click)="resetHistoryImageZoom()">Đặt lại</button>
+            <button
+              type="button"
+              [disabled]="imageZoom >= 4"
+              aria-label="Phóng to ảnh"
+              (click)="zoomHistoryImageIn()"
+            >
+              +
+            </button>
+            <button type="button" aria-label="Đóng ảnh" (click)="closeHistoryImage()">×</button>
+          </div>
+        </header>
+
+        <div class="image-lightbox__viewport" (wheel)="onHistoryImageWheel($event)">
+          @if (imageUrlForFile(zoomedImage.file.id); as zoomedImageUrl) {
+            <div
+              class="image-lightbox__stage"
+              [style.width.%]="imageZoom * 100"
+              [style.height.%]="imageZoom * 100"
+            >
+              <img [src]="zoomedImageUrl" [alt]="zoomedImage.file.originalFileName" />
+              <svg
+                [attr.viewBox]="'0 0 ' + zoomedImage.width + ' ' + zoomedImage.height"
+                preserveAspectRatio="xMidYMid meet"
+                aria-label="Vùng nhận diện trên ảnh phóng to"
+              >
+                @for (
+                  detection of zoomedImage.detections;
+                  track detection.classCode + detection.boundingBox.x + detection.boundingBox.y
+                ) {
+                  <rect
+                    [attr.x]="detection.boundingBox.x"
+                    [attr.y]="detection.boundingBox.y"
+                    [attr.width]="detection.boundingBox.width"
+                    [attr.height]="detection.boundingBox.height"
+                    [class.healthy-box]="detection.classKind === 'HEALTHY'"
+                  />
+                }
+              </svg>
+            </div>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</section>

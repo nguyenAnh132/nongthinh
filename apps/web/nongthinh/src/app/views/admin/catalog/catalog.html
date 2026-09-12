@@ -1,0 +1,259 @@
+<div class="catalog-page">
+  <header class="summary-row admin-content-header">
+    <div>
+      <h1>Quản lý danh mục</h1>
+    </div>
+
+    <div class="summary-actions">
+      <button type="button" class="secondary-button refresh-button" [disabled]="loading" (click)="loadCategories()">
+        {{ loading ? 'Đang tải...' : 'Tải lại' }}
+      </button>
+      <button type="button" class="primary-button add-category-button" (click)="openCreate()">
+        Thêm danh mục
+      </button>
+    </div>
+  </header>
+
+  <section class="overview-statistics" aria-label="Tổng quan danh mục">
+    <article class="overview-stat-card">
+      <span>Tổng số</span>
+      <strong>{{ categories.length }}</strong>
+    </article>
+    <article class="overview-stat-card">
+      <span>Đang hoạt động</span>
+      <strong>{{ activeCategoryCount }}</strong>
+    </article>
+    <article class="overview-stat-card">
+      <span>Tạm ẩn</span>
+      <strong>{{ inactiveCategoryCount }}</strong>
+    </article>
+  </section>
+
+  <section class="panel category-overview">
+    <div class="list-toolbar">
+      <div>
+        <h2>Danh sách danh mục</h2>
+      </div>
+      @if (!loading && !loadError) {
+      <span class="result-count">{{ categories.length }} danh mục</span>
+      }
+    </div>
+
+    @if (loading) {
+    <div class="state-box">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <p>Đang tải danh sách danh mục...</p>
+    </div>
+    } @else if (loadError) {
+    <div class="state-box state-box--error">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ loadError }}</p>
+      <button type="button" class="secondary-button" (click)="loadCategories()">Thử lại</button>
+    </div>
+    } @else if (categories.length === 0) {
+    <div class="state-box">
+      <span class="empty-icon material-symbols-outlined" aria-hidden="true">category</span>
+      <h3>Chưa có danh mục</h3>
+      <p>Hãy tạo danh mục đầu tiên để bắt đầu tổ chức sản phẩm.</p>
+      <button type="button" class="primary-button" (click)="openCreate()">
+        <span class="material-symbols-outlined" aria-hidden="true">add</span>
+        Thêm danh mục
+      </button>
+    </div>
+    } @else {
+    <div class="category-table-header" aria-hidden="true">
+      <span>Danh mục</span>
+      <span>Phân cấp &amp; đường dẫn</span>
+      <span>Thứ tự</span>
+      <span>Trạng thái</span>
+      <span>Hành động</span>
+    </div>
+
+    <div class="category-list">
+      @for (category of categories; track category.id) {
+      <article class="category-card">
+        <div class="category-main-cell">
+          <div class="category-details">
+            <h3>{{ category.name }}</h3>
+            <p>{{ category.description || 'Chưa có mô tả cho danh mục này.' }}</p>
+          </div>
+        </div>
+
+        <div class="category-hierarchy-cell">
+          <span class="cell-label">Phân cấp &amp; đường dẫn</span>
+          <strong>{{ parentName(category) }}</strong>
+          <code>/{{ category.slug }}</code>
+        </div>
+
+        <div class="category-order-cell">
+          <span class="cell-label">Thứ tự</span>
+          <strong>{{ category.displayOrder }}</strong>
+        </div>
+
+        <div class="category-status-cell">
+          <span class="cell-label">Trạng thái</span>
+          <span
+            class="status-label"
+            [class.status-label--active]="category.active"
+            [class.status-label--inactive]="!category.active"
+          >
+            {{ category.active ? 'Đang hoạt động' : 'Tạm ẩn' }}
+          </span>
+        </div>
+
+        <div class="category-actions">
+          <button type="button" class="action-button" title="Chỉnh sửa danh mục"
+            [disabled]="saving || !!deletingCategoryId" (click)="startEdit(category)">
+            <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+            <span class="sr-only">Chỉnh sửa {{ category.name }}</span>
+          </button>
+          <button type="button" class="action-button action-button--danger" title="Xoá danh mục"
+            [disabled]="saving || !!deletingCategoryId" (click)="requestDelete(category.id)">
+            <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+            <span class="sr-only">Xoá {{ category.name }}</span>
+          </button>
+        </div>
+
+        @if (deleteConfirmationId === category.id) {
+        <div class="delete-confirmation">
+          <div>
+            <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+            <p>
+              Xác nhận xoá <strong>“{{ category.name }}”</strong>? Danh mục sẽ được ẩn khỏi hệ
+              thống.
+            </p>
+          </div>
+          <div class="confirmation-actions">
+            <button type="button" class="confirmation-cancel" [disabled]="deletingCategoryId === category.id"
+              (click)="cancelDelete()">
+              Huỷ
+            </button>
+            <button type="button" class="confirmation-delete" [disabled]="deletingCategoryId === category.id"
+              (click)="deleteCategory(category)">
+              {{ deletingCategoryId === category.id ? 'Đang xoá...' : 'Xác nhận xoá' }}
+            </button>
+          </div>
+        </div>
+        }
+      </article>
+      }
+    </div>
+    }
+  </section>
+
+  @if (editorOpen) {
+  <div class="editor-backdrop" (click)="closeEditorFromBackdrop($event)">
+    <form class="panel category-editor" [formGroup]="categoryForm" (ngSubmit)="submitCategory()">
+      <div class="editor-heading">
+        <div>
+          <h2>{{ editingCategory ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới' }}</h2>
+          <p>
+            @if (editingCategory) {
+            Cập nhật thông tin cho “{{ editingCategory.name }}”.
+            } @else {
+            Tạo danh mục mới trong hệ thống sản phẩm.
+            }
+          </p>
+        </div>
+        <button type="button" class="close-editor-button" aria-label="Đóng" [disabled]="saving" (click)="cancelEdit()">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </div>
+
+      <div class="form-sections">
+        <section class="form-section">
+          <div class="form-section-heading">
+            <h3>Thông tin cơ bản</h3>
+            <p>Tên, đường dẫn và vị trí của danh mục trong hệ thống.</p>
+          </div>
+
+          <div class="form-grid">
+            <label class="field field--span-7">
+              <span>Tên danh mục <b>*</b></span>
+              <input formControlName="name" maxlength="150" placeholder="Ví dụ: Phân bón hữu cơ"
+                (input)="onCategoryNameInput()" />
+              @if (categoryForm.controls.name.touched && categoryForm.controls.name.invalid) {
+              <small>Vui lòng nhập tên danh mục, tối đa 150 ký tự.</small>
+              }
+            </label>
+
+            <label class="field field--span-5">
+              <span>Đường dẫn (slug) <b>*</b></span>
+              <input formControlName="slug" maxlength="180" placeholder="phan-bon-huu-co" />
+              @if (categoryForm.controls.slug.touched && categoryForm.controls.slug.invalid) {
+              <small>Vui lòng nhập đường dẫn, tối đa 180 ký tự.</small>
+              }
+            </label>
+
+            <label class="field field--span-7">
+              <span>Danh mục cha</span>
+              <select formControlName="parentId">
+                <option value="">Không có — danh mục gốc</option>
+                @for (category of parentOptions; track category.id) {
+                <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="field field--span-5">
+              <span>Thứ tự hiển thị <b>*</b></span>
+              <input formControlName="displayOrder" type="number" min="0" />
+              @if (
+              categoryForm.controls.displayOrder.touched &&
+              categoryForm.controls.displayOrder.invalid
+              ) {
+              <small>Thứ tự hiển thị phải từ 0 trở lên.</small>
+              }
+            </label>
+
+            <label class="field field--span-12">
+              <span>Mô tả</span>
+              <textarea formControlName="description" rows="5"
+                placeholder="Mô tả ngắn về phạm vi của danh mục"></textarea>
+            </label>
+          </div>
+        </section>
+
+        @if (editingCategory) {
+        <section class="form-section">
+          <div class="form-section-heading">
+            <h3>Trạng thái hiển thị</h3>
+            <p>Kiểm soát việc danh mục có xuất hiện trong danh sách công khai hay không.</p>
+          </div>
+
+          <label class="status-field">
+            <span>
+              <strong>Danh mục đang hoạt động</strong>
+              <small> Tắt trạng thái này để tạm ẩn danh mục khỏi khu vực công khai. </small>
+            </span>
+            <span class="switch">
+              <input type="checkbox" formControlName="active" aria-label="Trạng thái hoạt động" />
+              <span class="switch-track"></span>
+            </span>
+          </label>
+        </section>
+        }
+      </div>
+
+      <div class="form-actions">
+        <span><b>*</b> Thông tin bắt buộc</span>
+        <div class="form-action-buttons">
+          <button class="secondary-button" type="button" [disabled]="saving" (click)="cancelEdit()">
+            Huỷ
+          </button>
+          <button class="primary-button" type="submit" [disabled]="saving">
+            <span class="material-symbols-outlined" aria-hidden="true">
+              {{ editingCategory ? 'save' : 'add' }}
+            </span>
+            @if (saving) {
+            Đang lưu...
+            } @else {
+            {{ editingCategory ? 'Lưu thay đổi' : 'Tạo danh mục' }}
+            }
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+  }
+</div>

@@ -1,0 +1,75 @@
+<h1 class="admin-title admin-content-header">Duyệt doanh nghiệp</h1>
+
+<nz-spin [nzSpinning]="loading">
+  <nz-card [nzBordered]="false" class="brands-card">
+    <div class="brands-toolbar">
+      <nz-input-group class="search-input">
+        <input
+          nz-input
+          placeholder="Tìm tên, MST, email, SĐT..."
+          [(ngModel)]="searchText"
+        />
+      </nz-input-group>
+      <div class="toolbar-actions">
+        <nz-select
+          [(ngModel)]="statusFilter"
+          (ngModelChange)="loadBrands()"
+          nzPlaceHolder="Trạng thái"
+          style="width: 200px;"
+        >
+          @for (opt of statusOptions; track opt.value) {
+            <nz-option [nzValue]="opt.value" [nzLabel]="opt.label"></nz-option>
+          }
+        </nz-select>
+        <button nz-button (click)="loadBrands()">Tải lại</button>
+      </div>
+    </div>
+
+    <nz-table
+      #brandsTable
+      [nzData]="filteredBrands"
+      [nzShowPagination]="true"
+      [nzPageSize]="10"
+      nzSize="middle"
+    >
+      <thead>
+        <tr>
+          <th>Doanh nghiệp</th>
+          <th>MST</th>
+          <th>Người đại diện</th>
+          <th>Liên hệ</th>
+          <th>Trạng thái</th>
+          <th>Ngày tạo</th>
+          <th nzWidth="120px">Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let brand of brandsTable.data">
+          <td>
+            <strong>{{ brand.brandName }}</strong>
+            <div class="brand-id">{{ brand.id | slice:0:8 }}…</div>
+          </td>
+          <td>{{ brand.taxCode || '—' }}</td>
+          <td>{{ brand.representativeName || '—' }}</td>
+          <td>
+            <div>{{ brand.representativeEmail || brand.phone || '—' }}</div>
+            @if (brand.representativePhone && brand.representativeEmail) {
+              <div class="muted">{{ brand.representativePhone }}</div>
+            }
+          </td>
+          <td>
+            <nz-tag [nzColor]="statusColor(brand.status)">
+              {{ statusLabel(brand.status) }}
+            </nz-tag>
+          </td>
+          <td>{{ formatDate(brand.createdAt) }}</td>
+          <td>
+            <a nz-button nzType="link" nzSize="small" [routerLink]="['/admin/brands', brand.id]">
+              Chi tiết
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </nz-card>
+</nz-spin>

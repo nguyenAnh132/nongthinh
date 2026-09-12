@@ -1,0 +1,119 @@
+<div class="me-test-page">
+  <div class="me-test-header">
+    <h1>Thông tin tài khoản</h1>
+    <p class="me-test-subtitle">Dữ liệu từ <code>GET /me</code> — trang test xác thực</p>
+  </div>
+
+  <div class="me-test-content" *ngIf="currentUser() as user; else noUser">
+    <!-- Info cards -->
+    <div class="info-grid">
+      <div class="info-card">
+        <span class="info-label">User ID</span>
+        <span class="info-value mono">{{ user.userId }}</span>
+      </div>
+      <div class="info-card">
+        <span class="info-label">Email</span>
+        <span class="info-value">{{ user.email }}</span>
+      </div>
+      <div class="info-card">
+        <span class="info-label">Role</span>
+        <span class="info-value badge">{{ normalizedRole }}</span>
+      </div>
+      <div class="info-card" *ngIf="user.adminGroup">
+        <span class="info-label">Admin Group</span>
+        <span class="info-value badge">{{ user.adminGroup }}</span>
+      </div>
+      <div class="info-card">
+        <span class="info-label">Enabled</span>
+        <span
+          class="info-value"
+          [class.text-ok]="user.isEnabled"
+          [class.text-warn]="!user.isEnabled"
+        >
+          {{ user.isEnabled ? 'Có' : 'Không' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="section-card" *ngIf="user.profile">
+      <h3>Profile</h3>
+      <div class="detail-row">
+        <span>Type:</span><span>{{ user.profile.type }}</span>
+      </div>
+      <div class="detail-row">
+        <span>Display Name:</span><span>{{ user.profile.displayName }}</span>
+      </div>
+      <div class="detail-row">
+        <span>Status:</span><span class="badge">{{ user.profile.status }}</span>
+      </div>
+      <div class="detail-row" *ngIf="user.profile.avatarUrl">
+        <span>Avatar:</span><span class="mono">{{ user.profile.avatarUrl }}</span>
+      </div>
+    </div>
+
+    <!-- Flags -->
+    <div class="section-card" *ngIf="user.flags">
+      <h3>Flags</h3>
+      <div class="detail-row">
+        <span>Requires Email Verification:</span>
+        <span [class.text-warn]="user.flags.requiresEmailVerification">
+          {{ user.flags.requiresEmailVerification ? 'Có' : 'Không' }}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span>Requires Profile Completion:</span>
+        <span [class.text-warn]="user.flags.requiresProfileCompletion">
+          {{ user.flags.requiresProfileCompletion ? 'Có' : 'Không' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Permissions -->
+    <div class="section-card">
+      <h3>Permissions</h3>
+      <div
+        class="permissions-list"
+        *ngIf="user.permissions && user.permissions.length > 0; else noPerms"
+      >
+        <span class="perm-badge" *ngFor="let p of user.permissions">{{ p }}</span>
+      </div>
+      <ng-template #noPerms>
+        <p class="text-muted">Không có permission nào.</p>
+      </ng-template>
+    </div>
+
+    <!-- Raw JSON -->
+    <div class="section-card">
+      <h3>Raw JSON</h3>
+      <pre class="json-block">{{ userJson }}</pre>
+    </div>
+  </div>
+
+  <ng-template #noUser>
+    <div class="no-user">
+      <p>Không có dữ liệu user. Có thể phiên đã hết hạn.</p>
+    </div>
+  </ng-template>
+
+  <!-- Actions -->
+  <div class="me-test-actions">
+    <button class="btn btn-secondary" (click)="reload()" [disabled]="isReloading">
+      {{ isReloading ? 'Đang tải...' : '🔄 Tải lại /me' }}
+    </button>
+    <button class="btn btn-danger" (click)="logout()">🚪 Đăng xuất</button>
+  </div>
+</div>
+
+@if (logoutDialogOpen()) {
+  <app-confirm-dialog
+    title="Đăng xuất?"
+    message="Bạn có chắc chắn muốn đăng xuất khỏi tài khoản hiện tại?"
+    confirmLabel="Đăng xuất"
+    busyLabel="Đang đăng xuất..."
+    iconName="logout"
+    [busy]="loggingOut()"
+    (confirmed)="confirmLogout()"
+    (dismissed)="cancelLogout()"
+  />
+}

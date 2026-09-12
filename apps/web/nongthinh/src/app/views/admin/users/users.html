@@ -1,0 +1,99 @@
+<h1 class="admin-title admin-content-header">Quản lý Người dùng</h1>
+
+<nz-alert
+  nzType="info"
+  nzShowIcon
+  nzMessage="Đồng bộ hồ sơ tự động"
+  nzDescription="Khi thêm vai trò Farmer/Brand/Admin cho user, hệ thống sẽ tự tạo hồ sơ tương ứng. Khi gỡ vai trò, hồ sơ đó sẽ bị xóa vĩnh viễn."
+  style="margin-bottom: 16px;"
+></nz-alert>
+
+<nz-spin [nzSpinning]="loading">
+  <nz-card [nzBordered]="false" class="users-card">
+    <div class="users-toolbar">
+      <nz-input-group class="search-input">
+        <input nz-input placeholder="Tìm email hoặc ID..." [(ngModel)]="searchText" />
+      </nz-input-group>
+      <div class="toolbar-actions">
+        <nz-select [(ngModel)]="roleFilter" nzPlaceHolder="Tất cả vai trò" nzAllowClear style="width: 180px;">
+          <nz-option nzValue="FARMER" nzLabel="FARMER"></nz-option>
+          <nz-option nzValue="BRAND" nzLabel="BRAND"></nz-option>
+          <nz-option nzValue="ADMIN" nzLabel="ADMIN"></nz-option>
+        </nz-select>
+        <button nz-button (click)="loadUsers()">Tải lại</button>
+      </div>
+    </div>
+
+    <nz-table #basicTable [nzData]="filteredUsers" [nzShowPagination]="true" [nzPageSize]="10" nzSize="middle">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Email</th>
+          <th>Vai trò</th>
+          <th>Trạng thái</th>
+          <th>Ngày tạo</th>
+          <th nzWidth="260px">Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of basicTable.data">
+          <td><span class="user-id">{{ user.id | slice:0:8 }}…</span></td>
+          <td><strong>{{ user.email }}</strong></td>
+          <td>
+            <nz-tag [nzColor]="roleColor(user.roles)">{{ user.rolesLabel }}</nz-tag>
+          </td>
+          <td>
+            <nz-tag [nzColor]="statusColor(user.status)">{{ user.status }}</nz-tag>
+          </td>
+          <td>{{ user.createdAt }}</td>
+          <td>
+            @if (user.status === 'PENDING' && user.roles.includes('BRAND')) {
+              <button
+                nz-button
+                nzType="primary"
+                nzSize="small"
+                [nzLoading]="actionLoadingId === user.id"
+                (click)="approveBrand(user)"
+              >Duyệt</button>
+              <button
+                nz-button
+                nzDanger
+                nzSize="small"
+                [nzLoading]="actionLoadingId === user.id"
+                (click)="rejectBrand(user)"
+              >Từ chối</button>
+            }
+            @if (user.status === 'ACTIVE') {
+              <button
+                nz-button
+                nzType="text"
+                nzDanger
+                nzSize="small"
+                nz-popconfirm
+                nzPopconfirmTitle="Khóa tài khoản này?"
+                (nzOnConfirm)="disableUser(user)"
+                [nzLoading]="actionLoadingId === user.id"
+              >Khóa</button>
+            }
+            @if (user.status === 'DISABLED') {
+              <button
+                nz-button
+                nzType="link"
+                nzSize="small"
+                (click)="enableUser(user)"
+                [nzLoading]="actionLoadingId === user.id"
+              >Mở khóa</button>
+            }
+            <button
+              nz-button
+              nzType="link"
+              nzSize="small"
+              (click)="editRoles(user)"
+              [nzLoading]="actionLoadingId === user.id"
+            >Vai trò</button>
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </nz-card>
+</nz-spin>

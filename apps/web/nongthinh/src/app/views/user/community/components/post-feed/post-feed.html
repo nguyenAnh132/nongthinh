@@ -1,0 +1,52 @@
+<div class="post-feed">
+  @for (post of posts; track post.id) {
+    <app-community-post-card
+      [post]="post"
+      [detailMode]="detailMode"
+      (detailRequested)="detailRequested.emit(post.id)"
+      (reactionUsersRequested)="reactionUsersRequested.emit(post.id)"
+      [currentUserId]="currentUserId"
+      [currentUserName]="currentUserName"
+      [currentUserAvatarUrl]="currentUserAvatarUrl"
+      [interactionsEnabled]="interactionsEnabled"
+      (reactionChanged)="reactionChanged.emit({ postId: post.id, reactionType: $event })"
+      (commentsRequested)="commentsRequested.emit({ postId: post.id, append: $event })"
+      (commentCreated)="
+        commentCreated.emit({
+          postId: post.id,
+          content: $event.content,
+          parentCommentId: $event.parentCommentId,
+        })
+      "
+      (commentUpdated)="
+        commentUpdated.emit({
+          postId: post.id,
+          commentId: $event.commentId,
+          content: $event.content,
+        })
+      "
+      (commentDeleted)="commentDeleted.emit({ postId: post.id, commentId: $event })"
+      (bookmarkToggled)="bookmarkToggled.emit(post.id)"
+      (shareRequested)="shareRequested.emit(post.id)"
+      (deleteRequested)="deleteRequested.emit(post.id)"
+      (reportRequested)="
+        reportRequested.emit({
+          postId: post.id,
+          reason: $event.reason,
+          reasonDetail: $event.reasonDetail,
+        })
+      "
+    />
+  } @empty {
+    <section class="empty-feed">
+      <span
+        class="empty-feed-icon"
+        style="--community-icon: url('/icons/community/square-plus.png')"
+        aria-hidden="true"
+      ></span>
+      <h2>{{ emptyTitle }}</h2>
+      <p>{{ emptyDescription }}</p>
+      <button type="button" (click)="startPost.emit(null)">Tạo bài viết đầu tiên</button>
+    </section>
+  }
+</div>

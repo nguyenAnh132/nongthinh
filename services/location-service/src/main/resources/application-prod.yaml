@@ -1,0 +1,7 @@
+keycloak:
+  url: ${KEYCLOAK_URL:}
+  realm: ${KEYCLOAK_REALM:}
+
+spring:
+  application:
+    name: location-service

@@ -1,0 +1,118 @@
+================================================================================
+BRAND SERVICE - API ENDPOINTS
+================================================================================
+
+Base URL (qua API Gateway):  http://localhost:8888/api/v1/brand
+Base URL (trực tiếp service): http://localhost:9097/brand
+Context path (dev): /brand
+Port (dev): 9097
+
+Service điều phối workflow xét duyệt thương hiệu (Camunda BPM).
+Các endpoint admin yêu cầu JWT với quyền tương ứng.
+
+--------------------------------------------------------------------------------
+HEADERS (bắt buộc)
+--------------------------------------------------------------------------------
+Authorization: Bearer <access_token>
+Content-Type: application/json    (chỉ bắt buộc khi có request body)
+
+--------------------------------------------------------------------------------
+RESPONSE FORMAT
+--------------------------------------------------------------------------------
+Tất cả endpoint bọc trong ApiResponse:
+{
+  "code": "string | null",
+  "message": "string",
+  "result": <T> | null
+}
+
+================================================================================
+1. ADMIN TICKETS  (/admin/tickets)
+================================================================================
+
+Quyền yêu cầu: ticket:manage
+
+--- GET /admin/tickets ---
+Mô tả   : Lấy danh sách ticket (task Camunda) đang mở
+Auth    : ticket:manage
+Response: ApiResponse<List<TicketView>>
+  result[].taskId         : String
+  result[].taskName       : String
+  result[].brandProfileId : UUID
+  result[].assignee       : String | null
+  result[].createdAt      : Instant
+
+--- GET /admin/tickets/{taskId} ---
+Mô tả   : Lấy chi tiết một ticket
+Auth    : ticket:manage
+Path    : taskId (String)
+Response: ApiResponse<TicketDetailView>
+
+--- POST /admin/tickets/{taskId}/claim ---
+Mô tả   : Nhận (claim) ticket để xử lý
+Auth    : ticket:manage
+Path    : taskId (String)
+Response: ApiResponse<Void>
+
+--- POST /admin/tickets/{taskId}/unclaim ---
+Mô tả   : Hủy claim ticket
+Auth    : ticket:manage
+Path    : taskId (String)
+Response: ApiResponse<Void>
+
+--- POST /admin/tickets/{taskId}/complete/phone-verification ---
+Mô tả   : Hoàn thành bước xác minh điện thoại
+Auth    : ticket:manage
+Path    : taskId (String)
+Body    :
+{
+  "phoneCalled": "string",
+  "result": "string",
+  "note": "string"
+}
+Response: ApiResponse<Void>
+
+--- POST /admin/tickets/{taskId}/complete/documents-review ---
+Mô tả   : Hoàn thành bước rà soát hồ sơ/giấy tờ
+Auth    : ticket:manage
+Path    : taskId (String)
+Body    :
+{
+  "documentsOk": boolean,
+  "revisionReason": "string"    // bắt buộc khi documentsOk = false
+}
+Response: ApiResponse<Void>
+
+--- POST /admin/tickets/{taskId}/complete/final-decision ---
+Mô tả   : Hoàn thành bước quyết định cuối (duyệt/từ chối)
+Auth    : ticket:manage
+Path    : taskId (String)
+Body    :
+{
+  "outcome": "string",           // APPROVED | REJECTED
+  "rejectionReason": "string"    // bắt buộc khi outcome = REJECTED
+}
+Response: ApiResponse<Void>
+
+================================================================================
+2. ADMIN BRAND APPROVAL PROCESS  (/admin/brand-profiles)
+================================================================================
+
+--- GET /admin/brand-profiles/{brandProfileId}/process ---
+Mô tả   : Lấy trạng thái quy trình xét duyệt của một thương hiệu
+Auth    : brand:approve hoặc ticket:manage
+Path    : brandProfileId (UUID)
+Response: ApiResponse<BrandApprovalProcessView>
+  result.brandProfileId  : UUID
+  result.processInstanceId : String | null
+  result.currentStage    : String
+  result.tasks           : List<ProcessTaskView>
+
+================================================================================
+GHI CHÚ
+================================================================================
+- Brand-service không lưu profile; gọi profile-service (internal API) để đọc/cập nhật
+  trạng thái hồ sơ trong quá trình workflow.
+- Ticket tương ứng với user task trong Camunda process "brand-approval".
+- Luồng xét duyệt: phone-verification → documents-review → final-decision.
+- API Gateway strip header X-API-KEY khi route từ client.

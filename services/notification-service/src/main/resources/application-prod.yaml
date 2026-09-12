@@ -1,0 +1,51 @@
+cookie:
+  secure: ${COOKIE_SECURE:true}
+  http-only: ${COOKIE_HTTP_ONLY:true}
+  access-token-name: ${COOKIE_ACCESS_TOKEN_NAME:access_token}
+  refresh-token-name: ${COOKIE_REFRESH_TOKEN_NAME:refresh_token}
+  same-site: ${COOKIE_SAME_SITE:Lax}
+  access-path: ${COOKIE_ACCESS_PATH:/}
+  refresh-path: ${COOKIE_REFRESH_PATH:/}
+
+keycloak:
+  url: ${KEYCLOAK_URL:}
+  realm: ${KEYCLOAK_REALM:}
+
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: ${NOTIFICATION_SERVICE_DB_URL:}
+    username: ${NOTIFICATION_SERVICE_DB_USERNAME:}
+    password: ${NOTIFICATION_SERVICE_DB_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:}
+    consumer:
+      group-id: notification-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:}
+    api-key:
+      header-name: X-API-KEY
+      current-service-key: ${NOTIFICATION_SERVICE_API_KEY:}
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+server:
+  port: ${NOTIFICATION_SERVICE_PORT:9093}
+  servlet:
+    context-path: /notification

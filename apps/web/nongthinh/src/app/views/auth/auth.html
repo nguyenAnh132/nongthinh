@@ -1,0 +1,185 @@
+<div class="auth-page">
+  <div class="auth-container" #container>
+
+    <div class="auth-visual">
+      <img src="images/hero-banner.png" alt="Nông nghiệp xanh" class="auth-bg-img" />
+      <div class="auth-bg-overlay"></div>
+      <a routerLink="/" class="back-link">Quay lại</a>
+      <div class="auth-visual-content">
+        <div class="brand">
+          <span class="nav-logo-icon">
+            <img src="images/nongthinh_logo.png" alt="Nông Thịnh Logo"
+              style="width: 100%; height: 100%; object-fit: contain;" />
+          </span>
+          <span class="nav-logo-text">Nông Thịnh</span>
+        </div>
+        <h2 class="visual-title">Kết nối Nông dân<br>với Tương lai</h2>
+        <p class="visual-desc">Phát triển bền vững cùng Nông Thịnh.</p>
+      </div>
+    </div>
+
+    <div class="auth-forms">
+
+      <!-- Login (bypassed automatically) -->
+      <div class="form-wrapper text-center" #loginForm style="padding: 60px 0;">
+        <div class="form-header">
+          <h3>Đang đăng nhập...</h3>
+        </div>
+        <p style="color: var(--color-primary-600); font-weight: 500;">
+          Đang chuyển đến trang đăng nhập an toàn Keycloak...
+        </p>
+      </div>
+
+      <!-- Role -->
+      <div class="form-wrapper" #roleForm style="display: none;">
+        <div class="form-header">
+          <h3>Tham gia Nông Thịnh</h3>
+          <p>Bạn muốn đăng ký với vai trò gì?</p>
+        </div>
+        <div class="role-selection-grid">
+          <div class="role-card" (click)="onRoleSelect('FARMER')">
+            <h4>Tôi là nông dân</h4>
+            <p>Sử dụng AI chẩn đoán, xem thời tiết, giá lúa</p>
+          </div>
+          <div class="role-card" (click)="onRoleSelect('BRAND')">
+            <h4>Nhãn hàng / Đại lý</h4>
+            <p>Quản lý sản phẩm vật tư nông nghiệp</p>
+          </div>
+        </div>
+        <p class="auth-switch mt-8">Đã có tài khoản? <a href="javascript:void(0)" (click)="goToView('login', 'backward')">Đăng nhập</a></p>
+      </div>
+
+      <!-- Register credentials -->
+      <div class="form-wrapper" #registerForm style="display: none;">
+        <div class="form-header">
+          <button class="btn-back" (click)="backToRoleSelect()" type="button" aria-label="Quay lại">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h3>Tạo tài khoản</h3>
+          <p>Bước 1: Thiết lập email và mật khẩu</p>
+        </div>
+        <form [formGroup]="registerFormGroup" (ngSubmit)="onRegisterSubmit()">
+          <div class="input-group">
+            <label for="reg-email">Email</label>
+            <input type="email" id="reg-email" formControlName="email" placeholder="Nhập email" />
+          </div>
+          <div class="input-group">
+            <label for="reg-password">Mật khẩu</label>
+            <input type="password" id="reg-password" formControlName="password" placeholder="Tạo mật khẩu" />
+          </div>
+          <div class="input-group">
+            <label for="reg-password-confirm">Xác nhận mật khẩu</label>
+            <input type="password" id="reg-password-confirm" formControlName="confirmPassword" placeholder="Xác nhận mật khẩu" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Đang chuẩn bị hồ sơ...' : 'Tiếp tục' }}
+          </button>
+        </form>
+        <p class="auth-switch mt-6">Đã có tài khoản? <a href="javascript:void(0)" (click)="goToView('login', 'backward')">Đăng nhập</a></p>
+      </div>
+
+      <!-- Profile -->
+      <div class="form-wrapper" #profileForm style="display: none;">
+        <div class="form-header">
+          <button class="btn-back" (click)="backToRegister()" type="button" aria-label="Quay lại">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h3>Thông tin hồ sơ</h3>
+          <p>Bước 2: Bổ sung thông tin của bạn</p>
+        </div>
+        <form [formGroup]="profileFormGroup" (ngSubmit)="onProfileSubmit()">
+          @for (field of profileFields; track field.key) {
+            <div class="input-group">
+              <label [for]="'prof-' + field.key">{{ field.label }}</label>
+              
+              @if (field.controlType === 'select') {
+                <select 
+                  [id]="'prof-' + field.key" 
+                  [formControlName]="field.key"
+                  (change)="field.key === 'provinceId' || field.key === 'officeProvinceId'
+                    ? onProvinceChange($event)
+                    : null"
+                >
+                  <option value="">{{ field.placeholder }}</option>
+                  @for (opt of getOptionsForField(field); track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              } @else {
+                <input
+                  [type]="field.type"
+                  [id]="'prof-' + field.key"
+                  [formControlName]="field.key"
+                  [placeholder]="field.placeholder"
+                />
+              }
+            </div>
+          }
+          <button type="submit" class="btn btn-primary btn-full" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Đang đăng ký...' : 'Đăng ký' }}
+          </button>
+        </form>
+      </div>
+
+      <!-- OTP -->
+      <div class="form-wrapper" #otpForm style="display: none;">
+        <div class="form-header">
+          <button class="btn-back" (click)="backToProfile()" type="button" aria-label="Quay lại">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h3>Xác thực Email</h3>
+          <p>Mã OTP đã được gửi đến {{ registrationEmail || 'email của bạn' }}.</p>
+        </div>
+        <form [formGroup]="otpFormGroup" (ngSubmit)="onOtpSubmit()">
+          <div class="otp-inputs">
+            @for (key of otpDigitKeys; track key) {
+              <input
+                type="text"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                maxlength="1"
+                [formControlName]="key"
+                (input)="onOtpInput($event)"
+                (keydown)="onOtpKeydown($event)"
+              />
+            }
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" [disabled]="isSubmitting">
+            {{ isSubmitting ? 'Đang xác minh...' : 'Xác nhận' }}
+          </button>
+          <div class="resend-otp">
+            @if (isResendCooldownActive) {
+              Gửi lại mã sau <span class="resend-countdown">{{ resendCountdownLabel }}</span>
+            } @else {
+              Chưa nhận được mã?
+              <a
+                href="javascript:void(0)"
+                [class.is-disabled]="!canResendOtp"
+                (click)="resendOtp($event)"
+              >Gửi lại ngay</a>
+            }
+          </div>
+        </form>
+      </div>
+
+      <!-- Brand pending approval -->
+      <div class="form-wrapper" #pendingForm style="display: none;">
+        <div class="form-header">
+          <h3>Đăng ký đã gửi</h3>
+          <p>Tài khoản thương hiệu đang chờ quản trị viên duyệt.</p>
+        </div>
+        <p>Sau khi quản trị viên duyệt, bạn có thể đăng nhập bằng email đã đăng ký.</p>
+        <button type="button" class="btn btn-primary btn-full mt-6" (click)="goToView('login', 'backward')">
+          Về trang đăng nhập
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

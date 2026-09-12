@@ -1,0 +1,747 @@
+<section class="operations-page">
+  <aside class="operations-sidebar" aria-label="Điều hướng quản lý doanh nghiệp">
+    <div class="workspace-identity">
+      <app-user-avatar
+        [name]="isAdmin ? 'Quản trị danh mục' : businessName"
+        [avatarUrl]="businessAvatarUrl"
+        [size]="38"
+      />
+      <strong>{{ isAdmin ? 'Quản trị danh mục' : businessName }}</strong>
+    </div>
+    <nav class="workspace-navigation">
+      @if (isAdmin) {
+        <p class="nav-group-title">Danh mục</p>
+        <button type="button" class="active">Thêm danh mục</button>
+      } @else {
+        <p class="nav-group-title">Sản phẩm</p>
+        <button
+          type="button"
+          [disabled]="savingProduct"
+          [class.active]="
+            activeTab === 'products' || activeTab === 'detail' || activeTab === 'edit'
+          "
+          [attr.aria-current]="activeTab === 'products' ? 'page' : null"
+          (click)="selectTab('products')"
+        >
+          Tất cả sản phẩm
+          <span class="nav-count">{{ productsLoaded ? products.length : '—' }}</span>
+        </button>
+        <button
+          type="button"
+          [disabled]="savingProduct"
+          [class.active]="activeTab === 'product'"
+          [attr.aria-current]="activeTab === 'product' ? 'page' : null"
+          (click)="selectTab('product')"
+        >
+          Thêm sản phẩm
+        </button>
+        <button
+          type="button"
+          [disabled]="savingProduct"
+          [class.active]="activeTab === 'history'"
+          [attr.aria-current]="activeTab === 'history' ? 'page' : null"
+          (click)="selectTab('history')"
+        >
+          Lịch sử sản phẩm
+        </button>
+        <p class="nav-group-title second-group">Bệnh cây trồng</p>
+        <button
+          type="button"
+          [disabled]="savingProduct"
+          [class.active]="activeTab === 'disease'"
+          [attr.aria-current]="activeTab === 'disease' ? 'page' : null"
+          (click)="selectTab('disease')"
+        >
+          Quản lý bệnh cây trồng
+        </button>
+      }
+    </nav>
+  </aside>
+
+  <div class="operations-content">
+    <nav class="breadcrumb" aria-label="Đường dẫn">
+      <span>Doanh nghiệp</span><span aria-hidden="true">/</span
+      ><span>{{ activeTab === 'disease' ? 'Bệnh cây trồng' : 'Sản phẩm' }}</span>
+      @if (activeTab !== 'disease') {
+        <span aria-hidden="true">/</span><strong>{{ pageTitle }}</strong>
+      }
+    </nav>
+
+    @if (loading) {
+      <div class="state-card">Đang xác thực hồ sơ thương hiệu...</div>
+    } @else if (!isAdmin && !brandProfileId) {
+      <div class="state-card state-card--warning">
+        Hồ sơ chưa ở trạng thái ACTIVE. Vui lòng kiểm tra lại trang Hồ sơ.
+      </div>
+    } @else if (activeTab === 'products') {
+      <app-brand-product-list
+        [products]="products"
+        [categories]="categories"
+        [loading]="loadingProducts"
+        [error]="productsError"
+        [statusUpdatingId]="statusUpdatingId"
+        (create)="selectTab('product')"
+        (detail)="selectTab('detail', $event.id)"
+        (edit)="selectTab('edit', $event.id)"
+        (history)="selectTab('history', $event.id)"
+        (publicationStatusChange)="updatePublicationStatus($event.product, $event.status)"
+        (retry)="loadProducts()"
+      />
+    } @else if (loadingDetail) {
+      <div
+        class="detail-loading"
+        role="status"
+        aria-busy="true"
+        aria-label="Đang tải chi tiết sản phẩm"
+      >
+        <div></div>
+        <span></span><span></span><span></span>
+      </div>
+    } @else if (detailError) {
+      <section class="state-card" role="alert">
+        <h2>Chưa tải được sản phẩm</h2>
+        <p>{{ detailError }}</p>
+        <button class="secondary-button" type="button" (click)="retryDetail()">Thử lại</button>
+      </section>
+    } @else if (activeTab === 'detail' && selectedProduct; as product) {
+      <header class="workspace-heading">
+        <div>
+          <button class="back-link" type="button" (click)="selectTab('products')">
+            <img src="/icons/business/left.png" alt="" aria-hidden="true" /> Tất cả sản phẩm
+          </button>
+          <h1>Chi tiết sản phẩm</h1>
+        </div>
+        <div class="heading-actions">
+          <button class="secondary-button" type="button" (click)="selectTab('history', product.id)">
+            Xem lịch sử</button
+          ><button class="primary-button" type="button" (click)="selectTab('edit', product.id)">
+            Cập nhật sản phẩm
+          </button>
+        </div>
+      </header>
+      <section class="product-detail-view">
+        <div class="detail-overview">
+          <div class="detail-image">
+            @if (product.thumbnailUrl) {
+              <img [src]="product.thumbnailUrl" [alt]="product.name" />
+            } @else {
+              <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span
+              ><small>Chưa có ảnh sản phẩm</small>
+            }
+          </div>
+          <div class="detail-copy">
+            <span class="product-status" [attr.data-status]="statusKey(product)">{{
+              statusLabel(product)
+            }}</span>
+            <h2>{{ product.name }}</h2>
+            <p class="detail-category">{{ categoryLabel(product.categoryId) }}</p>
+            <div
+              class="detail-rating"
+              [attr.aria-label]="
+                product.reviewCount
+                  ? (product.averageRating | number: '1.1-1') + ' trên 5 sao, ' + product.reviewCount + ' đánh giá'
+                  : 'Chưa có đánh giá'
+              "
+            >
+              <span aria-hidden="true">★</span>
+              @if (product.reviewCount > 0) {
+                <strong>{{ product.averageRating | number: '1.1-1' }}</strong>
+                <small>{{ product.reviewCount }} đánh giá</small>
+              } @else {
+                <small>Chưa có đánh giá</small>
+              }
+            </div>
+            <p>{{ product.shortDescription || 'Chưa có mô tả ngắn.' }}</p>
+            <small>Cập nhật {{ product.updatedAt | date: 'dd/MM/yyyy HH:mm' : '+0700' }}</small>
+            @if (product.moderationReason) {
+              <p class="moderation-note">Lý do khóa: {{ product.moderationReason }}</p>
+            }
+          </div>
+        </div>
+        <div class="detail-section">
+          <h3>Thông tin sản phẩm</h3>
+          <dl class="detail-facts">
+            @for (field of detailFields; track field.key) {
+              <div>
+                <dt>{{ field.label }}</dt>
+                <dd>{{ product[field.key] || 'Chưa cập nhật' }}</dd>
+              </div>
+            }
+          </dl>
+        </div>
+        <div class="detail-section">
+          <h3>Mô tả & hướng dẫn sử dụng</h3>
+          @for (field of descriptionFields; track field.key) {
+            <div class="detail-description">
+              <h4>{{ field.label }}</h4>
+              <p>{{ product[field.key] || 'Chưa cập nhật' }}</p>
+            </div>
+          }
+        </div>
+        <div class="detail-section">
+          <h3>
+            Bệnh cây trồng được điều trị <span>{{ treatments.length }}</span>
+          </h3>
+          @for (treatment of treatments; track treatment.id) {
+            <article class="treatment-summary">
+              <h4>{{ diseaseLabel(treatment.diseaseId) }}</h4>
+              <dl class="detail-facts">
+                <div>
+                  <dt>Mức hiệu quả</dt>
+                  <dd>{{ effectivenessLabel(treatment.effectivenessLevel) }}</dd>
+                </div>
+                <div>
+                  <dt>Thứ tự ưu tiên</dt>
+                  <dd>{{ treatment.priority }}</dd>
+                </div>
+                <div>
+                  <dt>Liều dùng</dt>
+                  <dd>{{ treatment.dosage || 'Chưa cập nhật' }}</dd>
+                </div>
+                <div>
+                  <dt>Phương pháp áp dụng</dt>
+                  <dd>{{ treatment.applicationMethod || 'Chưa cập nhật' }}</dd>
+                </div>
+                <div>
+                  <dt>Thời điểm áp dụng</dt>
+                  <dd>{{ treatment.applicationTiming || 'Chưa cập nhật' }}</dd>
+                </div>
+                <div>
+                  <dt>Tần suất</dt>
+                  <dd>{{ treatment.frequencyInstruction || 'Chưa cập nhật' }}</dd>
+                </div>
+              </dl>
+              @if (treatment.treatmentNote) {
+                <p>{{ treatment.treatmentNote }}</p>
+              }
+            </article>
+          } @empty {
+            <p class="muted">Chưa có thông tin điều trị.</p>
+          }
+        </div>
+        <div class="detail-section">
+          <h3>Liên kết mua hàng</h3>
+          @if (safePurchaseUrl(product.purchaseUrl); as url) {
+            <a [href]="url" target="_blank" rel="noopener noreferrer"
+              >{{ product.purchaseUrl }} ↗</a
+            >
+          } @else {
+            <p class="muted">{{ product.purchaseUrl || 'Chưa cập nhật' }}</p>
+          }
+        </div>
+      </section>
+    } @else if (activeTab === 'category') {
+      <div class="content-grid content-grid--category">
+        <form class="operation-card" [formGroup]="categoryForm" (ngSubmit)="createCategory()">
+          <div class="card-heading">
+            <div>
+              <span class="step">01</span>
+              <h2>Tạo danh mục mới</h2>
+            </div>
+            <p>Danh mục được kích hoạt ngay và có thể chọn khi tạo sản phẩm.</p>
+          </div>
+
+          <div class="form-grid">
+            <label class="field field--wide">
+              <span>Tên danh mục <b>*</b></span>
+              <input
+                formControlName="name"
+                maxlength="150"
+                placeholder="Ví dụ: Phân bón hữu cơ"
+                (input)="onCategoryNameInput()"
+              />
+              @if (categoryForm.controls.name.touched && categoryForm.controls.name.invalid) {
+                <small>Vui lòng nhập tên danh mục (tối đa 150 ký tự).</small>
+              }
+            </label>
+
+            <label class="field">
+              <span>Đường dẫn (slug) <b>*</b></span>
+              <input formControlName="slug" maxlength="180" placeholder="phan-bon-huu-co" />
+            </label>
+
+            <label class="field">
+              <span>Danh mục cha</span>
+              <select formControlName="parentId">
+                <option value="">Không có — danh mục cấp cao nhất</option>
+                @for (category of categories; track category.id) {
+                  <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="field field--small">
+              <span>Thứ tự hiển thị</span>
+              <input formControlName="displayOrder" type="number" min="0" />
+            </label>
+
+            <label class="field field--wide">
+              <span>Mô tả</span>
+              <textarea
+                formControlName="description"
+                rows="5"
+                placeholder="Mô tả ngắn giúp người dùng hiểu phạm vi của danh mục"
+              ></textarea>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <span><b>*</b> Thông tin bắt buộc</span>
+            <button class="primary-button" type="submit" [disabled]="savingCategory">
+              {{ savingCategory ? 'Đang tạo...' : 'Tạo danh mục' }}
+            </button>
+          </div>
+        </form>
+
+        <aside class="category-panel">
+          <span class="eyebrow">Danh mục đang dùng</span>
+          <h3>{{ categories.length }} danh mục hiện có</h3>
+          <div class="category-list">
+            @for (category of categories; track category.id) {
+              <div class="category-item">
+                <span>{{ category.name }}</span>
+                <small>#{{ category.displayOrder }}</small>
+              </div>
+            } @empty {
+              <p>Chưa có danh mục. Hãy tạo danh mục đầu tiên.</p>
+            }
+          </div>
+        </aside>
+      </div>
+    } @else if (activeTab === 'history') {
+      <header class="workspace-heading">
+        <div>
+          <button class="back-link" type="button" (click)="selectTab('products')">
+            <img src="/icons/business/left.png" alt="" aria-hidden="true" /> Tất cả sản phẩm
+          </button>
+          <h1>Lịch sử sản phẩm</h1>
+        </div>
+        @if (historyProductId) {
+          <button class="secondary-button" type="button" (click)="selectTab('history')">
+            Tất cả lịch sử
+          </button>
+        }
+      </header>
+      <section class="product-history-panel">
+        @if (loadingProducts) {
+          <div class="state-card">Đang tải danh sách sản phẩm...</div>
+        } @else if (productsError) {
+          <div class="state-card" role="alert">
+            <p>{{ productsError }}</p>
+            <button class="secondary-button" type="button" (click)="loadProducts()">Thử lại</button>
+          </div>
+        } @else {
+          <div class="product-history-list">
+            @for (product of historyProducts; track product.id) {
+              <article class="product-history-card">
+                <div class="product-history-summary">
+                  <div class="product-history-image">
+                    @if (product.thumbnailUrl) {
+                      <img [src]="product.thumbnailUrl" [alt]="product.name" />
+                    } @else {
+                      <span class="material-symbols-outlined">inventory_2</span>
+                    }
+                  </div>
+                  <div>
+                    <h3>{{ product.name }}</h3>
+                    <p>
+                      {{ product.sku || 'Chưa có SKU' }}
+                      · {{ statusLabel(product) }}
+                    </p>
+                    <small>Tạo lúc {{ product.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+                  </div>
+                  <button
+                    type="button"
+                    class="secondary-button"
+                    (click)="toggleProductHistory(product)"
+                  >
+                    {{ expandedProductHistoryId === product.id ? 'Ẩn lịch sử' : 'Xem lịch sử' }}
+                  </button>
+                </div>
+
+                @if (expandedProductHistoryId === product.id) {
+                  <div class="product-timeline">
+                    @if (productHistoryLoadingId === product.id) {
+                      <p class="timeline-state">Đang tải lịch sử...</p>
+                    } @else if (historyErrors[product.id]) {
+                      <div role="alert">
+                        <p>{{ historyErrors[product.id] }}</p>
+                        <button
+                          class="secondary-button"
+                          type="button"
+                          (click)="loadProductHistory(product.id)"
+                        >
+                          Thử lại
+                        </button>
+                      </div>
+                    } @else {
+                      @for (history of productHistories[product.id] || []; track history.id) {
+                        <div class="product-timeline-entry">
+                          <span class="timeline-dot"></span>
+                          <div>
+                            <div class="timeline-heading">
+                              <strong>{{ productActionLabel(history.action) }}</strong>
+                              <time>{{ history.createdAt | date: 'dd/MM/yyyy HH:mm' }}</time>
+                            </div>
+                            <p>
+                              {{ historyActorLabel(history.actorType) }}
+                            </p>
+                            @if (history.reason) {
+                              <blockquote>{{ history.reason }}</blockquote>
+                            }
+                          </div>
+                        </div>
+                      } @empty {
+                        <p class="timeline-state">Chưa có lịch sử sản phẩm.</p>
+                      }
+                    }
+                  </div>
+                }
+              </article>
+            } @empty {
+              <div class="state-card">
+                Chưa có sản phẩm nào. Hãy tạo sản phẩm đầu tiên để bắt đầu ghi lịch sử.
+              </div>
+            }
+          </div>
+        }
+      </section>
+    } @else if (activeTab === 'disease') {
+      <app-disease-management />
+    } @else if (activeTab === 'product' || (activeTab === 'edit' && selectedProduct)) {
+      <header class="workspace-heading">
+        <div>
+          <button
+            class="back-link"
+            type="button"
+            [disabled]="savingProduct"
+            (click)="selectTab('products')"
+          >
+            <img src="/icons/business/left.png" alt="" aria-hidden="true" /> Tất cả sản phẩm
+          </button>
+          <h1>{{ activeTab === 'edit' ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới' }}</h1>
+        </div>
+        <span class="required-note"><b>*</b> Thông tin bắt buộc</span>
+      </header>
+      @if (activeTab === 'edit' && selectedProduct; as product) {
+        <div class="publication-control" [attr.data-status]="statusKey(product)">
+          <div>
+            <img class="publication-icon" src="/icons/business/eye.png" alt="" aria-hidden="true" />
+            <p>
+              <strong>Trạng thái hiển thị: {{ statusLabel(product) }}</strong>
+              @if (product.moderationStatus === 'LOCKED') {
+                <small>
+                  Sản phẩm đang bị admin khóa và doanh nghiệp không thể đổi trạng thái.
+                </small>
+              } @else if (product.publicationStatus !== 'PUBLISHED') {
+                <small>
+                  Sản phẩm chưa hiển thị công khai với khách hàng.
+                </small>
+              }
+            </p>
+          </div>
+          @if (product.moderationStatus !== 'LOCKED') {
+            <button
+              class="secondary-button publication-button"
+              type="button"
+              [disabled]="statusUpdatingId !== null || savingProduct"
+              (click)="updatePublicationStatus(product)"
+            >
+              {{
+                statusUpdatingId === product.id
+                  ? 'Đang cập nhật...'
+                  : publicationActionLabel(product)
+              }}
+            </button>
+          }
+        </div>
+      }
+      <form
+        class="product-form"
+        [class.operation-card]="activeTab === 'product'"
+        [formGroup]="productForm"
+        (ngSubmit)="createProduct()"
+      >
+        <fieldset [disabled]="savingProduct" class="product-fields">
+          <div class="card-heading">
+            <div>
+              <span class="step">01</span>
+              <h2>Thông tin sản phẩm</h2>
+            </div>
+          </div>
+
+          <div class="section-title">Thông tin chính</div>
+          <div class="form-grid form-grid--three">
+            <label class="field field--wide">
+              <span>Tên sản phẩm <b>*</b></span>
+              <input
+                formControlName="name"
+                maxlength="255"
+                placeholder="Nhập tên thương mại đầy đủ"
+                (input)="onProductNameInput()"
+              />
+              @if (productForm.controls.name.touched && productForm.controls.name.invalid) {
+                <small>Vui lòng nhập tên sản phẩm (tối đa 255 ký tự).</small>
+              }
+            </label>
+            <label class="field">
+              <span>Danh mục <b>*</b></span>
+              <select formControlName="categoryId">
+                <option value="" disabled>Chọn danh mục</option>
+                @if (selectedProduct && !hasActiveCategory(selectedProduct.categoryId)) {
+                  <option [value]="selectedProduct.categoryId">
+                    Danh mục hiện tại (ngừng hoạt động)
+                  </option>
+                }
+                @for (category of categories; track category.id) {
+                  <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+              @if (!categories.length) {
+                <small>Hãy tạo một danh mục trước khi thêm sản phẩm.</small>
+              }
+            </label>
+            <label class="field">
+              <span>Đường dẫn (slug) <b>*</b></span>
+              <input formControlName="slug" maxlength="280" placeholder="ten-san-pham" />
+            </label>
+            <label class="field">
+              <span>Mã SKU</span>
+              <input formControlName="sku" maxlength="100" placeholder="SKU-001" />
+            </label>
+            <label class="field">
+              <span>Số đăng ký</span>
+              <input formControlName="registrationNumber" maxlength="100" />
+            </label>
+            <label class="field">
+              <span>Nhà sản xuất</span>
+              <input formControlName="manufacturerName" maxlength="255" />
+            </label>
+            <label class="field">
+              <span>Xuất xứ</span>
+              <input formControlName="originCountry" maxlength="100" />
+            </label>
+            <label class="field">
+              <span>Dạng sản phẩm</span>
+              <input formControlName="form" maxlength="100" placeholder="Bột, nước, viên..." />
+            </label>
+            <label class="field">
+              <span>Đơn vị</span>
+              <input formControlName="unit" maxlength="50" placeholder="Chai, gói, kg..." />
+            </label>
+            <label class="field">
+              <span>Quy cách đóng gói</span>
+              <input formControlName="packageSpecification" maxlength="255" />
+            </label>
+            <label class="field field--wide">
+              <span>Mô tả ngắn</span>
+              <textarea formControlName="shortDescription" rows="3" maxlength="500"></textarea>
+              <em>{{ productForm.controls.shortDescription.value.length }}/500</em>
+            </label>
+            <label class="field field--wide">
+              <span>Mô tả chi tiết</span>
+              <textarea formControlName="description" rows="5"></textarea>
+            </label>
+          </div>
+
+          <div class="section-title">Hướng dẫn và an toàn</div>
+          <div class="form-grid">
+            <label class="field field--wide">
+              <span>Thành phần</span>
+              <textarea formControlName="ingredients" rows="3"></textarea>
+            </label>
+            <label class="field">
+              <span>Hướng dẫn sử dụng</span>
+              <textarea formControlName="usageInstruction" rows="4"></textarea>
+            </label>
+            <label class="field">
+              <span>Liều lượng</span>
+              <textarea formControlName="dosageInstruction" rows="4"></textarea>
+            </label>
+            <label class="field">
+              <span>Chỉ dẫn an toàn</span>
+              <textarea formControlName="safetyInstruction" rows="4"></textarea>
+            </label>
+            <label class="field">
+              <span>Bảo quản</span>
+              <textarea formControlName="storageInstruction" rows="4"></textarea>
+            </label>
+            <label class="field field--wide">
+              <span>Cảnh báo</span>
+              <textarea formControlName="warning" rows="3"></textarea>
+            </label>
+            <label class="field field--wide">
+              <span>Liên kết mua hàng</span>
+              <input formControlName="purchaseUrl" type="url" placeholder="https://..." />
+            </label>
+          </div>
+
+          <div class="section-title treatment-title">
+            <span>Bệnh sản phẩm điều trị</span>
+            <button type="button" class="add-treatment-button" (click)="addTreatmentRow()">
+              + Thêm bệnh
+            </button>
+          </div>
+          @if (!approvedDiseases.length && !treatments.length) {
+            <div class="treatment-empty">
+              Chưa có bệnh đã duyệt để lựa chọn. Hãy tạo bệnh ở tab “Quản lý bệnh” và gửi duyệt.
+            </div>
+          } @else {
+            <div class="treatment-list">
+              @for (row of treatmentRows.controls; track row; let index = $index) {
+                <section class="treatment-card" [formGroup]="row">
+                  <div class="treatment-card-heading">
+                    <strong>Bệnh điều trị #{{ index + 1 }}</strong>
+                    <button type="button" (click)="removeTreatmentRow(index)">Xoá dòng</button>
+                  </div>
+                  <div class="form-grid form-grid--three">
+                    <label class="field">
+                      <span>Bệnh</span>
+                      <select formControlName="diseaseId">
+                        <option value="">Không chọn</option>
+                        @if (
+                          row.controls.diseaseId.value &&
+                          !hasApprovedDisease(row.controls.diseaseId.value)
+                        ) {
+                          <option [value]="row.controls.diseaseId.value">
+                            Bệnh đã liên kết (không còn được duyệt)
+                          </option>
+                        }
+                        @for (disease of approvedDiseases; track disease.id) {
+                          <option
+                            [value]="disease.id"
+                            [disabled]="isDiseaseSelectedElsewhere(disease.id, index)"
+                          >
+                            {{ disease.name }} · {{ cropTypeLabel(disease.cropTypeId) }}
+                          </option>
+                        }
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>Mức hiệu quả</span>
+                      <select formControlName="effectivenessLevel">
+                        <option value="">Chưa xác định</option>
+                        <option value="LOW">Thấp</option>
+                        <option value="MEDIUM">Trung bình</option>
+                        <option value="HIGH">Cao</option>
+                        <option value="VERY_HIGH">Rất cao</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span>Thứ tự ưu tiên</span>
+                      <input formControlName="priority" type="number" min="0" />
+                    </label>
+                    <label class="field">
+                      <span>Liều dùng cho bệnh này</span>
+                      <input
+                        formControlName="dosage"
+                        maxlength="255"
+                        placeholder="Ví dụ: 20 ml / bình 16 lít"
+                      />
+                    </label>
+                    <label class="field">
+                      <span>Phương pháp áp dụng</span>
+                      <input
+                        formControlName="applicationMethod"
+                        placeholder="Phun lá, tưới gốc..."
+                      />
+                    </label>
+                    <label class="field">
+                      <span>Thời điểm áp dụng</span>
+                      <input
+                        formControlName="applicationTiming"
+                        placeholder="Khi bệnh mới xuất hiện..."
+                      />
+                    </label>
+                    <label class="field field--wide">
+                      <span>Tần suất</span>
+                      <input
+                        formControlName="frequencyInstruction"
+                        maxlength="255"
+                        placeholder="Lặp lại sau 5–7 ngày nếu cần"
+                      />
+                    </label>
+                    <label class="field field--wide">
+                      <span>Ghi chú điều trị</span>
+                      <textarea
+                        formControlName="treatmentNote"
+                        rows="3"
+                        placeholder="Lưu ý riêng khi dùng sản phẩm cho bệnh này"
+                      ></textarea>
+                    </label>
+                  </div>
+                </section>
+              }
+            </div>
+          }
+
+          <div class="section-title">Ảnh đại diện</div>
+          <div class="image-upload">
+            <label class="upload-zone">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onImageSelected($event)"
+              />
+              @if (imagePreviewUrl || (activeTab === 'edit' && selectedProduct?.thumbnailUrl)) {
+                <img [src]="imagePreviewUrl || selectedProduct?.thumbnailUrl" alt="Ảnh sản phẩm" />
+              } @else {
+                <span class="upload-icon">↑</span>
+                <strong>Chọn ảnh sản phẩm</strong>
+                <small>JPEG, PNG hoặc WebP · tối đa 5 MB</small>
+              }
+            </label>
+            <div class="image-meta">
+              @if (selectedImage) {
+                <strong>{{ selectedImage.name }}</strong>
+                <span>{{ (selectedImage.size / 1024 / 1024).toFixed(2) }} MB</span>
+              } @else {
+                <strong>{{
+                  activeTab === 'edit' ? 'Cập nhật ảnh đại diện' : 'Ảnh là tùy chọn'
+                }}</strong>
+                <span>{{
+                  activeTab === 'edit'
+                    ? 'Chọn ảnh mới để thay ảnh đại diện hiện tại.'
+                    : 'Bạn có thể bổ sung ảnh sau khi tạo sản phẩm.'
+                }}</span>
+              }
+              <label class="field">
+                <span>Văn bản thay thế</span>
+                <input formControlName="imageAltText" maxlength="255" />
+              </label>
+              @if (imageError) {
+                <p class="image-error">{{ imageError }}</p>
+              }
+            </div>
+          </div>
+        </fieldset>
+        <div class="form-actions sticky-actions">
+          <span><b>*</b> Thông tin bắt buộc</span>
+          <div class="heading-actions">
+            <button
+              class="secondary-button"
+              type="button"
+              [disabled]="savingProduct"
+              (click)="selectTab('products')"
+            >
+              Hủy
+            </button>
+            <button
+              class="primary-button"
+              type="submit"
+              [disabled]="savingProduct || (!categories.length && !selectedProduct)"
+            >
+              {{
+                savingProduct
+                  ? 'Đang lưu...'
+                  : activeTab === 'edit'
+                    ? 'Lưu thay đổi'
+                    : 'Tạo sản phẩm'
+              }}
+            </button>
+          </div>
+        </div>
+      </form>
+    }
+  </div>
+</section>

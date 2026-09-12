@@ -1,0 +1,69 @@
+<div class="toast-viewport" aria-live="polite" aria-relevant="additions">
+  @for (toast of toasts(); track toast.id) {
+    <div [class]="'toast toast--' + toast.type" role="status">
+      <span class="toast__icon" [attr.aria-label]="iconLabel(toast.type)">
+        @switch (toast.type) {
+          @case ('success') {
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M6.5 12.5l3.5 3.5 7.5-7.5"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          }
+          @case ('info') {
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 11v6M12 7.5h.01"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              />
+            </svg>
+          }
+          @case ('warning') {
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M12 8v5M12 16h.01"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              />
+            </svg>
+          }
+          @default {
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M8 8l8 8M16 8l-8 8"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              />
+            </svg>
+          }
+        }
+      </span>
+
+      <p class="toast__message">{{ toast.message }}</p>
+
+      <button
+        type="button"
+        class="toast__close"
+        aria-label="Đóng thông báo"
+        (click)="dismiss(toast.id)"
+      >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path
+            d="M7 7l10 10M17 7L7 17"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+    </div>
+  }
+</div>

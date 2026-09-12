@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:agri_catalog_service;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+
+  flyway:
+    enabled: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://keycloak.nongthinh.nvtanh.id.vn/realms/nongthinh
+    api-key:
+      header-name: X-API-KEY
+      current-service-key: agri-catalog
+      clients:
+        file-service:
+          url: http://localhost:9095/files
+          api-key: file
+        rice-disease-diagnosis-service:
+          url: http://localhost:9099/diagnosis
+          api-key: diagnosis
+
+cookie:
+  secure: false
+  http-only: true
+  access-token-name: access_token
+  refresh-token-name: refresh_token
+  same-site: Lax
+  access-path: /
+  refresh-path: /

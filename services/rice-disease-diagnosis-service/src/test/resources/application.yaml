@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:diagnosis_service;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/test
+    api-key:
+      current-service-key: test-diagnosis-key
+      clients:
+        agri-catalog-service:
+          url: http://localhost:9098/agri-catalog
+          api-key: test-catalog-key
+        file-service:
+          url: http://localhost:9095/files
+          api-key: test-file-key

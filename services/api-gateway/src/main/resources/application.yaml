@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: api-gateway
+  profiles:
+    default: dev
+  http:
+    clients:
+      connect-timeout: 5s
+      # Read timeout is idle time between chunks; SSE heartbeats arrive every 15s.
+      read-timeout: 45s
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          streaming-media-types:
+            - text/event-stream
+            - text/event-stream;charset=UTF-8
+            - application/x-ndjson
+  mvc:
+    async:
+      request-timeout: 30m

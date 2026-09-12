@@ -1,0 +1,30 @@
+<aside class="right-sidebar" aria-label="Thông tin cộng đồng nổi bật">
+  <section class="sidebar-card">
+    <div class="section-heading">
+      <div>
+        <span class="section-kicker">Đang được quan tâm</span>
+        <h2>Chủ đề nổi bật</h2>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <p class="topic-state" role="status">Đang tải chủ đề...</p>
+    } @else if (loadFailed()) {
+      <p class="topic-state topic-state-error" role="status">Không thể tải chủ đề.</p>
+    } @else {
+      <div class="topic-list">
+        @for (topic of topics(); track topic.id) {
+          <div class="topic-item">
+            <span class="topic-rank">{{ formatRank(topic.rank) }}</span>
+            <span class="topic-copy">
+              <strong>{{ topic.name }}</strong>
+              <small>{{ topic.postCount }} bài viết</small>
+            </span>
+          </div>
+        } @empty {
+          <p class="topic-state">Chưa có chủ đề nổi bật.</p>
+        }
+      </div>
+    }
+  </section>
+</aside>

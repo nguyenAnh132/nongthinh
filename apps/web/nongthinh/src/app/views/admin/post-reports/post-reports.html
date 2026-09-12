@@ -1,0 +1,431 @@
+<section class="reports-page">
+  <header class="reports-heading">
+    <div>
+      <h1>Báo cáo bài viết</h1>
+      <p>Kiểm tra nội dung, người báo cáo và chủ bài viết trước khi đưa ra quyết định.</p>
+    </div>
+    <button type="button" class="refresh-button" [disabled]="loading()" (click)="loadReports()">
+      <span class="material-symbols-outlined" [class.is-spinning]="loading()">refresh</span>
+      Tải lại
+    </button>
+  </header>
+
+  <nav class="status-tabs" aria-label="Lọc báo cáo theo trạng thái">
+    @for (filter of statusFilters; track filter.value) {
+      <button
+        type="button"
+        [class.is-active]="selectedStatus() === filter.value"
+        [attr.aria-current]="selectedStatus() === filter.value ? 'page' : null"
+        (click)="selectStatus(filter.value)"
+      >
+        {{ filter.label }}
+      </button>
+    }
+  </nav>
+
+  <section class="reports-panel" aria-labelledby="reports-list-title">
+    <div class="panel-heading">
+      <div>
+        <h2 id="reports-list-title">Danh sách báo cáo</h2>
+        <p>{{ displayedRange() }}</p>
+      </div>
+      <span class="filter-summary">
+        {{ selectedStatus() === 'ALL' ? 'Tất cả trạng thái' : statusLabel($any(selectedStatus())) }}
+      </span>
+    </div>
+
+    @if (loading() && !reports().length) {
+      <div class="state-box" role="status">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <h3>Đang tải báo cáo...</h3>
+        <p>Dữ liệu đang được lấy từ post-service.</p>
+      </div>
+    } @else if (loadError()) {
+      <div class="state-box state-box--error" role="alert">
+        <span class="material-symbols-outlined" aria-hidden="true">error</span>
+        <h3>Không thể tải báo cáo</h3>
+        <p>{{ loadError() }}</p>
+        <button type="button" (click)="loadReports()">Thử lại</button>
+      </div>
+    } @else {
+      <div class="report-table-heading" aria-hidden="true">
+        <span>Bài viết được báo cáo</span>
+        <span>Người báo cáo</span>
+        <span>Lý do</span>
+        <span>Trạng thái</span>
+        <span>Hành động</span>
+      </div>
+
+      <div class="report-list" [attr.aria-busy]="enrichmentLoading()">
+        @for (report of reports(); track report.id) {
+          <article class="report-row">
+            <button type="button" class="report-main" (click)="viewDetail(report)">
+              @if (postFor(report); as post) {
+                <app-user-avatar
+                  [name]="authorFor(report).name"
+                  [avatarUrl]="authorFor(report).avatarUrl"
+                  [size]="42"
+                />
+                <span class="post-row-copy">
+                  <span class="identity-line">
+                    <strong>{{ authorFor(report).name }}</strong>
+                    <small class="role-pill" [attr.data-role]="authorFor(report).role">
+                      {{ authorFor(report).roleLabel }}
+                    </small>
+                  </span>
+                  <span class="post-excerpt">{{ post.content }}</span>
+                  <small>{{ postTypeLabel(post) }} · {{ formatDate(post.createdAt) }}</small>
+                </span>
+              } @else if (postFor(report) === null) {
+                <span class="report-icon material-symbols-outlined" aria-hidden="true">comments_disabled</span>
+                <span>
+                  <strong>Không tải được bài viết</strong>
+                  <small title="{{ report.postId }}">{{ shortId(report.postId) }}</small>
+                </span>
+              } @else {
+                <span class="row-skeleton" aria-hidden="true"></span>
+                <span>
+                  <strong>Đang tải bài viết...</strong>
+                  <small>{{ shortId(report.postId) }}</small>
+                </span>
+              }
+            </button>
+
+            <div class="user-cell">
+              <span class="cell-label">Người báo cáo</span>
+              <app-user-avatar
+                [name]="reporterFor(report).name"
+                [avatarUrl]="reporterFor(report).avatarUrl"
+                [size]="34"
+              />
+              <span>
+                <strong>{{ reporterFor(report).name }}</strong>
+                <small>{{ reporterFor(report).roleLabel }}</small>
+              </span>
+            </div>
+
+            <div class="reason-cell">
+              <span class="cell-label">Lý do</span>
+              <strong>{{ reasonLabel(report.reason) }}</strong>
+              <p>{{ report.reasonDetail || 'Không có thông tin bổ sung.' }}</p>
+            </div>
+
+            <div class="status-cell">
+              <span class="cell-label">Trạng thái</span>
+              <span class="status-badge" [attr.data-status]="report.status">
+                {{ statusLabel(report.status) }}
+              </span>
+              <small>{{ formatDate(report.createdAt) }}</small>
+            </div>
+
+            <div class="row-actions">
+              <button type="button" class="icon-button" title="Xem đầy đủ" (click)="viewDetail(report)">
+                <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                <span class="sr-only">Xem đầy đủ báo cáo và bài viết</span>
+              </button>
+              @if (report.status === 'PENDING') {
+                <button
+                  type="button"
+                  class="action-button action-button--review"
+                  [disabled]="!!actionReportId()"
+                  (click)="startReview(report)"
+                >
+                  <span class="material-symbols-outlined" aria-hidden="true">manage_search</span>
+                  {{ actionReportId() === report.id ? 'Đang chuyển...' : 'Xem xét' }}
+                </button>
+              }
+              @if (isOpen(report)) {
+                <button
+                  type="button"
+                  class="icon-button icon-button--success"
+                  title="Giải quyết"
+                  [disabled]="!!actionReportId()"
+                  (click)="openCompletion(report, 'RESOLVE')"
+                >
+                  <span class="material-symbols-outlined" aria-hidden="true">done</span>
+                  <span class="sr-only">Giải quyết báo cáo</span>
+                </button>
+                <button
+                  type="button"
+                  class="icon-button icon-button--danger"
+                  title="Bác bỏ"
+                  [disabled]="!!actionReportId()"
+                  (click)="openCompletion(report, 'REJECT')"
+                >
+                  <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                  <span class="sr-only">Bác bỏ báo cáo</span>
+                </button>
+              }
+            </div>
+          </article>
+        } @empty {
+          <div class="state-box">
+            <span class="material-symbols-outlined state-icon" aria-hidden="true">verified_user</span>
+            <h3>Không có báo cáo phù hợp</h3>
+            <p>Hiện chưa có báo cáo ở trạng thái đã chọn.</p>
+          </div>
+        }
+      </div>
+
+      @if (totalPages() > 1) {
+        <nav class="pagination" aria-label="Phân trang báo cáo">
+          <button type="button" [disabled]="currentPage() === 0 || loading()" (click)="previousPage()">
+            <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+            Trang trước
+          </button>
+          <span>Trang <strong>{{ currentPage() + 1 }}</strong> / {{ totalPages() }}</span>
+          <button type="button" [disabled]="!hasNextPage() || loading()" (click)="nextPage()">
+            Trang sau
+            <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+          </button>
+        </nav>
+      }
+    }
+  </section>
+
+  @if (detailReport(); as report) {
+    <div class="modal-backdrop" role="presentation" (click)="closeDetailFromBackdrop($event)">
+      <section class="detail-dialog" role="dialog" aria-modal="true" aria-labelledby="report-detail-title">
+        <header class="dialog-heading">
+          <div>
+            <span class="heading-eyebrow">Chi tiết báo cáo</span>
+            <h2 id="report-detail-title">{{ reasonLabel(report.reason) }}</h2>
+            <p>#{{ shortId(report.id) }} · {{ formatDate(report.createdAt) }}</p>
+          </div>
+          <button type="button" aria-label="Đóng chi tiết" [disabled]="detailLoading()" (click)="closeDetail()">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </header>
+
+        @if (detailLoading()) {
+          <div class="detail-loading" role="status">Đang đồng bộ báo cáo, bài viết và hồ sơ người dùng...</div>
+        }
+
+        <div class="detail-status-line">
+          <span class="status-badge" [attr.data-status]="report.status">{{ statusLabel(report.status) }}</span>
+          @if (postFor(report); as post) {
+            <span class="post-status-badge" [class.is-removed]="post.status === 'HIDDEN' || !!post.deletedAt">
+              {{ postStatusLabel(post) }}
+            </span>
+          }
+        </div>
+
+        <section class="people-grid" aria-label="Các bên liên quan">
+          <article class="person-card">
+            <span class="person-label">Người báo cáo</span>
+            <div class="person-heading">
+              <app-user-avatar
+                [name]="reporterFor(report).name"
+                [avatarUrl]="reporterFor(report).avatarUrl"
+                [size]="48"
+              />
+              <div>
+                <strong>{{ reporterFor(report).name }}</strong>
+                <span class="role-pill" [attr.data-role]="reporterFor(report).role">
+                  {{ reporterFor(report).roleLabel }}
+                </span>
+              </div>
+            </div>
+            @for (detail of reporterFor(report).details; track detail) {
+              <p>{{ detail }}</p>
+            }
+            <small title="{{ report.reporterId }}">ID: {{ report.reporterId }}</small>
+          </article>
+
+          <article class="person-card">
+            <span class="person-label">Chủ bài viết</span>
+            <div class="person-heading">
+              <app-user-avatar
+                [name]="authorFor(report).name"
+                [avatarUrl]="authorFor(report).avatarUrl"
+                [size]="48"
+              />
+              <div>
+                <strong>{{ authorFor(report).name }}</strong>
+                <span class="role-pill" [attr.data-role]="authorFor(report).role">
+                  {{ authorFor(report).roleLabel }}
+                </span>
+              </div>
+            </div>
+            @for (detail of authorFor(report).details; track detail) {
+              <p>{{ detail }}</p>
+            }
+            @if (postFor(report); as post) {
+              <small title="{{ post.authorUserId }}">ID: {{ post.authorUserId }}</small>
+            }
+          </article>
+        </section>
+
+        @if (postFor(report); as post) {
+          <article class="reported-post">
+            <header class="reported-post__header">
+              <app-user-avatar
+                [name]="authorFor(report).name"
+                [avatarUrl]="authorFor(report).avatarUrl"
+                [size]="46"
+              />
+              <div>
+                <strong>{{ authorFor(report).name }}</strong>
+                <p>
+                  {{ authorFor(report).roleLabel }}
+                  @if (post.locationText) { · {{ post.locationText }} }
+                  · {{ formatDate(post.publishedAt || post.createdAt) }}
+                </p>
+              </div>
+            </header>
+
+            <div class="post-tags">
+              <span>{{ postTypeLabel(post) }}</span>
+              @if (topicLabel(post); as topic) { <span>#{{ topic }}</span> }
+            </div>
+
+            <p class="post-content">{{ post.content }}</p>
+
+            @if (post.media.length) {
+              <div class="post-media" [attr.data-count]="post.media.length">
+                @for (media of post.media; track media.id) {
+                  <figure>
+                    @if (media.mediaType === 'VIDEO') {
+                      <video [src]="media.mediaUrl" controls preload="metadata"></video>
+                    } @else {
+                      <img [src]="media.mediaUrl" [alt]="media.caption || 'Ảnh trong bài viết'" loading="lazy" />
+                    }
+                    @if (media.caption) { <figcaption>{{ media.caption }}</figcaption> }
+                  </figure>
+                }
+              </div>
+            }
+
+            <dl class="post-metadata">
+              <div><dt>Mã bài viết</dt><dd>{{ post.id }}</dd></div>
+              <div><dt>Trạng thái</dt><dd>{{ postStatusLabel(post) }}</dd></div>
+              <div><dt>Quyền xem</dt><dd>{{ visibilityLabel(post) }}</dd></div>
+              <div><dt>Ngày tạo</dt><dd>{{ formatDate(post.createdAt) }}</dd></div>
+              <div><dt>Ngày đăng</dt><dd>{{ formatDate(post.publishedAt) }}</dd></div>
+              <div><dt>Cập nhật</dt><dd>{{ formatDate(post.updatedAt) }}</dd></div>
+              @if (post.deletedAt) {
+                <div><dt>Ngày xóa</dt><dd>{{ formatDate(post.deletedAt) }}</dd></div>
+              }
+              @if (post.cropTypeIds.length) {
+                <div class="metadata-wide"><dt>Mã loại cây trồng</dt><dd>{{ post.cropTypeIds.join(', ') }}</dd></div>
+              }
+            </dl>
+          </article>
+        } @else if (!detailLoading()) {
+          <div class="post-unavailable" role="alert">
+            <span class="material-symbols-outlined" aria-hidden="true">comments_disabled</span>
+            Không thể tải nội dung bài viết này.
+          </div>
+        }
+
+        <section class="detail-copy detail-copy--reason">
+          <h3>Nội dung báo cáo</h3>
+          <strong>{{ reasonLabel(report.reason) }}</strong>
+          <p>{{ report.reasonDetail || 'Người dùng không cung cấp thông tin bổ sung.' }}</p>
+        </section>
+
+        <dl class="detail-grid">
+          <div><dt>Mã báo cáo</dt><dd>{{ report.id }}</dd></div>
+          <div><dt>Cập nhật gần nhất</dt><dd>{{ formatDate(report.updatedAt) }}</dd></div>
+          <div><dt>Người xử lý</dt><dd>{{ report.resolvedBy || '—' }}</dd></div>
+          <div><dt>Thời gian xử lý</dt><dd>{{ formatDate(report.resolvedAt) }}</dd></div>
+        </dl>
+
+        @if (report.resolutionNote || report.resolvedAt) {
+          <section class="detail-copy detail-copy--resolution">
+            <h3>Kết quả xử lý</h3>
+            <p>{{ report.resolutionNote || 'Không có ghi chú xử lý.' }}</p>
+            <small>{{ formatDate(report.resolvedAt) }}</small>
+          </section>
+        }
+
+        @if (isOpen(report)) {
+          <footer class="dialog-actions">
+            @if (report.status === 'PENDING') {
+              <button
+                type="button"
+                class="action-button action-button--review"
+                [disabled]="!!actionReportId()"
+                (click)="startReview(report)"
+              >
+                Bắt đầu xem xét
+              </button>
+            }
+            <button type="button" class="secondary-action" (click)="openCompletion(report, 'REJECT')">
+              Bác bỏ
+            </button>
+            <button type="button" class="primary-action" (click)="openCompletion(report, 'RESOLVE')">
+              Giải quyết
+            </button>
+          </footer>
+        }
+      </section>
+    </div>
+  }
+
+  @if (completionTarget(); as report) {
+    <div class="modal-backdrop completion-backdrop" role="presentation" (click)="closeCompletionFromBackdrop($event)">
+      <form class="completion-dialog" role="dialog" aria-modal="true" aria-labelledby="completion-title" (ngSubmit)="submitCompletion()">
+        <header class="dialog-heading">
+          <div>
+            <span class="heading-eyebrow">Xác nhận quyết định</span>
+            <h2 id="completion-title">{{ completionTitle() }}</h2>
+            <p>{{ completionDescription() }}</p>
+          </div>
+          <button type="button" aria-label="Đóng xác nhận" [disabled]="completionSaving()" (click)="closeCompletion()">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </header>
+
+        <div class="completion-summary">
+          <span>{{ reasonLabel(report.reason) }}</span>
+          <code>#{{ shortId(report.id) }}</code>
+        </div>
+
+        @if (completionAction() === 'RESOLVE') {
+          <fieldset class="moderation-options" [disabled]="completionSaving()">
+            <legend>Xử lý bài viết</legend>
+            <label [class.is-selected]="moderationAction === 'HIDE'">
+              <input type="radio" name="moderationAction" value="HIDE" [(ngModel)]="moderationAction" />
+              <span class="material-symbols-outlined" aria-hidden="true">visibility_off</span>
+              <span><strong>Ẩn bài viết</strong><small>Có thể khôi phục sau khi cần.</small></span>
+            </label>
+            <label [class.is-selected]="moderationAction === 'DELETE'">
+              <input type="radio" name="moderationAction" value="DELETE" [(ngModel)]="moderationAction" />
+              <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+              <span><strong>Xóa bài viết</strong><small>Gỡ bài khỏi hệ thống người dùng.</small></span>
+            </label>
+          </fieldset>
+        }
+
+        <label class="note-field" for="resolution-note">
+          <span>Ghi chú xử lý <small>(không bắt buộc)</small></span>
+          <textarea
+            id="resolution-note"
+            name="resolutionNote"
+            [(ngModel)]="resolutionNote"
+            maxlength="10000"
+            rows="5"
+            [disabled]="completionSaving()"
+            placeholder="Ghi lại căn cứ hoặc hành động đã thực hiện..."
+          ></textarea>
+          <small>{{ resolutionNote.length }}/10.000 ký tự</small>
+        </label>
+
+        <footer class="dialog-actions">
+          <button type="button" class="secondary-action" [disabled]="completionSaving()" (click)="closeCompletion()">
+            Hủy
+          </button>
+          <button
+            type="submit"
+            [class.primary-action]="completionAction() === 'RESOLVE'"
+            [class.danger-action]="completionAction() === 'REJECT'"
+            [disabled]="completionSaving()"
+          >
+            {{ completionSaving() ? 'Đang lưu...' : completionTitle() }}
+          </button>
+        </footer>
+      </form>
+    </div>
+  }
+</section>

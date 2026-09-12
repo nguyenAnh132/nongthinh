@@ -1,0 +1,54 @@
+  <button type="button" class="notification-button" aria-label="Thông báo"
+    [attr.aria-expanded]="open()" aria-controls="notification-panel" (click)="toggle()">
+    <span class="bell" aria-hidden="true"></span>
+    @if (store.enabled() && store.unreadCount() > 0) { <i>{{ store.badge() }}</i> }
+  </button>
+  @if (open()) {
+    <section id="notification-panel" class="notification-panel" aria-label="Thông báo">
+      <header>
+        <strong>Thông báo</strong>
+        <button type="button" (click)="store.markAllRead()" [disabled]="!store.enabled() || store.unreadCount() === 0">Đọc tất cả</button>
+      </header>
+      @if (!store.enabled()) {
+        @if (store.configState() === 'error') {
+          <p role="alert">Không thể kết nối dịch vụ thông báo.
+            <button type="button" (click)="store.retryConnection()">Thử lại</button>
+          </p>
+        } @else if (store.configState() === 'ready') {
+          <p role="status">Thông báo chưa được bật trên hệ thống.</p>
+        } @else {
+          <p role="status">Đang kết nối dịch vụ thông báo…</p>
+        }
+      } @else {
+      @if (store.connectionState() === 'reconnecting') {
+        <p role="status">Đang kết nối lại…</p>
+      }
+      @if (store.error()) {
+        <p role="alert">{{ store.error() }} <button type="button" (click)="store.refresh()">Thử lại</button></p>
+      }
+      <div class="notification-list" [attr.aria-busy]="store.loading()">
+        @for (item of store.items(); track item.id) {
+          <article [class.unread]="!item.readAt">
+            <button class="notification-content" type="button" (click)="visit(item)">
+              <span>{{ label(item) }}</span>
+              <time [attr.datetime]="item.createdAt">{{ item.createdAt | date:'dd/MM HH:mm' }}</time>
+            </button>
+            @if (!item.readAt) {
+              <button class="mark-read" type="button" aria-label="Đánh dấu đã đọc" title="Đánh dấu đã đọc"
+                (click)="store.markRead(item.id)">✓</button>
+            }
+          </article>
+        } @empty {
+          @if (!store.loading() && !store.error()) { <p>Bạn chưa có thông báo nào.</p> }
+        }
+        @if (store.loading()) {
+          <div class="skeleton" role="status" aria-label="Đang tải thông báo"></div>
+          <div class="skeleton" aria-hidden="true"></div>
+        }
+      </div>
+      @if (store.hasMore()) {
+        <button class="load-more" type="button" [disabled]="store.loading()" (click)="store.loadMore()">Xem thêm</button>
+      }
+      }
+    </section>
+  }

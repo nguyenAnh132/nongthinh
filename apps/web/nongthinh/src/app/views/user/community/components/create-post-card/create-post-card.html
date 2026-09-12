@@ -1,0 +1,12 @@
+<section class="create-card" aria-label="Tạo bài viết">
+  <div class="composer-row">
+    @if (loading) {
+      <span class="avatar-skeleton" aria-label="Đang tải thông tin người dùng"></span>
+    } @else {
+      <app-user-avatar [name]="userName" [avatarUrl]="avatarUrl" [size]="46" />
+    }
+    <button type="button" class="composer-trigger" (click)="startPost.emit(null)">
+      Bác đang muốn chia sẻ điều gì?
+    </button>
+  </div>
+</section>

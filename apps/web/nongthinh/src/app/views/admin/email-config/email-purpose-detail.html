@@ -1,0 +1,103 @@
+@if (purpose) {
+  <div class="email-detail-overlay">
+    @if (loading) {
+      <div class="email-detail-loading-wrap">
+        <p class="email-detail-loading">Đang tải...</p>
+      </div>
+    } @else {
+      <header class="email-detail-header">
+        <div class="email-detail-header__text">
+          <h1>{{ purpose.configTitle }}</h1>
+          <p>{{ purpose.configSubtitle }}</p>
+        </div>
+
+        <button type="button" class="email-detail-close" aria-label="Đóng" (click)="close()">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </header>
+
+      <div class="email-detail-content">
+        <section class="detail-card">
+          <h2>Danh sách biến</h2>
+
+          @if (variables.length === 0) {
+            <p class="email-detail-empty">Chưa có biến nào cho mục đích này.</p>
+          } @else {
+            <div class="variable-list">
+              @for (variable of variables; track variable.name) {
+                <div class="variable-row">
+                  <div class="variable-row__name">{{ '{' }}{{ '{' }}{{ variable.name }}{{ '}' }}{{ '}' }}</div>
+                  <div class="variable-row__meta">
+                    <span class="variable-row__description">{{ variable.description }}</span>
+                    <span class="variable-row__example">{{ variable.exampleValue }}</span>
+                    <span class="variable-row__badge">
+                      {{ variable.required ? 'bắt buộc' : 'tùy chọn' }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="detail-card">
+          <div class="template-section-header">
+            <h2>Danh sách mẫu email</h2>
+            <button type="button" class="add-template-btn" (click)="addTemplate()">
+              <span class="material-symbols-outlined">add</span>
+              Thêm mẫu mới
+            </button>
+          </div>
+
+          @if (templates.length === 0) {
+            <p class="email-detail-empty">Chưa có mẫu email nào.</p>
+          } @else {
+            <div class="template-table">
+              <div class="template-table__head">
+                <span>TÊN MẪU</span>
+                <span>MÔ TẢ</span>
+                <span>NGÀY TẠO</span>
+                <span>THAO TÁC</span>
+              </div>
+
+              @for (template of templates; track template.id; let last = $last) {
+                <div
+                  class="template-table__row"
+                  [class.is-last]="last"
+                  role="button"
+                  tabindex="0"
+                  (click)="openTemplate(template)"
+                  (keydown.enter)="openTemplate(template)">
+                  <div class="template-table__name">{{ template.name }}</div>
+                  <div class="template-table__description">{{ template.description }}</div>
+                  <div class="template-table__date">{{ template.createdAt }}</div>
+                  <div class="template-table__actions" (click)="$event.stopPropagation()">
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      aria-label="Xem trước"
+                      (click)="previewTemplate(template)">
+                      <span class="material-symbols-outlined">visibility</span>
+                    </button>
+
+                    <label class="switch">
+                      <input
+                        type="checkbox"
+                        [checked]="template.isActive"
+                        (change)="toggleTemplateActive(template)" />
+                      <span class="switch-track"></span>
+                    </label>
+
+                    <button type="button" class="edit-link" (click)="editTemplate(template)">
+                      Chỉnh sửa
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      </div>
+    }
+  </div>
+}

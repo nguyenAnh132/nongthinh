@@ -1,0 +1,81 @@
+<div class="email-config-page" [class.email-config-page--embedded]="embedded">
+  @if (!embedded) {
+    <div class="email-config-header admin-content-header">
+      <h1 class="email-config-title">Cấu hình Email</h1>
+    </div>
+  }
+
+  <div class="email-config-tabs" role="tablist">
+    <button
+      type="button"
+      class="email-config-tab"
+      [class.is-active]="activeTab === 'config'"
+      (click)="setTab('config')">
+      Cấu hình
+    </button>
+    <button
+      type="button"
+      class="email-config-tab"
+      [class.is-active]="activeTab === 'history'"
+      (click)="setTab('history')">
+      Lịch sử gửi mail
+    </button>
+  </div>
+
+  @if (activeTab === 'config') {
+    @if (purposesLoading) {
+      <div class="history-placeholder">
+        <p>Đang tải danh sách mục đích email...</p>
+      </div>
+    } @else {
+      <div class="purpose-grid">
+        @for (purpose of purposes; track purpose.code) {
+        <article class="purpose-card">
+          <div class="purpose-card__icon"></div>
+          <h2 class="purpose-card__title">{{ purpose.title }}</h2>
+          <p class="purpose-card__description">{{ purpose.description }}</p>
+          <button
+            type="button"
+            class="purpose-card__action"
+            (click)="openPurposeConfig(purpose)">
+            Cấu hình mẫu
+          </button>
+        </article>
+      }
+      </div>
+    }
+  } @else {
+    <div class="history-placeholder">
+      @if (historyLoading) {
+        <p>Đang tải lịch sử gửi mail...</p>
+      } @else if (emailHistory.length === 0) {
+        <p>Chưa có lịch sử gửi mail.</p>
+      } @else {
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>User ID</th>
+              <th>Template ID</th>
+              <th>Purpose ID</th>
+              <th>Trạng thái</th>
+              <th>Thời gian gửi</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of emailHistory; track item.id) {
+              <tr>
+                <td>{{ item.id }}</td>
+                <td>{{ item.userId }}</td>
+                <td>{{ item.templateId }}</td>
+                <td>{{ item.purposeId }}</td>
+                <td>{{ item.status }}</td>
+                <td>{{ formatSendAt(item.sendAt) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>

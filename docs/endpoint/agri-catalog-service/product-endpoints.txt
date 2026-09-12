@@ -1,0 +1,152 @@
+================================================================================
+AGRI CATALOG SERVICE - PRODUCT API ENDPOINTS
+================================================================================
+
+Base URL: http://localhost:9098/agri-catalog
+
+Headers cho endpoint quản trị:
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+Tất cả response được bọc trong ApiResponse:
+{
+  "code": "string | null",
+  "message": "string",
+  "traceId": "string | null",
+  "result": "<T> | null"
+}
+
+================================================================================
+1. PUBLIC PRODUCTS  (/public/products)
+================================================================================
+
+--- GET /public/products ---
+Mô tả   : Lấy danh sách sản phẩm đang công khai, không bị khóa và chưa bị soft delete.
+Auth    : Public
+Query   :
+  - brandId (UUID, không bắt buộc): lọc theo Brand.
+  - categoryId (UUID, không bắt buộc): lọc theo category.
+  - Có thể truyền đồng thời cả hai điều kiện.
+Sắp xếp : publishedAt giảm dần.
+Response: 200 OK, ApiResponse<List<ProductView>>
+
+Chỉ sản phẩm có publicationStatus=PUBLISHED và moderationStatus=NORMAL được trả về.
+
+================================================================================
+2. ADMIN PRODUCTS  (/products)
+================================================================================
+
+GET, PUT và DELETE trong phần này yêu cầu ROLE_ADMIN.
+Riêng POST /products dành cho ROLE_BRAND.
+
+--- GET /products ---
+Mô tả   : Lấy danh sách sản phẩm chưa bị soft delete.
+Auth    : ROLE_ADMIN
+Query   :
+  - brandId (UUID, không bắt buộc): lọc theo Brand.
+  - categoryId (UUID, không bắt buộc): lọc theo category.
+  - Có thể truyền đồng thời cả hai điều kiện.
+Sắp xếp : createdAt giảm dần.
+Response: 200 OK, ApiResponse<List<ProductView>>
+
+--- GET /products/{id} ---
+Mô tả   : Lấy chi tiết sản phẩm chưa bị soft delete theo ID.
+Auth    : ROLE_ADMIN
+Path    : id (UUID)
+Response: 200 OK, ApiResponse<ProductView>
+
+--- POST /products ---
+Mô tả   : Tạo sản phẩm mới ở trạng thái DRAFT và NORMAL, chưa featured.
+Auth    : ROLE_BRAND
+Body    :
+{
+  "brandId": "UUID",
+  "categoryId": "UUID",
+  "name": "string",
+  "slug": "string",
+  "sku": "string | null",
+  "registrationNumber": "string | null",
+  "manufacturerName": "string | null",
+  "originCountry": "string | null",
+  "shortDescription": "string | null",
+  "description": "string | null",
+  "ingredients": "string | null",
+  "usageInstruction": "string | null",
+  "dosageInstruction": "string | null",
+  "safetyInstruction": "string | null",
+  "storageInstruction": "string | null",
+  "warning": "string | null",
+  "form": "string | null",
+  "unit": "string | null",
+  "packageSpecification": "string | null",
+  "purchaseUrl": "string | null"
+}
+Validation:
+  - brandId và categoryId bắt buộc.
+  - categoryId phải tham chiếu category chưa bị xóa.
+  - name bắt buộc, tối đa 255 ký tự.
+  - slug bắt buộc, tối đa 280 ký tự.
+  - slug duy nhất không phân biệt hoa thường trong phạm vi một Brand.
+  - shortDescription tối đa 500 ký tự.
+Response: 201 Created, ApiResponse<ProductView>
+
+--- PUT /products/{id} ---
+Mô tả   : Cập nhật toàn bộ nội dung có thể chỉnh sửa của sản phẩm.
+Auth    : ROLE_ADMIN
+Path    : id (UUID)
+Body    : Giống POST nhưng không có brandId.
+Ghi chú :
+  - brandId là bất biến sau khi tạo.
+  - thumbnailUrl, publicationStatus, moderationStatus và featured không thuộc CRUD nội dung.
+  - thumbnailUrl được đồng bộ tự động từ ảnh ProductImage primary.
+  - category và slug được kiểm tra lại như khi tạo.
+Response: 200 OK, ApiResponse<ProductView>
+
+--- DELETE /products/{id} ---
+Mô tả   : Soft delete sản phẩm, ghi nhận deletedAt và deletedBy.
+Auth    : ROLE_ADMIN
+Path    : id (UUID)
+Response: 200 OK, ApiResponse<Void>
+
+ProductView gồm toàn bộ trường nội dung ở request cùng các trường:
+  id, thumbnailUrl, publicationStatus, moderationStatus, moderationReason,
+  lockedAt, lockedBy, publishedAt, unpublishedAt, featured,
+  createdAt, createdBy, updatedAt, updatedBy.
+
+================================================================================
+3. PRODUCT ERROR CODES
+================================================================================
+
+NOT_FOUND_PRODUCT_NOT_FOUND
+  Không tìm thấy sản phẩm hoặc sản phẩm đã bị soft delete.
+
+NOT_FOUND_PRODUCT_CATEGORY_NOT_FOUND
+  Category được chỉ định không tồn tại hoặc đã bị soft delete.
+
+BUS_PRODUCT_SLUG_ALREADY_EXISTS
+  Slug đã được dùng bởi sản phẩm chưa xóa thuộc cùng Brand.
+
+VAL_PRODUCT_BRAND_ID_REQUIRED
+VAL_PRODUCT_CATEGORY_ID_REQUIRED
+VAL_PRODUCT_NAME_REQUIRED
+VAL_PRODUCT_NAME_TOO_LONG
+VAL_PRODUCT_SLUG_REQUIRED
+VAL_PRODUCT_SLUG_TOO_LONG
+VAL_PRODUCT_SKU_TOO_LONG
+VAL_PRODUCT_REGISTRATION_NUMBER_TOO_LONG
+VAL_PRODUCT_MANUFACTURER_NAME_TOO_LONG
+VAL_PRODUCT_ORIGIN_COUNTRY_TOO_LONG
+VAL_PRODUCT_SHORT_DESCRIPTION_TOO_LONG
+VAL_PRODUCT_FORM_TOO_LONG
+VAL_PRODUCT_UNIT_TOO_LONG
+VAL_PRODUCT_PACKAGE_SPECIFICATION_TOO_LONG
+
+================================================================================
+4. GHI CHÚ
+================================================================================
+
+- DELETE là soft delete; bản ghi vẫn còn trong PostgreSQL.
+- Khi soft delete Product, các liên kết ProductImage của Product cũng được soft delete.
+- Sản phẩm mới luôn có publicationStatus=DRAFT, moderationStatus=NORMAL và featured=false.
+- Slug chỉ cần duy nhất trong một Brand; hai Brand khác nhau có thể dùng cùng slug.
+- createdBy, updatedBy và deletedBy lấy từ claim nongthinh_id trong JWT.

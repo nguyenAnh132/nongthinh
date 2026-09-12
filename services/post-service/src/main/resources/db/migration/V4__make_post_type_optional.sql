@@ -1,0 +1,2 @@
+ALTER TABLE posts
+    ALTER COLUMN post_type_id DROP NOT NULL;

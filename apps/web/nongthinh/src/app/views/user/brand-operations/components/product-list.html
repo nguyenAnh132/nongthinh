@@ -1,0 +1,203 @@
+<header class="list-heading">
+  <div>
+    <h1>Sản phẩm</h1>
+  </div>
+  <button class="primary-button" type="button" (click)="create.emit()">
+    <span aria-hidden="true">＋</span> Thêm sản phẩm
+  </button>
+</header>
+
+<section class="product-panel" aria-label="Danh sách sản phẩm" [attr.aria-busy]="loading">
+  <nav class="status-tabs" aria-label="Lọc trạng thái sản phẩm">
+    @for (tab of tabs; track tab.value) {
+      <button
+        type="button"
+        [class.active]="status === tab.value"
+        [attr.aria-pressed]="status === tab.value"
+        (click)="status = tab.value; page = 1"
+      >
+        {{ tab.label }} <span>{{ loading || error ? '—' : count(tab.value) }}</span>
+      </button>
+    }
+  </nav>
+  <div class="filters">
+    <label class="search-field"
+      ><span class="material-symbols-outlined" aria-hidden="true">search</span
+      ><input
+        aria-label="Tìm theo tên hoặc mã SKU"
+        placeholder="Tìm theo tên hoặc mã SKU"
+        [(ngModel)]="keyword"
+        (ngModelChange)="page = 1"
+    /></label>
+    <select aria-label="Lọc danh mục" [(ngModel)]="category" (ngModelChange)="page = 1">
+      <option value="">Tất cả danh mục</option>
+      @for (item of categories; track item.id) {
+        <option [value]="item.id">{{ item.name }}</option>
+      }
+    </select>
+    <button class="reset-button" type="button" (click)="resetFilters()">Đặt lại</button>
+  </div>
+  <div class="result-bar">
+    <span
+      ><strong>{{ loading || error ? '—' : filtered.length }}</strong> sản phẩm</span
+    ><label
+      >Sắp xếp
+      <select [(ngModel)]="sort" (ngModelChange)="page = 1" aria-label="Sắp xếp sản phẩm">
+        <option value="newest">Mới nhất</option>
+        <option value="updated">Cập nhật gần nhất</option>
+        <option value="name">Tên A – Z</option>
+      </select></label
+    >
+  </div>
+  @if (loading) {
+    <div class="skeleton-list" role="status" aria-label="Đang tải sản phẩm">
+      @for (row of [1, 2, 3, 4]; track row) {
+        <div><i></i><span></span><span></span></div>
+      }
+    </div>
+  } @else if (error) {
+    <div class="empty-state" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+      <h2>Chưa tải được sản phẩm</h2>
+      <p>{{ error }}</p>
+      <button type="button" class="secondary-button" (click)="retry.emit()">Thử lại</button>
+    </div>
+  } @else if (!filtered.length) {
+    <div class="empty-state">
+      <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span>
+      <h2>{{ products.length ? 'Không tìm thấy sản phẩm' : 'Bắt đầu với sản phẩm đầu tiên' }}</h2>
+      <p>
+        {{
+          products.length
+            ? 'Thử tên, mã SKU hoặc bộ lọc khác.'
+            : 'Thêm thông tin sản phẩm để giới thiệu đến cộng đồng nông dân.'
+        }}
+      </p>
+      @if (products.length) {
+        <button type="button" class="secondary-button" (click)="resetFilters()">Xóa bộ lọc</button>
+      } @else {
+        <button type="button" class="primary-button" (click)="create.emit()">
+          ＋ Thêm sản phẩm
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="product-grid" aria-label="Sản phẩm của doanh nghiệp">
+      @for (product of visible; track product.id) {
+        <article
+          class="product-card"
+          [class.menu-open]="openActionsId === product.id"
+          [attr.aria-label]="product.name"
+        >
+          <div class="product-card-media">
+            <button
+              type="button"
+              class="product-image-button"
+              (click)="detail.emit(product)"
+              [attr.aria-label]="'Xem chi tiết ' + product.name"
+            >
+              @if (product.thumbnailUrl) {
+                <img [src]="product.thumbnailUrl" [alt]="product.name" loading="lazy" />
+              } @else {
+                <span class="product-image-placeholder">
+                  <img src="/icons/business/image-slash.png" alt="" aria-hidden="true" />
+                </span>
+              }
+            </button>
+            <span class="status" [attr.data-status]="statusKey(product)">{{
+              statusLabel(product)
+            }}</span>
+            <div class="row-actions" (click)="$event.stopPropagation()">
+              <button
+                class="more-actions-button"
+                type="button"
+                [attr.aria-label]="'Mở thao tác cho ' + product.name"
+                [attr.aria-expanded]="openActionsId === product.id"
+                (click)="toggleActions(product.id, $event)"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>
+              </button>
+              @if (openActionsId === product.id) {
+                <div class="actions-menu" role="menu">
+                  <button type="button" role="menuitem" (click)="chooseAction('edit', product)">
+                    Cập nhật
+                  </button>
+                  <button type="button" role="menuitem" (click)="chooseAction('detail', product)">
+                    Chi tiết
+                  </button>
+                  <button type="button" role="menuitem" (click)="chooseAction('history', product)">
+                    Lịch sử
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+          <div class="product-card-body">
+            <small class="category-label">{{ categoryLabel(product.categoryId) }}</small>
+            <button type="button" class="product-identity" (click)="detail.emit(product)">
+              {{ product.name }}
+            </button>
+            <div
+              class="product-rating"
+              [attr.aria-label]="
+                product.reviewCount
+                  ? (product.averageRating | number: '1.1-1') + ' trên 5 sao, ' + product.reviewCount + ' đánh giá'
+                  : 'Chưa có đánh giá'
+              "
+            >
+              <span class="rating-star" aria-hidden="true">★</span>
+              @if (product.reviewCount > 0) {
+                <strong>{{ product.averageRating | number: '1.1-1' }}</strong>
+                <span>({{ product.reviewCount }} đánh giá)</span>
+              } @else {
+                <span>Chưa có đánh giá</span>
+              }
+            </div>
+            <div class="product-meta">
+              <span>SKU: {{ product.sku || 'Chưa cập nhật' }}</span>
+              <span>Cập nhật {{ product.updatedAt | date: 'dd/MM/yyyy' : '+0700' }}</span>
+            </div>
+            @if (product.moderationStatus === 'LOCKED') {
+              <div class="locked-note">Admin đang khóa</div>
+            } @else {
+              <button
+                type="button"
+                class="status-action"
+                [class.status-action--publish]="statusKey(product) !== 'PUBLISHED'"
+                [disabled]="statusUpdatingId !== null"
+                (click)="changePublicationStatus(product)"
+              >
+                {{
+                  statusUpdatingId === product.id
+                    ? 'Đang cập nhật...'
+                    : publicationActionLabel(product)
+                }}
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+    <footer class="pagination">
+      <span>Trang {{ currentPage }} / {{ totalPages }}</span>
+      <div>
+        <button
+          type="button"
+          aria-label="Trang trước"
+          [disabled]="currentPage === 1"
+          (click)="page = currentPage - 1"
+        >
+          ‹</button
+        ><span class="current-page">{{ currentPage }}</span
+        ><button
+          type="button"
+          aria-label="Trang sau"
+          [disabled]="currentPage === totalPages"
+          (click)="page = currentPage + 1"
+        >
+          ›
+        </button>
+      </div>
+    </footer>
+  }
+</section>

@@ -1,0 +1,393 @@
+<section class="articles-page">
+  <header class="page-heading">
+    <div>
+      <h1>Quản lý bài viết</h1>
+    </div>
+    <button type="button" class="refresh-button" [disabled]="loading()" (click)="loadPosts()">
+      <span class="material-symbols-outlined" [class.is-spinning]="loading()" aria-hidden="true"
+        >refresh</span
+      >
+      Làm mới
+    </button>
+  </header>
+
+  <section class="statistics-grid" aria-label="Tổng quan bài viết">
+    <article class="stat-card stat-card--primary">
+      <span class="material-symbols-outlined" aria-hidden="true">article</span>
+      <div>
+        <small>Tổng số bài viết</small>
+        <strong>{{ statistics()?.totalPosts ?? 0 }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="material-symbols-outlined" aria-hidden="true">date_range</span>
+      <div>
+        <small>Trong khoảng đang xem</small>
+        <strong>{{ statistics()?.postsInRange ?? 0 }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="material-symbols-outlined" aria-hidden="true">public</span>
+      <div>
+        <small>Đã xuất bản</small>
+        <strong>{{ statusCount('PUBLISHED') }}</strong>
+      </div>
+    </article>
+    <article class="stat-card">
+      <span class="material-symbols-outlined" aria-hidden="true">visibility_off</span>
+      <div>
+        <small>Bản nháp / Đã ẩn</small>
+        <strong>{{ statusCount('DRAFT') + statusCount('HIDDEN') }}</strong>
+      </div>
+    </article>
+  </section>
+
+  <section class="chart-panel">
+    <header class="chart-heading">
+      <div>
+        <h2>Bài viết theo thời gian</h2>
+        <p>Thống kê theo giờ trong ngày hoặc theo ngày trong tuần.</p>
+      </div>
+      <div class="period-tabs" aria-label="Chọn khoảng thống kê">
+        <button
+          type="button"
+          [class.is-active]="period() === 'TODAY'"
+          (click)="selectPeriod('TODAY')"
+        >
+          Hôm nay
+        </button>
+        <button
+          type="button"
+          [class.is-active]="period() === 'WEEK'"
+          (click)="selectPeriod('WEEK')"
+        >
+          7 ngày
+        </button>
+        <button
+          type="button"
+          [class.is-active]="period() === 'CUSTOM'"
+          (click)="selectPeriod('CUSTOM')"
+        >
+          Tùy chọn
+        </button>
+      </div>
+    </header>
+
+    @if (period() === 'CUSTOM') {
+      <form class="custom-range" (ngSubmit)="applyCustomRange()">
+        <label>
+          <span>Từ ngày</span>
+          <input type="date" name="customFrom" [(ngModel)]="customFrom" />
+        </label>
+        <label>
+          <span>Đến ngày</span>
+          <input type="date" name="customTo" [(ngModel)]="customTo" />
+        </label>
+        <button type="submit" [disabled]="statisticsLoading()">Xem thống kê</button>
+      </form>
+    }
+
+    @if (statisticsLoading() && !statistics()) {
+      <div class="chart-state">Đang tải biểu đồ...</div>
+    } @else if (statistics(); as stats) {
+      <div class="chart-wrap" [class.is-hourly]="stats.bucket === 'HOUR'">
+        <div class="chart-grid" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="bar-chart" role="img" aria-label="Biểu đồ số bài viết theo thời gian">
+          @for (point of stats.timeline; track point.bucketStart) {
+            <div
+              class="bar-column"
+              [attr.title]="chartLabel(point.bucketStart) + ': ' + point.count"
+            >
+              <span class="bar-value">{{ point.count }}</span>
+              <span class="bar" [style.height.%]="chartBarHeight(point.count)"></span>
+              <small>{{ chartLabel(point.bucketStart) }}</small>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
+  <nav class="management-tabs" aria-label="Nội dung quản lý bài viết">
+    <button
+      type="button"
+      [class.is-active]="activeView() === 'POSTS'"
+      (click)="selectView('POSTS')"
+    >
+      Danh sách bài viết
+    </button>
+    <button
+      type="button"
+      [class.is-active]="activeView() === 'HISTORY'"
+      (click)="selectView('HISTORY')"
+    >
+      Lịch sử thay đổi
+    </button>
+  </nav>
+
+  @if (activeView() === 'POSTS') {
+    <form class="filter-panel" (ngSubmit)="applyFilters()">
+      <label class="user-search-field">
+        <span>Người đăng</span>
+        <div class="input-with-icon">
+          <span class="material-symbols-outlined" aria-hidden="true">person_search</span>
+          <input
+            type="text"
+            name="searchUserQuery"
+            [(ngModel)]="searchUserQuery"
+            (ngModelChange)="onUserSearchChange()"
+            placeholder="Tìm theo email hoặc UUID"
+            autocomplete="off"
+          />
+        </div>
+        @if (!selectedAuthorId && userSuggestions.length) {
+          <div class="user-suggestions">
+            @for (user of userSuggestions; track user.id) {
+              <button type="button" (click)="selectUser(user)">
+                <strong>{{ user.email }}</strong>
+                <small>{{ user.id }}</small>
+              </button>
+            }
+          </div>
+        }
+      </label>
+      <label>
+        <span>Nội dung</span>
+        <input
+          type="text"
+          name="contentKeyword"
+          [(ngModel)]="contentKeyword"
+          placeholder="Từ khóa trong bài viết"
+          autocomplete="off"
+        />
+      </label>
+      <label>
+        <span>Trạng thái</span>
+        <select name="statusFilter" [(ngModel)]="statusFilter">
+          <option value="">Tất cả trạng thái</option>
+          <option value="PUBLISHED">Đã xuất bản</option>
+          <option value="DRAFT">Bản nháp</option>
+          <option value="HIDDEN">Đã ẩn</option>
+        </select>
+      </label>
+      <div class="filter-actions">
+        <button
+          type="button"
+          class="secondary-action"
+          [disabled]="loading()"
+          (click)="clearFilters()"
+        >
+          Xóa lọc
+        </button>
+        <button type="submit" class="primary-action" [disabled]="loading()">Tìm kiếm</button>
+      </div>
+      @if (filterError) {
+        <p class="filter-error" role="alert">{{ filterError }}</p>
+      }
+    </form>
+
+    <section class="posts-panel">
+      <header class="panel-heading">
+        <div>
+          <h2>Danh sách bài viết</h2>
+          <p>Hiển thị cả bài công khai, bản nháp và bài đã ẩn.</p>
+        </div>
+        <span>{{ displayedRange() }}</span>
+      </header>
+
+      @if (loading() && !posts().length) {
+        <div class="state-box" role="status">
+          <span class="loading-spinner" aria-hidden="true"></span>
+          <h3>Đang tải bài viết...</h3>
+        </div>
+      } @else if (loadError()) {
+        <div class="state-box state-box--error" role="alert">
+          <span class="material-symbols-outlined" aria-hidden="true">error</span>
+          <h3>Không thể tải dữ liệu</h3>
+          <p>{{ loadError() }}</p>
+          <button type="button" (click)="loadPosts(0)">Thử lại</button>
+        </div>
+      } @else if (!posts().length) {
+        <div class="state-box">
+          <span class="material-symbols-outlined" aria-hidden="true">article</span>
+          <h3>Không có bài viết phù hợp</h3>
+          <p>Hãy thay đổi từ khóa hoặc bộ lọc người đăng.</p>
+        </div>
+      } @else {
+        <div class="posts-table-heading" aria-hidden="true">
+          <span>Bài viết</span>
+          <span>Người đăng</span>
+          <span>Trạng thái</span>
+          <span>Ngày tạo</span>
+          <span></span>
+        </div>
+        <div class="post-list">
+          @for (post of posts(); track post.id) {
+            <article class="post-row">
+              <div class="post-summary">
+                @if (post.media.length && post.media[0].contentType.startsWith('image/')) {
+                  <img [src]="post.media[0].mediaUrl" alt="Ảnh bài viết" />
+                } @else {
+                  <span class="post-placeholder material-symbols-outlined" aria-hidden="true"
+                    >article</span
+                  >
+                }
+                <div>
+                  <p>{{ post.content }}</p>
+                  <small>#{{ shortId(post.id) }} · {{ post.media.length }} tệp</small>
+                </div>
+              </div>
+              <div class="author-cell">
+                <span class="cell-label">Người đăng</span>
+                <strong>{{ authorLabel(post.authorUserId) }}</strong>
+                <small>{{ shortId(post.authorUserId) }}</small>
+              </div>
+              <div>
+                <span class="status-badge" [attr.data-status]="post.status">
+                  {{ statusLabel(post.status) }}
+                </span>
+              </div>
+              <time [attr.datetime]="post.createdAt">{{ formatDate(post.createdAt) }}</time>
+              <button type="button" class="detail-button" (click)="viewDetail(post)">
+                <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                <span class="sr-only">Xem chi tiết bài viết</span>
+              </button>
+            </article>
+          }
+        </div>
+        <footer class="pagination">
+          <span>{{ displayedRange() }}</span>
+          <div>
+            <button
+              type="button"
+              [disabled]="currentPage() === 0 || loading()"
+              (click)="previousPage()"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+              Trước
+            </button>
+            <span>Trang {{ currentPage() + 1 }} / {{ totalPages() || 1 }}</span>
+            <button type="button" [disabled]="!hasNextPage() || loading()" (click)="nextPage()">
+              Sau
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+            </button>
+          </div>
+        </footer>
+      }
+    </section>
+  } @else {
+    <app-post-histories [embedded]="true" [userEmails]="userEmails()" />
+  }
+
+  @if (detail(); as post) {
+    <div class="modal-backdrop" role="presentation" (click)="closeDetailFromBackdrop($event)">
+      <section
+        class="detail-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="post-detail-title"
+      >
+        <header class="dialog-heading">
+          <div>
+            <span class="heading-eyebrow">{{ statusLabel(post.status) }}</span>
+            <h2 id="post-detail-title">Chi tiết bài viết</h2>
+            <p>{{ formatDate(post.createdAt) }}</p>
+          </div>
+          <button
+            type="button"
+            aria-label="Đóng chi tiết"
+            [disabled]="detailLoading()"
+            (click)="closeDetail()"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </header>
+
+        @if (detailLoading()) {
+          <div class="detail-loading">Đang đồng bộ toàn bộ thông tin bài viết...</div>
+        }
+
+        <dl class="detail-grid">
+          <div>
+            <dt>Mã bài viết</dt>
+            <dd>{{ post.id }}</dd>
+          </div>
+          <div>
+            <dt>Người đăng</dt>
+            <dd>{{ authorLabel(post.authorUserId) }} · {{ post.authorUserId }}</dd>
+          </div>
+          <div>
+            <dt>Trạng thái</dt>
+            <dd>{{ statusLabel(post.status) }}</dd>
+          </div>
+          <div>
+            <dt>Quyền xem</dt>
+            <dd>{{ post.visibility }}</dd>
+          </div>
+          <div>
+            <dt>Loại bài</dt>
+            <dd>{{ post.postTypeId || 'Không phân loại' }}</dd>
+          </div>
+          <div>
+            <dt>Chủ đề</dt>
+            <dd>{{ post.topicId || '—' }}</dd>
+          </div>
+          <div>
+            <dt>Ngày xuất bản</dt>
+            <dd>{{ formatDate(post.publishedAt) }}</dd>
+          </div>
+          <div>
+            <dt>Cập nhật lần cuối</dt>
+            <dd>{{ formatDate(post.updatedAt) }}</dd>
+          </div>
+        </dl>
+
+        <section class="detail-copy">
+          <h3>Nội dung</h3>
+          <p>{{ post.content }}</p>
+          @if (post.locationText) {
+            <small>Địa điểm: {{ post.locationText }}</small>
+          }
+        </section>
+
+        @if (post.cropTypeIds.length) {
+          <section class="detail-copy">
+            <h3>Cây trồng liên quan</h3>
+            <div class="id-chips">
+              @for (cropTypeId of post.cropTypeIds; track cropTypeId) {
+                <code>{{ cropTypeId }}</code>
+              }
+            </div>
+          </section>
+        }
+
+        @if (post.media.length) {
+          <section class="detail-copy">
+            <h3>Hình ảnh và tệp đính kèm ({{ post.media.length }})</h3>
+            <div class="media-grid">
+              @for (media of post.media; track media.id) {
+                <a [href]="media.mediaUrl" target="_blank" rel="noopener noreferrer">
+                  @if (media.contentType.startsWith('image/')) {
+                    <img [src]="media.mediaUrl" [alt]="media.caption || 'Ảnh bài viết'" />
+                  } @else {
+                    <span class="material-symbols-outlined" aria-hidden="true">movie</span>
+                  }
+                  <div>
+                    <strong>{{ media.caption || media.contentType }}</strong>
+                    <small
+                      >{{ media.width || '—' }} × {{ media.height || '—' }} ·
+                      {{ media.sizeBytes || '—' }} bytes</small
+                    >
+                    <small>File: {{ media.fileId }}</small>
+                  </div>
+                </a>
+              }
+            </div>
+          </section>
+        }
+      </section>
+    </div>
+  }
+</section>

@@ -1,0 +1,56 @@
+@use '../crop-types/crop-types.scss';
+
+.catalog-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 6px;
+  border: 1px solid #dce8df;
+  border-radius: 12px;
+  background: #f5f8f6;
+}
+
+.catalog-tabs button {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  border: 0;
+  border-radius: 9px;
+  color: #52645a;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.catalog-tabs button.is-active {
+  color: #176b38;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(32, 60, 46, 0.1);
+}
+
+.catalog-tabs strong {
+  min-width: 25px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #e2eee6;
+  font-size: 12px;
+}
+
+.crop-type-details small {
+  color: #7a8981;
+  font-size: 11px;
+}
+
+.form-actions {
+  justify-content: flex-end;
+}
+
+@media (max-width: 560px) {
+  .catalog-tabs {
+    flex-direction: column;
+  }
+}

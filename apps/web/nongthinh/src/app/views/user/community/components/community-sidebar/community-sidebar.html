@@ -1,0 +1,24 @@
+<aside class="community-sidebar" aria-label="Điều hướng cộng đồng">
+  <nav class="sidebar-nav">
+    @for (item of items; track item.id) {
+      <button
+        type="button"
+        class="sidebar-item"
+        [class.active]="activeFilter === item.id"
+        [attr.aria-current]="activeFilter === item.id ? 'page' : null"
+        (click)="filterChange.emit(item.id)"
+      >
+        <span class="item-icon" aria-hidden="true">
+          <span
+            class="community-icon"
+            [style.--community-icon]="'url(' + item.iconUrl + ')'"
+          ></span>
+        </span>
+        <span>{{ item.label }}</span>
+        @if (item.badge) {
+          <span class="item-badge">{{ item.badge }}</span>
+        }
+      </button>
+    }
+  </nav>
+</aside>

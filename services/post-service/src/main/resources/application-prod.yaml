@@ -1,0 +1,56 @@
+server:
+  port: ${POST_SERVICE_PORT:9100}
+  servlet:
+    context-path: /posts
+  forward-headers-strategy: framework
+
+spring:
+  datasource:
+    url: ${POST_SERVICE_DB_URL}
+    username: ${POST_SERVICE_DB_USERNAME}
+    password: ${POST_SERVICE_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: ${POST_SERVICE_DB_POOL_MAX_SIZE:20}
+      minimum-idle: ${POST_SERVICE_DB_POOL_MIN_IDLE:5}
+      connection-timeout: ${POST_SERVICE_DB_CONNECTION_TIMEOUT_MS:3000}
+      validation-timeout: ${POST_SERVICE_DB_VALIDATION_TIMEOUT_MS:1000}
+      max-lifetime: ${POST_SERVICE_DB_MAX_LIFETIME_MS:1800000}
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+    api-key:
+      header-name: X-API-KEY
+      current-service-key: ${POST_SERVICE_API_KEY}
+      clients:
+        profile-service:
+          url: ${PROFILE_SERVICE_URL:http://profile-service:9092/profile}
+          api-key: ${PROFILE_SERVICE_API_KEY}
+        file-service:
+          url: ${FILE_SERVICE_URL:http://file-service:9095/files}
+          api-key: ${FILE_SERVICE_API_KEY}
+          connect-timeout-ms: ${FILE_SERVICE_CONNECT_TIMEOUT_MS:2000}
+          read-timeout-ms: ${FILE_SERVICE_READ_TIMEOUT_MS:3000}
+        agri-catalog-service:
+          url: ${AGRI_CATALOG_SERVICE_URL:http://agri-catalog-service:9098/agri-catalog}
+          api-key: ${AGRI_CATALOG_SERVICE_API_KEY}
+          connect-timeout-ms: ${AGRI_CATALOG_SERVICE_CONNECT_TIMEOUT_MS:2000}
+          read-timeout-ms: ${AGRI_CATALOG_SERVICE_READ_TIMEOUT_MS:3000}
+
+management:
+  endpoint:
+    health:
+      show-details: when_authorized
+
+logging:
+  level:
+    root: INFO
+    com.nongthinh.post_service: INFO
+    org.hibernate.SQL: WARN

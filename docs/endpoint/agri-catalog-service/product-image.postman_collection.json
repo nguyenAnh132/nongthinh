@@ -1,0 +1,393 @@
+{
+  "info": {
+    "_postman_id": "acbc5104-c082-46a2-b41d-54f0668e5b1c",
+    "name": "Agri Catalog Service - Product Image",
+    "description": "Flow upload file PRODUCT_IMAGE lên file-service rồi CRUD liên kết ProductImage tại agri-catalog-service. Cấu hình accessToken và productId trước khi chạy. Tại request 01, chọn một file ảnh local trong form-data.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Response is JSON', function () {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "});",
+          "pm.test('Response has message', function () {",
+          "    pm.expect(pm.response.json()).to.have.property('message');",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "catalogBaseUrl",
+      "value": "http://localhost:9098/agri-catalog",
+      "type": "string"
+    },
+    {
+      "key": "fileBaseUrl",
+      "value": "http://localhost:9095/files",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "publishedProductId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productImageFileId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productImageId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Product Image - Upload and CRUD Flow",
+      "description": "Chạy theo thứ tự. productId phải là Product active. Request upload cần chọn một file JPEG, PNG hoặc WebP.",
+      "item": [
+        {
+          "name": "01 - Upload PRODUCT_IMAGE To File Service",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "purpose",
+                  "value": "PRODUCT_IMAGE",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{fileBaseUrl}}/upload",
+              "host": ["{{fileBaseUrl}}"],
+              "path": ["upload"]
+            },
+            "description": "Chọn file ảnh local trước khi gửi. File-service cho phép ROLE_BRAND hoặc ROLE_ADMIN."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Uploaded file metadata is returned', function () {",
+                  "    const result = pm.response.json().result;",
+                  "    pm.expect(result.id).to.be.a('string').and.not.empty;",
+                  "    pm.expect(result.purpose).to.eql('PRODUCT_IMAGE');",
+                  "    pm.expect(result.status).to.eql('UPLOADED');",
+                  "    pm.expect(result.contentType).to.match(/^image\\//);",
+                  "    pm.collectionVariables.set('productImageFileId', result.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Attach Image To Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileId\": \"{{productImageFileId}}\",\n  \"altText\": \"Ảnh sản phẩm kiểm thử Postman\",\n  \"displayOrder\": 10,\n  \"primary\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{catalogBaseUrl}}/products/{{productId}}/images",
+              "host": ["{{catalogBaseUrl}}"],
+              "path": ["products", "{{productId}}", "images"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('Canonical file metadata is attached', function () {",
+                  "    const result = pm.response.json().result;",
+                  "    pm.expect(result.id).to.be.a('string').and.not.empty;",
+                  "    pm.expect(result.productId).to.eql(pm.collectionVariables.get('productId'));",
+                  "    pm.expect(result.fileId).to.eql(pm.collectionVariables.get('productImageFileId'));",
+                  "    pm.expect(result.imageUrl).to.be.a('string').and.not.empty;",
+                  "    pm.expect(result.primary).to.eql(true);",
+                  "    pm.collectionVariables.set('productImageId', result.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - List Product Images",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogBaseUrl}}/products/{{productId}}/images",
+              "host": ["{{catalogBaseUrl}}"],
+              "path": ["products", "{{productId}}", "images"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Created image is in the list', function () {",
+                  "    const ids = pm.response.json().result.map(function (image) { return image.id; });",
+                  "    pm.expect(ids).to.include(pm.collectionVariables.get('productImageId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Get Product Image By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogBaseUrl}}/products/{{productId}}/images/{{productImageId}}",
+              "host": ["{{catalogBaseUrl}}"],
+              "path": ["products", "{{productId}}", "images", "{{productImageId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Requested image is returned', function () {",
+                  "    pm.expect(pm.response.json().result.id).to.eql(pm.collectionVariables.get('productImageId'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Update Product Image Metadata",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileId\": \"{{productImageFileId}}\",\n  \"altText\": \"Ảnh sản phẩm đã cập nhật\",\n  \"displayOrder\": 1,\n  \"primary\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{catalogBaseUrl}}/products/{{productId}}/images/{{productImageId}}",
+              "host": ["{{catalogBaseUrl}}"],
+              "path": ["products", "{{productId}}", "images", "{{productImageId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Image metadata is updated', function () {",
+                  "    const result = pm.response.json().result;",
+                  "    pm.expect(result.altText).to.eql('Ảnh sản phẩm đã cập nhật');",
+                  "    pm.expect(result.displayOrder).to.eql(1);",
+                  "    pm.expect(result.primary).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Verify Product Thumbnail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogBaseUrl}}/products/{{productId}}",
+              "host": ["{{catalogBaseUrl}}"],
+              "path": ["products", "{{productId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Product thumbnail matches primary image URL', function () {",
+                  "    const thumbnailUrl = pm.response.json().result.thumbnailUrl;",
+                  "    pm.expect(thumbnailUrl).to.be.a('string').and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Delete Product Image",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{catalogBaseUrl}}/products/{{productId}}/images/{{productImageId}}",
+              "host": ["{{catalogBaseUrl}}"],
+              "path": ["products", "{{productId}}", "images", "{{productImageId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Delete response is correct', function () {",
+                  "    const body = pm.response.json();",
+                  "    pm.expect(body.message).to.eql('Product image deleted successfully');",
+                  "    pm.expect(body.result).to.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Verify Deleted Image Is Not Found",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogBaseUrl}}/products/{{productId}}/images/{{productImageId}}",
+              "host": ["{{catalogBaseUrl}}"],
+              "path": ["products", "{{productId}}", "images", "{{productImageId}}"]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 404', function () { pm.response.to.have.status(404); });",
+                  "pm.test('Product image not found is returned', function () {",
+                  "    pm.expect(pm.response.json().code).to.eql('NOT_FOUND_PRODUCT_IMAGE_NOT_FOUND');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Public Product Images",
+      "item": [
+        {
+          "name": "Get Images Of Published Product",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalogBaseUrl}}/public/products/{{publishedProductId}}/images",
+              "host": ["{{catalogBaseUrl}}"],
+              "path": ["public", "products", "{{publishedProductId}}", "images"]
+            },
+            "description": "Cấu hình publishedProductId bằng ID sản phẩm PUBLISHED + NORMAL."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Result is an array', function () { pm.expect(pm.response.json().result).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

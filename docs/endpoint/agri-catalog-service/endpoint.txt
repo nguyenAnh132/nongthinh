@@ -1,0 +1,167 @@
+================================================================================
+AGRI CATALOG SERVICE - API ENDPOINTS
+================================================================================
+
+Base URL (trực tiếp service): http://localhost:9098/agri-catalog
+Context path (dev): /agri-catalog
+Port (dev): 9098
+
+Hiện tại API Gateway chưa khai báo route cho agri-catalog-service. Client cần gọi
+trực tiếp service cho đến khi route tương ứng được bổ sung.
+
+--------------------------------------------------------------------------------
+HEADERS
+--------------------------------------------------------------------------------
+Authorization: Bearer <access_token>   (bắt buộc với endpoint quản trị)
+Content-Type: application/json         (bắt buộc khi có request body)
+
+--------------------------------------------------------------------------------
+RESPONSE FORMAT
+--------------------------------------------------------------------------------
+Tất cả endpoint bọc trong ApiResponse:
+{
+  "code": "string | null",
+  "message": "string",
+  "traceId": "string | null",
+  "result": <T> | null
+}
+
+ProductCategoryView:
+{
+  "id": "UUID",
+  "parentId": "UUID | null",
+  "name": "string",
+  "slug": "string",
+  "description": "string | null",
+  "displayOrder": 0,
+  "active": true,
+  "createdAt": "Instant",
+  "createdBy": "UUID",
+  "updatedAt": "Instant | null",
+  "updatedBy": "UUID | null"
+}
+
+HTTP status:
+- GET thành công     : 200 OK
+- POST tạo mới       : 201 Created
+- PUT cập nhật       : 200 OK
+- DELETE             : 200 OK
+- Validation/business: 400 Bad Request
+- Không xác thực     : 401 Unauthorized
+- Không có quyền     : 403 Forbidden
+- Không tìm thấy     : 404 Not Found
+
+================================================================================
+1. PUBLIC PRODUCT CATEGORIES  (/public/product-categories)
+================================================================================
+
+--- GET /public/product-categories ---
+Mô tả   : Lấy danh sách category đang active và chưa bị soft delete.
+Auth    : Public
+Body    : Không
+Sắp xếp : displayOrder tăng dần, sau đó name tăng dần.
+Response: 200 OK, ApiResponse<List<ProductCategoryView>>
+
+================================================================================
+2. ADMIN PRODUCT CATEGORIES  (/product-categories)
+================================================================================
+
+Tất cả endpoint trong phần này yêu cầu JWT có authority ROLE_ADMIN.
+
+--- GET /product-categories ---
+Mô tả   : Lấy tất cả category chưa bị soft delete, bao gồm active và inactive.
+Auth    : ROLE_ADMIN
+Body    : Không
+Sắp xếp : displayOrder tăng dần, sau đó name tăng dần.
+Response: 200 OK, ApiResponse<List<ProductCategoryView>>
+
+--- GET /product-categories/{id} ---
+Mô tả   : Lấy chi tiết category chưa bị soft delete theo ID.
+Auth    : ROLE_ADMIN
+Path    : id (UUID)
+Body    : Không
+Response: 200 OK, ApiResponse<ProductCategoryView>
+
+--- POST /product-categories ---
+Mô tả   : Tạo category mới. Category mới mặc định active.
+Auth    : ROLE_ADMIN
+Body    :
+{
+  "parentId": "UUID | null",
+  "name": "string",
+  "slug": "string",
+  "description": "string | null",
+  "displayOrder": 0
+}
+Validation:
+  - name bắt buộc, tối đa 150 ký tự.
+  - slug bắt buộc, tối đa 180 ký tự.
+  - displayOrder phải lớn hơn hoặc bằng 0.
+  - parentId, nếu có, phải tham chiếu category chưa bị xóa.
+  - slug phải duy nhất, không phân biệt hoa thường, trong các category chưa bị xóa.
+Response: 201 Created, ApiResponse<ProductCategoryView>
+
+--- PUT /product-categories/{id} ---
+Mô tả   : Cập nhật toàn bộ thông tin category.
+Auth    : ROLE_ADMIN
+Path    : id (UUID)
+Body    :
+{
+  "parentId": "UUID | null",
+  "name": "string",
+  "slug": "string",
+  "description": "string | null",
+  "displayOrder": 0,
+  "active": true
+}
+Validation:
+  - name bắt buộc, tối đa 150 ký tự.
+  - slug bắt buộc, tối đa 180 ký tự.
+  - active bắt buộc.
+  - displayOrder phải lớn hơn hoặc bằng 0.
+  - parentId phải tồn tại nếu khác null.
+  - Không cho phép category làm cha của chính nó hoặc tạo chu trình trong cây.
+  - slug phải duy nhất, không phân biệt hoa thường, trong các category chưa bị xóa.
+Response: 200 OK, ApiResponse<ProductCategoryView>
+
+--- DELETE /product-categories/{id} ---
+Mô tả   : Soft delete category, ghi nhận deletedAt và deletedBy.
+Auth    : ROLE_ADMIN
+Path    : id (UUID)
+Body    : Không
+Điều kiện:
+  - Category phải tồn tại và chưa bị xóa.
+  - Category không được có category con chưa bị xóa.
+Response: 200 OK, ApiResponse<Void>
+
+================================================================================
+3. ERROR CODES
+================================================================================
+
+NOT_FOUND_PRODUCT_CATEGORY_NOT_FOUND
+  Không tìm thấy category hoặc category đã bị soft delete.
+
+BUS_PRODUCT_CATEGORY_SLUG_ALREADY_EXISTS
+  Slug đã được sử dụng bởi category chưa bị xóa.
+
+BUS_PRODUCT_CATEGORY_PARENT_INVALID
+  Quan hệ cha không hợp lệ hoặc tạo chu trình category.
+
+BUS_PRODUCT_CATEGORY_HAS_CHILDREN
+  Không thể xóa category vẫn còn category con.
+
+VAL_PRODUCT_CATEGORY_NAME_REQUIRED
+VAL_PRODUCT_CATEGORY_NAME_TOO_LONG
+VAL_PRODUCT_CATEGORY_SLUG_REQUIRED
+VAL_PRODUCT_CATEGORY_SLUG_TOO_LONG
+VAL_PRODUCT_CATEGORY_DISPLAY_ORDER_INVALID
+VAL_PRODUCT_CATEGORY_ACTIVE_REQUIRED
+
+================================================================================
+GHI CHÚ
+================================================================================
+
+- DELETE là soft delete; dữ liệu không bị xóa vật lý khỏi PostgreSQL.
+- Slug của category đã soft delete có thể được sử dụng lại.
+- Endpoint public không trả category inactive hoặc đã soft delete.
+- createdBy, updatedBy và deletedBy được lấy từ claim nongthinh_id trong JWT.

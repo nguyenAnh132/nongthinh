@@ -1,0 +1,307 @@
+<div class="brand-detail-header">
+  <a routerLink="/admin/brands" class="back-link">← Danh sách doanh nghiệp</a>
+  <h1 class="admin-title">Chi tiết doanh nghiệp</h1>
+</div>
+
+<nz-spin [nzSpinning]="loading">
+  @if (profile; as p) {
+    <div class="brand-detail-grid">
+      <div class="brand-detail-main">
+        <nz-card [nzBordered]="false" class="detail-card">
+          <div class="profile-head">
+            <div>
+              <h2 class="brand-name">{{ p.brandName }}</h2>
+              <nz-tag [nzColor]="statusColor(p.status)">{{ statusLabel(p.status) }}</nz-tag>
+            </div>
+            @if (p.logoUrl) {
+              <img [src]="p.logoUrl" alt="Logo" class="brand-logo" />
+            }
+          </div>
+
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Mã số thuế</span>
+              <span class="value">{{ p.taxCode || '—' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Website</span>
+              <span class="value">
+                @if (p.websiteUrl) {
+                  <a [href]="p.websiteUrl" target="_blank" rel="noopener">{{ p.websiteUrl }}</a>
+                } @else {
+                  —
+                }
+              </span>
+            </div>
+            <div class="info-item">
+              <span class="label">SĐT doanh nghiệp</span>
+              <span class="value">{{ p.phone || '—' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Ngày tạo</span>
+              <span class="value">{{ formatDate(p.createdAt) }}</span>
+            </div>
+            <div class="info-item full">
+              <span class="label">Mô tả</span>
+              <span class="value">{{ p.description || '—' }}</span>
+            </div>
+            <div class="info-item full">
+              <span class="label">Địa chỉ văn phòng</span>
+              <span class="value">{{ p.officeAddressDetail || '—' }}</span>
+            </div>
+          </div>
+
+          <nz-divider></nz-divider>
+
+          <h3 class="section-title">Người đại diện</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">Họ tên</span>
+              <span class="value">{{ p.representativeName || '—' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Email</span>
+              <span class="value">{{ p.representativeEmail || '—' }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Số điện thoại</span>
+              <span class="value">{{ p.representativePhone || '—' }}</span>
+            </div>
+          </div>
+
+          @if (p.rejectionReason) {
+            <nz-divider></nz-divider>
+            <nz-alert
+              nzType="error"
+              nzShowIcon
+              nzMessage="Lý do từ chối"
+              [nzDescription]="p.rejectionReason"
+            ></nz-alert>
+          }
+        </nz-card>
+
+        <nz-card [nzBordered]="false" class="detail-card" nzTitle="Giấy tờ">
+          @if ((detail?.documents?.length ?? 0) === 0) {
+            <p class="empty-hint">Chưa có giấy phép kinh doanh.</p>
+          } @else {
+            <ul class="doc-list">
+              @for (doc of detail!.documents; track doc.id) {
+                <li>
+                  <div>
+                    <a
+                      [href]="doc.businessLicenseUrl || '#'"
+                      target="_blank"
+                      rel="noopener"
+                      [class.disabled]="!doc.businessLicenseUrl"
+                    >
+                      Xem giấy phép kinh doanh
+                    </a>
+                    <div class="muted">{{ formatDate(doc.createdAt) }}</div>
+                  </div>
+                  <nz-tag>{{ doc.reviewStatus }}</nz-tag>
+                </li>
+              }
+            </ul>
+          }
+        </nz-card>
+
+        <nz-card [nzBordered]="false" class="detail-card" nzTitle="Lịch sử xác minh">
+          @if ((detail?.verificationLogs?.length ?? 0) === 0) {
+            <p class="empty-hint">Chưa có lần xác minh nào.</p>
+          } @else {
+            <ul class="timeline-list">
+              @for (log of detail!.verificationLogs; track log.id) {
+                <li>
+                  <div class="timeline-main">
+                    <strong>{{ log.result }}</strong>
+                    <span>{{ log.phoneCalled }}</span>
+                  </div>
+                  <div class="muted">{{ formatDate(log.verifiedAt || log.createdAt) }}</div>
+                  @if (log.note) {
+                    <div class="note">{{ log.note }}</div>
+                  }
+                </li>
+              }
+            </ul>
+          }
+        </nz-card>
+
+        <nz-card [nzBordered]="false" class="detail-card" nzTitle="Timeline hồ sơ">
+          @if ((detail?.lifecycleLogs?.length ?? 0) === 0) {
+            <p class="empty-hint">Chưa có sự kiện vòng đời.</p>
+          } @else {
+            <ul class="timeline-list">
+              @for (log of detail!.lifecycleLogs; track log.id) {
+                <li>
+                  <div class="timeline-main">
+                    <strong>{{ log.action }}</strong>
+                    <span>
+                      {{ log.fromStatus || '—' }} → {{ log.toStatus || '—' }}
+                    </span>
+                  </div>
+                  <div class="muted">{{ formatDate(log.createdAt) }}</div>
+                </li>
+              }
+            </ul>
+          }
+        </nz-card>
+      </div>
+
+      <aside class="brand-detail-side">
+        @if (canManageTickets) {
+          <nz-card [nzBordered]="false" class="detail-card" nzTitle="Ticket xét duyệt">
+            @if (process) {
+              <div class="info-item">
+                <span class="label">Process</span>
+                <span class="value">{{ process.status }}</span>
+              </div>
+              @if (process.activeTaskDefinitionKeys?.length) {
+                <div class="info-item" style="margin-top: 8px;">
+                  <span class="label">Bước hiện tại</span>
+                  <span class="value">
+                    @for (key of process.activeTaskDefinitionKeys; track key) {
+                      <nz-tag nzColor="blue">{{ taskLabel(key) }}</nz-tag>
+                    }
+                  </span>
+                </div>
+              }
+            }
+
+            @if (!ticket) {
+              <p class="empty-hint" style="margin-top: 12px;">
+                Không có ticket đang mở cho hồ sơ này
+                (có thể đang chờ doanh nghiệp nộp giấy tờ, hoặc process đã kết thúc).
+              </p>
+            } @else {
+              <div class="ticket-box">
+                <div class="info-item">
+                  <span class="label">Task</span>
+                  <span class="value">{{ ticket.taskName || taskLabel(ticket.taskDefinitionKey) }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">Assignee</span>
+                  <span class="value">{{ ticket.assignee || 'Chưa claim' }}</span>
+                </div>
+
+                <div class="action-row">
+                  @if (!ticket.assignee) {
+                    <button
+                      nz-button
+                      nzType="primary"
+                      [nzLoading]="actionLoading"
+                      (click)="claimTicket()"
+                    >
+                      Claim ticket
+                    </button>
+                  }
+                  @if (isAssignee) {
+                    <button
+                      nz-button
+                      [nzLoading]="actionLoading"
+                      (click)="unclaimTicket()"
+                    >
+                      Unclaim
+                    </button>
+                  }
+                </div>
+
+                @if (isAssignee && ticket.taskDefinitionKey === 'phone-verification') {
+                  <nz-divider></nz-divider>
+                  <h4 class="form-title">Xác minh điện thoại</h4>
+                  <label class="field-label">Số đã gọi</label>
+                  <input nz-input [(ngModel)]="phoneCalled" maxlength="10" />
+                  <label class="field-label">Kết quả</label>
+                  <nz-select [(ngModel)]="phoneResult" style="width: 100%;">
+                    <nz-option nzValue="VERIFIED" nzLabel="Đã xác minh"></nz-option>
+                    <nz-option nzValue="UNREACHABLE" nzLabel="Không liên lạc được"></nz-option>
+                    <nz-option nzValue="NEED_MORE_INFO" nzLabel="Cần thêm thông tin"></nz-option>
+                  </nz-select>
+                  <label class="field-label">Ghi chú</label>
+                  <textarea nz-input rows="3" [(ngModel)]="phoneNote"></textarea>
+                  <button
+                    nz-button
+                    nzType="primary"
+                    class="submit-btn"
+                    [nzLoading]="actionLoading"
+                    (click)="submitPhoneVerification()"
+                  >
+                    Hoàn thành bước này
+                  </button>
+                }
+
+                @if (isAssignee && ticket.taskDefinitionKey === 'documents-review') {
+                  <nz-divider></nz-divider>
+                  <h4 class="form-title">Rà soát giấy tờ</h4>
+                  <nz-radio-group [(ngModel)]="documentsOk">
+                    <label nz-radio [nzValue]="true">Hợp lệ</label>
+                    <label nz-radio [nzValue]="false">Cần bổ sung</label>
+                  </nz-radio-group>
+                  @if (!documentsOk) {
+                    <label class="field-label">Lý do bổ sung</label>
+                    <textarea nz-input rows="3" [(ngModel)]="revisionReason"></textarea>
+                  }
+                  <button
+                    nz-button
+                    nzType="primary"
+                    class="submit-btn"
+                    [nzLoading]="actionLoading"
+                    (click)="submitDocumentsReview()"
+                  >
+                    Hoàn thành bước này
+                  </button>
+                }
+
+                @if (isAssignee && ticket.taskDefinitionKey === 'final-decision') {
+                  <nz-divider></nz-divider>
+                  <h4 class="form-title">Quyết định cuối</h4>
+                  <nz-radio-group [(ngModel)]="finalOutcome">
+                    <label nz-radio nzValue="APPROVED">Duyệt</label>
+                    <label nz-radio nzValue="REJECTED">Từ chối</label>
+                  </nz-radio-group>
+                  @if (finalOutcome === 'REJECTED') {
+                    <label class="field-label">Lý do từ chối</label>
+                    <textarea nz-input rows="3" [(ngModel)]="finalRejectReason"></textarea>
+                  }
+                  <button
+                    nz-button
+                    nzType="primary"
+                    class="submit-btn"
+                    [nzLoading]="actionLoading"
+                    (click)="submitFinalDecision()"
+                  >
+                    Xác nhận quyết định
+                  </button>
+                }
+
+                @if (ticket.assignee && !isAssignee) {
+                  <p class="empty-hint" style="margin-top: 12px;">
+                    Ticket đang được xử lý bởi admin khác.
+                  </p>
+                }
+              </div>
+            }
+          </nz-card>
+        }
+
+        @if (canEarlyReject) {
+          <nz-card [nzBordered]="false" class="detail-card danger-card" nzTitle="Từ chối sớm">
+            <p class="empty-hint">
+              Từ chối hồ sơ mà không cần hoàn tất quy trình Camunda. Lý do sẽ được gửi email cho doanh nghiệp.
+            </p>
+            <label class="field-label">Lý do từ chối</label>
+            <textarea nz-input rows="4" [(ngModel)]="rejectReason" maxlength="1000"></textarea>
+            <button
+              nz-button
+              nzDanger
+              class="submit-btn"
+              [nzLoading]="actionLoading"
+              (click)="submitEarlyReject()"
+            >
+              Từ chối sớm
+            </button>
+          </nz-card>
+        }
+      </aside>
+    </div>
+  }
+</nz-spin>

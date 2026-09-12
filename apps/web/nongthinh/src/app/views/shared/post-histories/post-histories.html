@@ -1,0 +1,311 @@
+<section class="histories-page">
+  <header class="histories-heading">
+    <div>
+      <span class="heading-eyebrow">Nhật ký nội dung</span>
+      @if (embedded()) {
+        <h2>Lịch sử thay đổi</h2>
+      } @else {
+        <h1>Lịch sử bài viết</h1>
+      }
+      <p>Tra cứu dấu vết thay đổi bài viết để hỗ trợ kiểm duyệt và xử lý sự cố.</p>
+    </div>
+    <button type="button" class="refresh-button" [disabled]="loading()" (click)="loadHistories()">
+      <span class="material-symbols-outlined" [class.is-spinning]="loading()" aria-hidden="true"
+        >refresh</span
+      >
+      Làm mới
+    </button>
+  </header>
+
+  <nav class="action-tabs" aria-label="Lọc theo hành động">
+    @for (filter of actionFilters; track filter.value) {
+      <button
+        type="button"
+        [class.is-active]="selectedAction() === filter.value"
+        [attr.aria-pressed]="selectedAction() === filter.value"
+        (click)="selectAction(filter.value)"
+      >
+        {{ filter.label }}
+      </button>
+    }
+  </nav>
+
+  <form class="filter-panel" (ngSubmit)="applyFilters()">
+    <label>
+      <span>Mã bài viết</span>
+      <input
+        type="text"
+        name="postIdFilter"
+        [(ngModel)]="postIdFilter"
+        placeholder="UUID bài viết"
+        autocomplete="off"
+      />
+    </label>
+
+    <label>
+      <span>Mã tác giả</span>
+      <input
+        type="text"
+        name="postAuthorUserIdFilter"
+        [(ngModel)]="postAuthorUserIdFilter"
+        placeholder="UUID tác giả"
+        autocomplete="off"
+      />
+    </label>
+    <label>
+      <span>Mã tác nhân</span>
+      <input
+        type="text"
+        name="actorUserIdFilter"
+        [(ngModel)]="actorUserIdFilter"
+        placeholder="UUID người thao tác"
+        autocomplete="off"
+      />
+    </label>
+    <label>
+      <span>Loại tác nhân</span>
+      <select name="actorTypeFilter" [(ngModel)]="actorTypeFilter">
+        @for (actorType of actorTypes; track actorType.value) {
+          <option [ngValue]="actorType.value">{{ actorType.label }}</option>
+        }
+      </select>
+    </label>
+
+    <div class="filter-actions">
+      <button
+        type="button"
+        class="secondary-action"
+        [disabled]="loading()"
+        (click)="clearFilters()"
+      >
+        Xóa lọc
+      </button>
+      <button type="submit" class="primary-action" [disabled]="loading()">Áp dụng</button>
+    </div>
+  </form>
+
+  <section class="histories-panel">
+    <header class="panel-heading">
+      <div>
+        <h2>Danh sách thay đổi</h2>
+        <p>Mỗi bản ghi lưu ảnh chụp nội dung tại thời điểm thao tác.</p>
+      </div>
+      <span class="filter-summary">{{ displayedRange() }}</span>
+    </header>
+
+    @if (loading() && !histories().length) {
+      <div class="state-box" role="status">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <h3>Đang tải lịch sử...</h3>
+        <p>Đang kết nối tới post-service.</p>
+      </div>
+    } @else if (loadError()) {
+      <div class="state-box state-box--error" role="alert">
+        <span class="material-symbols-outlined state-icon" aria-hidden="true">error</span>
+        <h3>Không thể tải dữ liệu</h3>
+        <p>{{ loadError() }}</p>
+        <button type="button" (click)="loadHistories(0)">Thử lại</button>
+      </div>
+    } @else if (!histories().length) {
+      <div class="state-box">
+        <span class="material-symbols-outlined state-icon" aria-hidden="true">history</span>
+        <h3>Chưa có lịch sử phù hợp</h3>
+        <p>Hãy thay đổi bộ lọc hoặc quay lại sau khi bài viết có cập nhật mới.</p>
+      </div>
+    } @else {
+      <div class="history-table-heading" aria-hidden="true">
+        <span>Hành động</span>
+        <span>Nội dung tại thời điểm thay đổi</span>
+        <span>Tác nhân</span>
+        <span>Thời gian</span>
+        <span></span>
+      </div>
+
+      <div class="history-list">
+        @for (history of histories(); track history.id) {
+          <article class="history-row">
+            <div class="action-cell">
+              <span class="action-icon" [attr.data-action]="history.action" aria-hidden="true">
+                <span class="material-symbols-outlined">history</span>
+              </span>
+              <span>
+                <strong>{{ actionLabel(history.action) }}</strong>
+                <small>#{{ shortId(history.postId) }}</small>
+              </span>
+            </div>
+
+            <div class="snapshot-cell">
+              <span class="cell-label">Nội dung</span>
+              <p>{{ history.snapshot.content }}</p>
+              <small>
+                {{ history.snapshot.media.length }} tệp ·
+                {{ history.snapshot.cropTypeIds.length }} cây trồng
+              </small>
+            </div>
+
+            <div class="actor-cell">
+              <span class="cell-label">Tác nhân</span>
+              <strong>{{ actorLabel(history.actorType) }}</strong>
+              <small>{{ userLabel(history.actorUserId) }}</small>
+            </div>
+
+            <div class="date-cell">
+              <span class="cell-label">Thời gian</span>
+              <time [attr.datetime]="history.createdAt">{{ formatDate(history.createdAt) }}</time>
+            </div>
+
+            <div class="row-actions">
+              <button type="button" aria-label="Xem chi tiết lịch sử" (click)="viewDetail(history)">
+                <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+
+      <footer class="pagination">
+        <span>{{ displayedRange() }}</span>
+        <div>
+          <button
+            type="button"
+            [disabled]="currentPage() === 0 || loading()"
+            (click)="previousPage()"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+            Trước
+          </button>
+          <span>Trang {{ currentPage() + 1 }} / {{ totalPages() || 1 }}</span>
+          <button type="button" [disabled]="!hasNextPage() || loading()" (click)="nextPage()">
+            Sau
+            <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+          </button>
+        </div>
+      </footer>
+    }
+  </section>
+
+  @if (detail(); as history) {
+    <div class="modal-backdrop" role="presentation" (click)="closeDetailFromBackdrop($event)">
+      <section
+        class="detail-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="history-detail-title"
+      >
+        <header class="dialog-heading">
+          <div>
+            <span class="heading-eyebrow">{{ actionLabel(history.action) }}</span>
+            <h2 id="history-detail-title">Chi tiết lịch sử bài viết</h2>
+            <p>{{ formatDate(history.createdAt) }}</p>
+          </div>
+          <button
+            type="button"
+            aria-label="Đóng chi tiết"
+            [disabled]="detailLoading()"
+            (click)="closeDetail()"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </header>
+
+        @if (detailLoading()) {
+          <div class="detail-loading">Đang đồng bộ chi tiết mới nhất...</div>
+        }
+
+        <dl class="detail-grid">
+          <div>
+            <dt>Mã lịch sử</dt>
+            <dd>{{ history.id }}</dd>
+          </div>
+          <div>
+            <dt>Mã bài viết</dt>
+            <dd>{{ history.postId }}</dd>
+          </div>
+          <div>
+            <dt>Tác giả</dt>
+            <dd>{{ userLabel(history.postAuthorUserId) }} · {{ history.postAuthorUserId }}</dd>
+          </div>
+          <div>
+            <dt>Tác nhân</dt>
+            <dd>
+              {{ actorLabel(history.actorType) }} · {{ userLabel(history.actorUserId) }}
+              @if (history.actorUserId) {
+                · {{ history.actorUserId }}
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Trạng thái</dt>
+            <dd>{{ stateTransition(history) }}</dd>
+          </div>
+          <div>
+            <dt>Quyền xem</dt>
+            <dd>
+              {{ visibilityLabel(history.previousVisibility) }} →
+              {{ visibilityLabel(history.newVisibility) }}
+            </dd>
+          </div>
+          <div>
+            <dt>Loại bài</dt>
+            <dd>{{ history.snapshot.postTypeId || 'Không phân loại' }}</dd>
+          </div>
+          <div>
+            <dt>Chủ đề</dt>
+            <dd>{{ history.snapshot.postTopicId || '—' }}</dd>
+          </div>
+        </dl>
+
+        <section class="detail-copy">
+          <h3>Nội dung được lưu</h3>
+          <p>{{ history.snapshot.content }}</p>
+          @if (history.snapshot.locationText) {
+            <small>Địa điểm: {{ history.snapshot.locationText }}</small>
+          }
+        </section>
+
+        @if (history.snapshot.cropTypeIds.length) {
+          <section class="detail-copy">
+            <h3>Cây trồng liên quan</h3>
+            <div class="id-chips">
+              @for (cropTypeId of history.snapshot.cropTypeIds; track cropTypeId) {
+                <code>{{ cropTypeId }}</code>
+              }
+            </div>
+          </section>
+        }
+
+        @if (history.snapshot.media.length) {
+          <section class="detail-copy">
+            <h3>Tệp đính kèm</h3>
+            <div class="media-grid">
+              @for (media of history.snapshot.media; track media.fileId) {
+                <a [href]="media.mediaUrl" target="_blank" rel="noopener noreferrer">
+                  @if (media.contentType.startsWith('image/')) {
+                    <img [src]="media.mediaUrl" alt="Ảnh trong lịch sử bài viết" />
+                  } @else {
+                    <span class="material-symbols-outlined" aria-hidden="true">movie</span>
+                  }
+                  <div class="media-meta">
+                    <strong>{{ media.contentType }}</strong>
+                    <small>Thứ tự: {{ media.displayOrder }} · #{{ shortId(media.fileId) }}</small>
+                    <small>{{ media.mediaUrl }}</small>
+                  </div>
+                </a>
+              }
+            </div>
+          </section>
+        }
+
+        @if (history.reasonCode || history.reasonDetail || history.reportId) {
+          <section class="detail-copy detail-copy--moderation">
+            <h3>Ngữ cảnh kiểm duyệt</h3>
+            <p>{{ history.reasonDetail || history.reasonCode || 'Không có mô tả bổ sung.' }}</p>
+            @if (history.reportId) {
+              <small>Mã báo cáo: {{ history.reportId }}</small>
+            }
+          </section>
+        }
+      </section>
+    </div>
+  }
+</section>

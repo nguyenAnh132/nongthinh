@@ -1,0 +1,244 @@
+<section class="crop-type-page">
+  <div class="summary-row admin-content-header">
+    <div>
+      <h1>Quản lý loại cây trồng</h1>
+    </div>
+    <button class="primary-button" type="button" (click)="openCreate()">
+      <span class="material-symbols-outlined" aria-hidden="true">add</span>
+      Thêm loại cây trồng
+    </button>
+  </div>
+
+  <section class="statistics" aria-label="Tổng quan loại cây trồng">
+    <article class="stat-card">
+      <span>Tổng số</span>
+      <strong>{{ cropTypes.length }}</strong>
+    </article>
+    <article class="stat-card stat-card--active">
+      <span>Đang hoạt động</span>
+      <strong>{{ activeCropTypeCount }}</strong>
+    </article>
+    <article class="stat-card stat-card--inactive">
+      <span>Đã tạm ngưng</span>
+      <strong>{{ inactiveCropTypeCount }}</strong>
+    </article>
+  </section>
+
+  <section class="panel crop-type-overview">
+    <div class="list-toolbar">
+      <div>
+        <h2>Danh sách loại cây trồng</h2>
+        <p>{{ filteredCropTypes.length }} kết quả</p>
+      </div>
+      <div class="list-actions">
+        <label class="search-field">
+          <span class="material-symbols-outlined" aria-hidden="true">search</span>
+          <input
+            type="search"
+            [value]="searchTerm"
+            placeholder="Tìm theo mã hoặc tên"
+            (input)="searchTerm = $any($event.target).value"
+          />
+        </label>
+        <button
+          class="secondary-button refresh-button"
+          type="button"
+          title="Tải lại"
+          [disabled]="loading"
+          (click)="loadCropTypes()"
+        >
+          <span class="material-symbols-outlined" [class.is-spinning]="loading">refresh</span>
+          Tải lại
+        </button>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="state-box">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <p>Đang tải danh sách loại cây trồng...</p>
+      </div>
+    } @else if (loadError) {
+      <div class="state-box state-box--error">
+        <span class="material-symbols-outlined" aria-hidden="true">error</span>
+        <h3>Không thể tải dữ liệu</h3>
+        <p>{{ loadError }}</p>
+        <button class="secondary-button" type="button" (click)="loadCropTypes()">Thử lại</button>
+      </div>
+    } @else {
+      <div class="crop-type-table-header" aria-hidden="true">
+        <span>Loại cây trồng</span>
+        <span>Mã chuẩn</span>
+        <span>Trạng thái</span>
+        <span>Hành động</span>
+      </div>
+      <div class="crop-type-list">
+        @for (cropType of filteredCropTypes; track cropType.id) {
+          <article class="crop-type-card">
+            <div class="crop-type-main-cell">
+              <div class="crop-type-details">
+                <h3>{{ cropType.name }}</h3>
+                <p>{{ cropType.description || 'Chưa có mô tả.' }}</p>
+              </div>
+            </div>
+            <div class="crop-type-code-cell">
+              <span class="cell-label">Mã chuẩn</span>
+              <code>{{ cropType.code }}</code>
+            </div>
+            <div class="crop-type-status-cell">
+              <span class="cell-label">Trạng thái</span>
+              <span class="status-label" [class.status-label--inactive]="!cropType.active">
+                {{ cropType.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
+              </span>
+            </div>
+            <div class="crop-type-actions">
+              <button
+                class="action-button"
+                type="button"
+                title="Chỉnh sửa"
+                [disabled]="deletingCropTypeId === cropType.id"
+                (click)="startEdit(cropType)"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+                <span class="sr-only">Chỉnh sửa {{ cropType.name }}</span>
+              </button>
+              <button
+                class="action-button action-button--danger"
+                type="button"
+                title="Xóa"
+                [disabled]="deletingCropTypeId === cropType.id"
+                (click)="requestDelete(cropType.id)"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                <span class="sr-only">Xóa {{ cropType.name }}</span>
+              </button>
+            </div>
+
+            @if (deleteConfirmationId === cropType.id) {
+              <div class="delete-confirmation">
+                <div>
+                  <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+                  <p>Xóa loại cây trồng “{{ cropType.name }}”? Thao tác bị chặn nếu đang được dữ liệu khác sử dụng.</p>
+                </div>
+                <div class="confirmation-actions">
+                  <button type="button" (click)="cancelDelete()">Hủy</button>
+                  <button
+                    class="confirmation-delete"
+                    type="button"
+                    [disabled]="deletingCropTypeId === cropType.id"
+                    (click)="deleteCropType(cropType)"
+                  >
+                    {{ deletingCropTypeId === cropType.id ? 'Đang xóa...' : 'Xóa' }}
+                  </button>
+                </div>
+              </div>
+            }
+          </article>
+        } @empty {
+          <div class="state-box">
+            <span class="material-symbols-outlined empty-icon" aria-hidden="true">potted_plant</span>
+            <h3>Chưa có loại cây trồng phù hợp</h3>
+            <p>Hãy tạo một loại cây trồng để dùng cho danh mục bệnh và model chẩn đoán.</p>
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  @if (editorOpen) {
+    <div class="editor-backdrop" role="presentation" (click)="closeEditorFromBackdrop($event)">
+      <form
+        class="panel crop-type-editor"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="editingCropType ? 'edit-crop-type-title' : 'create-crop-type-title'"
+        [formGroup]="cropTypeForm"
+        (click)="$event.stopPropagation()"
+        (ngSubmit)="submitCropType()"
+      >
+        <div class="editor-heading">
+          <div>
+            <h2 [id]="editingCropType ? 'edit-crop-type-title' : 'create-crop-type-title'">
+              {{ editingCropType ? 'Chỉnh sửa loại cây trồng' : 'Thêm loại cây trồng' }}
+            </h2>
+            <p>
+              {{ editingCropType
+                ? 'Mã chuẩn không thể thay đổi sau khi đã tạo.'
+                : 'Mã chuẩn được dùng để liên kết dữ liệu giữa các service.' }}
+            </p>
+          </div>
+          <button
+            class="close-editor-button"
+            type="button"
+            aria-label="Đóng biểu mẫu"
+            [disabled]="saving"
+            (click)="cancelEdit()"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+
+        <div class="form-content">
+          <div class="form-grid">
+            <label class="field field--span-4">
+              <span>Mã chuẩn <b>*</b></span>
+              <input
+                formControlName="code"
+                maxlength="50"
+                placeholder="Ví dụ: RICE"
+                autocomplete="off"
+                [readonly]="!!editingCropType"
+                (input)="onCodeInput()"
+              />
+              @if (cropTypeForm.controls.code.touched && cropTypeForm.controls.code.invalid) {
+                <small>Mã gồm chữ in hoa, số hoặc dấu gạch dưới; bắt đầu bằng chữ cái.</small>
+              }
+            </label>
+            <label class="field field--span-8">
+              <span>Tên loại cây trồng <b>*</b></span>
+              <input formControlName="name" maxlength="150" placeholder="Ví dụ: Lúa" />
+              @if (cropTypeForm.controls.name.touched && cropTypeForm.controls.name.invalid) {
+                <small>Vui lòng nhập tên loại cây trồng, tối đa 150 ký tự.</small>
+              }
+            </label>
+            <label class="field field--span-12">
+              <span>Mô tả</span>
+              <textarea
+                formControlName="description"
+                maxlength="10000"
+                rows="5"
+                placeholder="Mô tả phạm vi hoặc đặc điểm của loại cây trồng"
+              ></textarea>
+            </label>
+          </div>
+
+          @if (editingCropType) {
+            <label class="status-field">
+              <span>
+                <strong>Loại cây trồng đang hoạt động</strong>
+                <small>Tạm ngưng để chặn dữ liệu bệnh mới, nhưng vẫn giữ được dữ liệu lịch sử.</small>
+              </span>
+              <span class="switch">
+                <input type="checkbox" formControlName="active" aria-label="Trạng thái hoạt động" />
+                <span class="switch-track"></span>
+              </span>
+            </label>
+          }
+        </div>
+
+        <div class="form-actions">
+          <span><b>*</b> Thông tin bắt buộc</span>
+          <div class="form-action-buttons">
+            <button class="secondary-button" type="button" [disabled]="saving" (click)="cancelEdit()">Hủy</button>
+            <button class="primary-button" type="submit" [disabled]="saving">
+              <span class="material-symbols-outlined" aria-hidden="true">
+                {{ editingCropType ? 'save' : 'add' }}
+              </span>
+              {{ saving ? 'Đang lưu...' : editingCropType ? 'Lưu thay đổi' : 'Tạo loại cây trồng' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  }
+</section>

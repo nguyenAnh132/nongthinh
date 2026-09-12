@@ -1,0 +1,2024 @@
+:host {
+  display: block;
+}
+
+:host * {
+  box-sizing: border-box;
+}
+
+.disease-manager {
+  display: grid;
+  gap: 22px;
+  color: #17362a;
+}
+
+.summary-row,
+.panel-heading,
+.list-toolbar,
+.disease-title-row,
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.summary-row h1 {
+  margin: 0;
+  color: #191c1e;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 44px;
+  letter-spacing: -0.02em;
+}
+
+.summary-row p,
+.panel-heading p,
+.list-toolbar p {
+  margin: 0;
+  color: #718078;
+}
+
+.summary-actions,
+.summary-stats {
+  display: flex;
+  align-items: center;
+}
+
+.summary-actions {
+  gap: 16px;
+}
+
+.summary-stats {
+  gap: 10px;
+}
+
+.summary-stats span {
+  display: grid;
+  min-width: 86px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #eaf6ee;
+  color: #587064;
+  font-size: 11px;
+}
+
+.summary-stats strong {
+  color: #17633c;
+  font-size: 22px;
+}
+
+.summary-stats .pending {
+  background: #fff4df;
+}
+
+.summary-stats .pending strong {
+  color: #ad6500;
+}
+
+.disease-overview-grid {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 18px;
+  min-width: 0;
+}
+
+.overview-statistics {
+  display: grid;
+  gap: 14px;
+}
+
+.overview-stat-card {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  min-height: 94px;
+  padding: 17px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  background: #22863a;
+  box-shadow: 0 12px 30px rgba(34, 134, 58, 0.2);
+}
+
+.overview-stat-card div {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  text-align: center;
+}
+
+.overview-stat-card div span {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 28px;
+}
+
+.overview-stat-card div strong {
+  color: #fff;
+  font-size: 38px;
+  line-height: 42px;
+}
+
+.overview-stat-card--pending {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: #22863a;
+}
+
+.recent-history-card {
+  min-width: 0;
+  padding: 20px 22px;
+}
+
+.recent-history-heading,
+.history-explorer-heading,
+.history-pagination,
+.history-pagination > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.recent-history-heading {
+  margin-bottom: 14px;
+}
+
+.recent-history-heading h2,
+.history-explorer-heading h2 {
+  margin: 0 0 3px;
+  color: #192c22;
+  font-size: 18px;
+}
+
+.recent-history-heading p,
+.history-explorer-heading p {
+  margin: 0;
+  color: #718078;
+  font-size: 12px;
+}
+
+.recent-history-heading .text-button {
+  flex: 0 0 auto;
+}
+
+.recent-history-list,
+.history-explorer-list {
+  display: grid;
+}
+
+.global-history-entry {
+  display: block;
+  min-width: 0;
+  padding: 10px 0;
+  border-top: 1px solid #edf2ee;
+}
+
+.global-history-content {
+  min-width: 0;
+}
+
+.global-history-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.global-history-title strong {
+  overflow: hidden;
+  color: #203c2e;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.global-history-title .history-action {
+  flex: 0 0 auto;
+  color: #3f7658;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.global-history-title time {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: #7d8b83;
+  font-size: 11px;
+}
+
+.global-history-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  margin-top: 5px;
+  color: #6c7d73;
+  font-size: 11px;
+}
+
+.history-crop-type {
+  padding-right: 12px;
+  border-right: 1px solid #d9e3dc;
+  color: #51665a;
+  font-weight: 600;
+}
+
+.history-status-bar {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px rgba(41, 71, 54, 0.08);
+  white-space: nowrap;
+}
+
+.history-status-segment {
+  min-height: 23px;
+  padding: 4px 10px;
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.history-status-segment--previous {
+  color: #52645a;
+  background: #e5ece7;
+  font-weight: 600;
+}
+
+.history-status-segment--current {
+  color: #fff;
+  background: #22863a;
+  font-weight: 700;
+}
+
+.history-status-segment--draft {
+  background: #65778a;
+}
+
+.history-status-segment--pending_review {
+  background: #b86b00;
+}
+
+.history-status-segment--approved {
+  background: #22863a;
+}
+
+.history-status-segment--rejected {
+  background: #b64141;
+}
+
+.history-status-segment--hidden {
+  background: #626778;
+}
+
+.history-actor {
+  padding-left: 12px;
+  border-left: 1px solid #d9e3dc;
+  color: #829087;
+}
+
+.history-actor strong {
+  color: #52675b;
+  font-weight: 600;
+}
+
+.global-history-content blockquote {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 5px 0 0;
+  color: #76562f;
+  font-size: 11px;
+  line-height: 16px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.recent-history-state {
+  display: grid;
+  min-height: 128px;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  color: #718078;
+  font-size: 12px;
+  text-align: center;
+}
+
+.recent-history-state p {
+  margin: 0;
+}
+
+.recent-history-state--error {
+  color: #a63636;
+}
+
+.recent-history-skeleton {
+  display: grid;
+  gap: 12px;
+  padding-top: 5px;
+}
+
+.recent-history-skeleton span {
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #edf2ee 25%, #f8faf8 50%, #edf2ee 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.2s infinite;
+}
+
+.history-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(1120px, calc(100vw - 48px));
+  max-width: none;
+  max-height: calc(100vh - 48px);
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  color: #17362a;
+  background: #fff;
+  box-shadow: 0 28px 90px rgba(7, 30, 18, 0.35);
+}
+
+.history-dialog::backdrop {
+  background: rgba(13, 34, 24, 0.6);
+  backdrop-filter: blur(3px);
+}
+
+.history-explorer {
+  display: grid;
+  grid-template-rows: auto auto minmax(220px, 1fr) auto;
+  max-height: calc(100vh - 48px);
+}
+
+.history-explorer-heading {
+  padding: 20px 22px;
+  border-bottom: 1px solid #e5ece7;
+}
+
+.history-filter-toolbar {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.4fr) repeat(3, minmax(130px, 1fr));
+  gap: 12px;
+  padding: 16px 22px;
+  border-bottom: 1px solid #e5ece7;
+  background: #f8faf8;
+}
+
+.history-filter-toolbar label {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.history-filter-toolbar label > span {
+  color: #50645a;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.history-filter-toolbar input,
+.history-filter-toolbar select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  outline: 0;
+  color: #191c1e;
+  background: #f2f4f6;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.history-filter-toolbar input:focus,
+.history-filter-toolbar select:focus {
+  box-shadow: inset 0 0 0 2px rgba(0, 107, 39, 0.16);
+}
+
+.history-search-filter {
+  grid-column: span 1;
+}
+
+.history-reset-button {
+  align-self: end;
+  min-height: 39px;
+}
+
+.history-results {
+  min-height: 240px;
+  overflow-y: auto;
+  padding: 4px 22px;
+}
+
+.global-history-entry--large {
+  padding: 14px 2px;
+}
+
+.history-explorer-state {
+  display: grid;
+  min-height: 240px;
+  place-items: center;
+  align-content: center;
+  gap: 12px;
+  color: #718078;
+  font-size: 13px;
+}
+
+.history-explorer-state p {
+  margin: 0;
+}
+
+.history-explorer-state--error {
+  color: #a63636;
+}
+
+.history-pagination {
+  padding: 14px 22px;
+  border-top: 1px solid #e5ece7;
+  color: #64776c;
+  font-size: 12px;
+}
+
+.history-pagination > div > span {
+  min-width: 92px;
+  text-align: center;
+}
+
+.panel {
+  padding: 24px;
+  border: 1px solid #dfe9e2;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(25, 60, 42, 0.06);
+}
+
+.disease-list-panel {
+  min-width: 0;
+}
+
+.editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 16px;
+  background: rgba(13, 34, 24, 0.58);
+  backdrop-filter: blur(3px);
+  overscroll-behavior: contain;
+  animation: fade-in 0.18s ease-out;
+}
+
+.disease-editor {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 95dvw;
+  max-width: calc(100dvw - 32px);
+  height: 95dvh;
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  padding: 0;
+  box-shadow: 0 24px 70px rgba(13, 45, 29, 0.25);
+  animation: modal-in 0.2s ease-out;
+}
+
+.disease-editor > .panel-heading {
+  padding: 22px 28px 18px;
+}
+
+.disease-editor > .panel-heading h3 {
+  font-size: 22px;
+}
+
+.panel-heading {
+  padding-bottom: 18px;
+  border-bottom: 1px solid #edf2ee;
+}
+
+.panel-heading h3,
+.list-toolbar h3 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.close-editor-button {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: #607067;
+  background: #f0f4f1;
+  transition:
+    color 0.18s ease,
+    background 0.18s ease;
+}
+
+.close-editor-button:hover {
+  color: #17362a;
+  background: #e1ebe4;
+}
+
+.close-editor-button .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.form-sections {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 28px 28px;
+  scrollbar-gutter: stable;
+}
+
+.form-section + .form-section {
+  margin-top: 28px;
+  padding-top: 26px;
+  border-top: 1px solid #e5ece7;
+}
+
+.form-section-heading {
+  margin-bottom: 17px;
+}
+
+.form-section-heading h4,
+.form-section-heading p {
+  margin: 0;
+}
+
+.form-section-heading h4 {
+  color: #1d382a;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.form-section-heading p {
+  margin-top: 4px;
+  color: #77867e;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field > span {
+  color: #191c1e;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.field b,
+.field small,
+.form-actions b {
+  color: #c84444;
+}
+
+.field em {
+  align-self: flex-end;
+  color: #89968f;
+  font-size: 11px;
+  font-style: normal;
+}
+
+.field input,
+.field select,
+.field textarea,
+.filters input,
+.filters select,
+.reject-box textarea {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  outline: 0;
+  color: #191c1e;
+  background: #f2f4f6;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.filters input:focus,
+.filters select:focus,
+.reject-box textarea:focus {
+  box-shadow: inset 0 0 0 2px rgba(0, 107, 39, 0.16);
+}
+
+.field textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.field--span-5 {
+  grid-column: span 5;
+}
+
+.field--span-6 {
+  grid-column: span 6;
+}
+
+.field--span-7 {
+  grid-column: span 7;
+}
+
+.field--span-12 {
+  grid-column: span 12;
+}
+
+.thumbnail-upload {
+  display: grid;
+  grid-template-columns: 144px minmax(0, 1fr);
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid #cedbd2;
+  border-radius: 10px;
+  background: #fbfdfb;
+}
+
+.thumbnail-preview {
+  display: grid;
+  place-items: center;
+  width: 144px;
+  height: 112px;
+  overflow: hidden;
+  border-radius: 9px;
+  color: #6c8175;
+  background: #eaf2ed;
+}
+
+.thumbnail-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-preview .material-symbols-outlined {
+  font-size: 30px;
+}
+
+.thumbnail-upload-content {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.thumbnail-upload-content > small {
+  color: #89968f;
+  font-size: 11px;
+}
+
+.thumbnail-upload-content > strong {
+  overflow: hidden;
+  max-width: 100%;
+  color: #40564a;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.upload-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.upload-button:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.remove-thumbnail {
+  padding: 0;
+  font-size: 12px;
+}
+
+.image-error {
+  margin: 0;
+  color: #c84444;
+  font-size: 12px;
+}
+
+.form-actions {
+  margin-top: 0;
+  padding: 16px 28px 18px;
+  border-top: 1px solid #edf2ee;
+  background: #fff;
+  color: #839088;
+  font-size: 12px;
+}
+
+.form-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.primary-button,
+.secondary-button,
+.danger-button {
+  padding: 9px 14px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.primary-button {
+  color: #fff;
+  background: #237a4d;
+}
+
+.add-disease-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 16px;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+.secondary-button {
+  border: 1px solid #cedbd2;
+  color: #365344;
+  background: #fff;
+}
+
+.danger-button {
+  color: #fff;
+  background: #b43c3c;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.text-button,
+.danger-link {
+  padding: 6px;
+  background: transparent;
+  font-weight: 700;
+}
+
+.text-button {
+  color: #237a4d;
+}
+
+.danger-link {
+  color: #b43c3c;
+}
+
+.filters {
+  display: flex;
+  gap: 8px;
+}
+
+.filters input {
+  min-width: 220px;
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  border-radius: 9px;
+  color: #237a4d;
+  background: #eaf6ee;
+}
+
+.disease-table-header,
+.disease-card {
+  display: grid;
+  grid-template-columns:
+    minmax(320px, 1.45fr)
+    minmax(116px, 0.45fr)
+    minmax(190px, 0.65fr)
+    72px;
+  gap: 18px;
+}
+
+.disease-table-header {
+  align-items: center;
+  margin-top: 20px;
+  padding: 14px 16px;
+  border: 1px solid #e1e6eb;
+  border-radius: 12px 12px 0 0;
+  background: #f1f3f6;
+  color: #35423b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.disease-table-header span:last-child {
+  text-align: right;
+}
+
+.disease-list {
+  border: 1px solid #e1e6eb;
+  border-top: 0;
+  border-radius: 0 0 12px 12px;
+  background: #fff;
+}
+
+.disease-card {
+  position: relative;
+  align-items: start;
+  padding: 18px 16px;
+  border-bottom: 1px solid #e8ece9;
+  background: #fff;
+}
+
+.disease-card:nth-child(even) {
+  background: #fafbfc;
+}
+
+.disease-card:last-child {
+  border-bottom: 0;
+}
+
+.disease-card:has(.action-dropdown) {
+  z-index: 10;
+}
+
+.disease-main-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  min-width: 0;
+}
+
+.disease-details {
+  min-width: 0;
+}
+
+.disease-details h4,
+.disease-details p,
+.disease-meta-cell p {
+  margin: 0;
+}
+
+.disease-details h4 {
+  color: #192c22;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 22px;
+}
+
+.disease-details h4 span,
+.disease-details strong,
+.disease-meta-cell strong {
+  color: #43544a;
+  font-weight: 700;
+}
+
+.disease-details p,
+.disease-meta-cell p {
+  margin-top: 4px;
+  color: #68766e;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.disease-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.disease-status-cell,
+.disease-meta-cell {
+  min-width: 0;
+}
+
+.disease-status-cell {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.cell-label {
+  display: none;
+  color: #35423b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.disease-visual {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 84px;
+  height: 72px;
+  overflow: hidden;
+  border: 1px solid #e1eae4;
+  border-radius: 8px;
+  color: #237a4d;
+  background: #f0f4f1;
+}
+
+.disease-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.disease-visual img.disease-placeholder {
+  padding: 4px;
+  object-fit: contain;
+}
+
+.disease-visual .material-symbols-outlined {
+  font-size: 30px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 0;
+  border-radius: 0;
+  color: #59675f;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-badge::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #9ba49e;
+  content: '';
+}
+
+.status-badge--approved {
+  color: #17633c;
+  background: transparent;
+}
+
+.status-badge--approved::before {
+  background: #35a85f;
+}
+
+.status-badge--pending_review {
+  color: #9a5a00;
+  background: transparent;
+}
+
+.status-badge--pending_review::before {
+  background: #e59a1a;
+}
+
+.status-badge--rejected {
+  color: #a63636;
+  background: transparent;
+}
+
+.status-badge--rejected::before {
+  background: #df4a4a;
+}
+
+.status-badge--hidden {
+  color: #5f6170;
+  background: transparent;
+}
+
+.card-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.action-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 1px solid #d8e2db;
+  border-radius: 9px;
+  color: #40564a;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.action-menu-trigger:hover:not(:disabled),
+.action-menu-trigger[aria-expanded='true'] {
+  border-color: #8db69c;
+  color: #17633c;
+  background: #f1f8f3;
+}
+
+.action-menu-trigger .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.action-dropdown {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  width: max-content;
+  min-width: 188px;
+  padding: 6px;
+  border: 1px solid #dce4df;
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(25, 60, 42, 0.18);
+  animation: action-menu-in 0.16s ease-out;
+}
+
+.action-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 7px;
+  color: #344b3e;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.action-dropdown button:hover {
+  color: #17633c;
+  background: #edf7f0;
+}
+
+.action-dropdown .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.action-dropdown .menu-item--success {
+  color: #17633c;
+}
+
+.action-dropdown .menu-item--danger {
+  color: #b43c3c;
+}
+
+.action-dropdown .menu-item--danger:hover {
+  color: #a12f2f;
+  background: #fff0f0;
+}
+
+.action-dropdown .menu-item--separated {
+  margin-top: 5px;
+  padding-top: 10px;
+  border-top: 1px solid #edf1ee;
+  border-radius: 0 0 7px 7px;
+}
+
+.review-history {
+  grid-column: 1 / -1;
+  padding: 16px;
+  border-top: 1px solid #edf2ee;
+}
+
+.review-history h5 {
+  margin: 0 0 14px;
+  font-size: 14px;
+}
+
+.history-timeline {
+  display: grid;
+  gap: 12px;
+}
+
+.history-entry {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.history-dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #237a4d;
+  box-shadow: 0 0 0 2px #b9d8c5;
+}
+
+.history-entry-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.history-entry-heading strong {
+  font-size: 13px;
+}
+
+.history-entry-heading time,
+.history-entry-meta,
+.history-state {
+  color: #718078;
+  font-size: 11px;
+}
+
+.history-entry-meta,
+.history-state {
+  margin: 3px 0 0;
+}
+
+.history-entry-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+}
+
+.history-entry blockquote {
+  margin: 7px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid #e0a85b;
+  border-radius: 0 7px 7px 0;
+  background: #fff7ed;
+  color: #755129;
+  font-size: 12px;
+}
+
+.rejection-note,
+.reject-box,
+.delete-box {
+  padding: 10px;
+  border-radius: 9px;
+  font-size: 12px;
+}
+
+.rejection-note {
+  width: 100%;
+  color: #8e3c3c;
+  background: #fff0f0;
+}
+
+.reject-box,
+.delete-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff7ed;
+}
+
+.row-expanded-panel {
+  grid-column: 1 / -1;
+  margin-top: 2px;
+  border-top: 1px solid #edf2ee;
+}
+
+.reject-box textarea {
+  flex: 1;
+}
+
+.delete-box span {
+  flex: 1;
+}
+
+.inline-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.empty-state {
+  padding: 40px;
+  color: #718078;
+  text-align: center;
+}
+
+.empty-state--error {
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  color: #a63636;
+}
+
+.empty-state--error > .material-symbols-outlined {
+  font-size: 30px;
+}
+
+.empty-state--error p {
+  margin: 0;
+}
+
+/* Glass surfaces for the admin disease dashboard. */
+.disease-manager--admin {
+  --glass-border: rgba(255, 255, 255, 0.72);
+  --glass-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 1px 0 0 rgba(255, 255, 255, 0.36),
+    inset 0 -1px 0 rgba(117, 170, 136, 0.16),
+    0 22px 52px rgba(19, 58, 38, 0.15);
+  --glass-surface:
+    radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.26), transparent 36%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(207, 235, 217, 0.06));
+  --glass-surface-strong:
+    radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.46), transparent 38%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(226, 241, 231, 0.32));
+}
+
+.disease-manager--admin .summary-row,
+.disease-manager--admin .panel,
+.disease-manager--admin .overview-stat-card {
+  border: 1px solid var(--glass-border);
+  border-radius: 22px;
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(5px) saturate(118%);
+  backdrop-filter: blur(5px) saturate(118%);
+}
+
+.disease-manager--admin .summary-row {
+  padding: 18px 22px;
+  background: var(--glass-surface);
+}
+
+.disease-manager--admin .summary-row h1,
+.disease-manager--admin .list-toolbar h3,
+.disease-manager--admin .recent-history-heading h2 {
+  color: #102d20;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.disease-manager--admin .panel {
+  background: var(--glass-surface);
+}
+
+.disease-manager--admin .overview-stat-card,
+.disease-manager--admin .overview-stat-card--pending {
+  border-color: rgba(220, 255, 232, 0.58);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 255, 255, 0.2), transparent 38%),
+    linear-gradient(135deg, rgba(6, 73, 39, 0.48), rgba(28, 140, 70, 0.2));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    inset 1px 0 0 rgba(255, 255, 255, 0.22),
+    0 18px 40px rgba(12, 79, 39, 0.24);
+}
+
+.disease-manager--admin .disease-table-header {
+  border-color: rgba(255, 255, 255, 0.66);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.24), transparent 32%),
+    linear-gradient(135deg, rgba(244, 249, 246, 0.24), rgba(216, 235, 223, 0.06));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 8px 24px rgba(25, 60, 42, 0.08);
+  -webkit-backdrop-filter: blur(4px) saturate(115%);
+  backdrop-filter: blur(4px) saturate(115%);
+}
+
+.disease-manager--admin .disease-list {
+  border-color: rgba(255, 255, 255, 0.62);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(203, 230, 212, 0.02));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 14px 30px rgba(25, 60, 42, 0.09);
+  -webkit-backdrop-filter: blur(3px) saturate(112%);
+  backdrop-filter: blur(3px) saturate(112%);
+}
+
+.disease-manager--admin .disease-card {
+  border-color: rgba(215, 229, 219, 0.72);
+  background:
+    radial-gradient(circle at 6% 0%, rgba(255, 255, 255, 0.2), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(226, 240, 231, 0.04));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.66);
+}
+
+.disease-manager--admin .disease-card:nth-child(even) {
+  background:
+    radial-gradient(circle at 6% 0%, rgba(255, 255, 255, 0.16), transparent 28%),
+    linear-gradient(135deg, rgba(244, 249, 246, 0.12), rgba(210, 233, 218, 0.02));
+}
+
+.disease-manager--admin .disease-visual,
+.disease-manager--admin .thumbnail-upload {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(239, 247, 242, 0.58);
+}
+
+.disease-manager--admin .filters input,
+.disease-manager--admin .filters select,
+.disease-manager--admin .field input,
+.disease-manager--admin .field select,
+.disease-manager--admin .field textarea,
+.disease-manager--admin .reject-box textarea,
+.disease-manager--admin .history-filter-toolbar input,
+.disease-manager--admin .history-filter-toolbar select {
+  border-color: rgba(255, 255, 255, 0.75);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), rgba(212, 237, 221, 0.34));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 7px 18px rgba(25, 60, 42, 0.1);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.disease-manager--admin .filters input:hover:not(:disabled),
+.disease-manager--admin .filters select:hover:not(:disabled),
+.disease-manager--admin .field input:hover:not(:disabled),
+.disease-manager--admin .field select:hover:not(:disabled),
+.disease-manager--admin .field textarea:hover:not(:disabled),
+.disease-manager--admin .reject-box textarea:hover:not(:disabled),
+.disease-manager--admin .history-filter-toolbar input:hover:not(:disabled),
+.disease-manager--admin .history-filter-toolbar select:hover:not(:disabled) {
+  border-color: rgba(129, 175, 145, 0.82);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(211, 241, 222, 0.48));
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 10px 24px rgba(20, 94, 48, 0.14);
+  transform: translateY(-1px);
+}
+
+.disease-manager--admin .filters input:focus,
+.disease-manager--admin .filters select:focus,
+.disease-manager--admin .field input:focus,
+.disease-manager--admin .field select:focus,
+.disease-manager--admin .field textarea:focus,
+.disease-manager--admin .reject-box textarea:focus,
+.disease-manager--admin .history-filter-toolbar input:focus,
+.disease-manager--admin .history-filter-toolbar select:focus {
+  border-color: rgba(38, 151, 79, 0.9);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(215, 245, 226, 0.58));
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 0 0 3px rgba(39, 174, 96, 0.18),
+    0 12px 28px rgba(20, 94, 48, 0.16);
+  transform: translateY(-1px);
+}
+
+.disease-manager--admin select option {
+  color: #203c2e;
+  background: #f3f9f5;
+}
+
+.disease-manager--admin .secondary-button,
+.disease-manager--admin .icon-button,
+.disease-manager--admin .action-menu-trigger,
+.disease-manager--admin .close-editor-button,
+.disease-manager--admin .text-button {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(255, 255, 255, 0.75);
+  border-style: solid;
+  border-width: 1px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.76), rgba(212, 237, 221, 0.4));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 7px 18px rgba(25, 60, 42, 0.11);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.disease-manager--admin .text-button {
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+
+.disease-manager--admin .primary-button {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(210, 255, 226, 0.42);
+  background: linear-gradient(135deg, rgba(31, 181, 91, 0.96), rgba(0, 107, 39, 0.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    0 9px 24px rgba(0, 107, 39, 0.3),
+    0 0 22px rgba(35, 183, 94, 0.12);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(140%);
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+.disease-manager--admin .secondary-button:hover:not(:disabled),
+.disease-manager--admin .icon-button:hover:not(:disabled),
+.disease-manager--admin .action-menu-trigger:hover:not(:disabled),
+.disease-manager--admin .action-menu-trigger[aria-expanded='true'],
+.disease-manager--admin .close-editor-button:hover:not(:disabled),
+.disease-manager--admin .text-button:hover:not(:disabled) {
+  border-color: rgba(129, 175, 145, 0.82);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(211, 241, 222, 0.62));
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 10px 24px rgba(20, 94, 48, 0.16);
+  transform: translateY(-1px);
+}
+
+.disease-manager--admin .primary-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(42, 199, 106, 0.98), rgba(0, 119, 45, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.48),
+    0 12px 28px rgba(0, 107, 39, 0.36),
+    0 0 26px rgba(35, 183, 94, 0.18);
+  transform: translateY(-1px);
+}
+
+.disease-manager--admin .primary-button:active:not(:disabled),
+.disease-manager--admin .secondary-button:active:not(:disabled),
+.disease-manager--admin .icon-button:active:not(:disabled),
+.disease-manager--admin .text-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.disease-manager--admin .history-filter-toolbar,
+.disease-manager--admin .form-actions {
+  border-color: rgba(215, 229, 219, 0.72);
+  background: rgba(246, 250, 247, 0.66);
+}
+
+.disease-manager--admin .history-dialog,
+.disease-manager--admin .disease-editor,
+.disease-manager--admin .action-dropdown {
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  background: var(--glass-surface-strong);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  backdrop-filter: blur(24px) saturate(130%);
+}
+
+.disease-manager--admin .recent-history-skeleton span {
+  background: linear-gradient(
+    90deg,
+    rgba(227, 237, 230, 0.58) 25%,
+    rgba(255, 255, 255, 0.74) 50%,
+    rgba(227, 237, 230, 0.58) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.disease-manager--admin .history-entry blockquote,
+.disease-manager--admin .reject-box,
+.disease-manager--admin .delete-box {
+  background: rgba(255, 247, 237, 0.76);
+}
+
+.disease-manager--admin .rejection-note {
+  background: rgba(255, 240, 240, 0.76);
+}
+
+/* Vietnamese-first typography with stronger contrast over clear glass. */
+.disease-manager--admin {
+  color: #0b2516;
+  font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-weight: 500;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.disease-manager--admin .summary-row h1,
+.disease-manager--admin .recent-history-heading h2,
+.disease-manager--admin .history-explorer-heading h2,
+.disease-manager--admin .panel-heading h3,
+.disease-manager--admin .list-toolbar h3,
+.disease-manager--admin .form-section-heading h4,
+.disease-manager--admin .disease-details h4,
+.disease-manager--admin .review-history h5 {
+  color: #061b0e;
+  font-weight: 800;
+  letter-spacing: -0.018em;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.64);
+}
+
+.disease-manager--admin .field > span,
+.disease-manager--admin .history-filter-toolbar label > span,
+.disease-manager--admin .cell-label,
+.disease-manager--admin .disease-table-header,
+.disease-manager--admin .global-history-title strong,
+.disease-manager--admin .history-entry-heading strong {
+  color: #102d1d;
+  font-weight: 700;
+  letter-spacing: -0.006em;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.disease-manager--admin .summary-row p,
+.disease-manager--admin .panel-heading p,
+.disease-manager--admin .list-toolbar p,
+.disease-manager--admin .disease-details p,
+.disease-manager--admin .disease-meta-cell p,
+.disease-manager--admin .global-history-meta,
+.disease-manager--admin .global-history-title time,
+.disease-manager--admin .history-entry-heading time,
+.disease-manager--admin .history-entry-meta,
+.disease-manager--admin .history-state,
+.disease-manager--admin .recent-history-state,
+.disease-manager--admin .empty-state {
+  color: #294535;
+  font-weight: 500;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.48);
+}
+
+.disease-manager--admin .disease-details h4 span,
+.disease-manager--admin .disease-details strong,
+.disease-manager--admin .disease-meta-cell strong,
+.disease-manager--admin .history-actor strong,
+.disease-manager--admin .thumbnail-upload-content > strong {
+  color: #183624;
+  font-weight: 700;
+}
+
+.disease-manager--admin .history-actor,
+.disease-manager--admin .thumbnail-upload-content > small,
+.disease-manager--admin .field em {
+  color: #385443;
+  font-weight: 500;
+}
+
+.disease-manager--admin .filters input,
+.disease-manager--admin .filters select,
+.disease-manager--admin .field input,
+.disease-manager--admin .field select,
+.disease-manager--admin .field textarea,
+.disease-manager--admin .reject-box textarea,
+.disease-manager--admin .history-filter-toolbar input,
+.disease-manager--admin .history-filter-toolbar select {
+  color: #0d2a19;
+  caret-color: #087235;
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: -0.004em;
+  text-shadow: none;
+}
+
+.disease-manager--admin input::placeholder,
+.disease-manager--admin textarea::placeholder {
+  color: #4b6555;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.disease-manager--admin button {
+  font-family: inherit;
+  letter-spacing: -0.004em;
+}
+
+.disease-manager--admin .overview-stat-card div span,
+.disease-manager--admin .overview-stat-card div strong {
+  color: #fff;
+  font-weight: 800;
+  text-shadow:
+    0 2px 8px rgba(2, 36, 15, 0.86),
+    0 1px 1px rgba(2, 36, 15, 0.72);
+}
+
+.disease-manager--admin .filters {
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.disease-manager--admin .filters input {
+  flex: 1 1 220px;
+}
+
+.disease-manager--admin .filters select {
+  flex: 0 1 190px;
+  min-width: 160px;
+}
+
+.disease-manager--admin .filters .icon-button {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 42px;
+  min-width: 42px;
+  height: 42px;
+  color: #0b5f30;
+}
+
+.disease-manager--admin .status-badge {
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  color: #263b30;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.36), rgba(211, 231, 218, 0.12));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.86),
+    0 6px 16px rgba(21, 61, 39, 0.12);
+  font-weight: 800;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.68);
+  -webkit-backdrop-filter: blur(5px) saturate(120%);
+  backdrop-filter: blur(5px) saturate(120%);
+}
+
+.disease-manager--admin .status-badge--draft {
+  border-color: rgba(137, 159, 183, 0.58);
+  color: #30445a;
+  background: linear-gradient(135deg, rgba(232, 240, 248, 0.48), rgba(125, 150, 178, 0.16));
+}
+
+.disease-manager--admin .status-badge--pending_review {
+  border-color: rgba(232, 169, 72, 0.62);
+  color: #714000;
+  background: linear-gradient(135deg, rgba(255, 244, 217, 0.54), rgba(229, 154, 26, 0.16));
+}
+
+.disease-manager--admin .status-badge--approved {
+  border-color: rgba(72, 177, 111, 0.62);
+  color: #07552b;
+  background: linear-gradient(135deg, rgba(224, 248, 232, 0.52), rgba(35, 160, 83, 0.16));
+}
+
+.disease-manager--admin .status-badge--rejected {
+  border-color: rgba(211, 92, 92, 0.58);
+  color: #842b2b;
+  background: linear-gradient(135deg, rgba(255, 232, 232, 0.52), rgba(205, 75, 75, 0.14));
+}
+
+.disease-manager--admin .status-badge--hidden {
+  border-color: rgba(124, 128, 148, 0.56);
+  color: #414655;
+  background: linear-gradient(135deg, rgba(237, 238, 244, 0.5), rgba(112, 117, 139, 0.14));
+}
+
+.disease-manager--admin .action-dropdown {
+  border-color: rgba(255, 255, 255, 0.76);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 255, 255, 0.46), transparent 38%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.42), rgba(210, 235, 219, 0.18));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 16px 36px rgba(13, 48, 29, 0.2);
+  -webkit-backdrop-filter: blur(8px) saturate(128%);
+  backdrop-filter: blur(8px) saturate(128%);
+}
+
+.disease-manager--admin .action-dropdown button:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(212, 240, 222, 0.3));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
+  }
+}
+
+@keyframes action-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes skeleton-loading {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (max-width: 1200px) {
+  .disease-table-header {
+    display: none;
+  }
+
+  .disease-list {
+    margin-top: 18px;
+    border-top: 1px solid #e1e6eb;
+    border-radius: 12px;
+  }
+
+  .disease-card {
+    grid-template-columns: minmax(0, 1fr) 72px;
+  }
+
+  .disease-main-cell {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .disease-status-cell,
+  .disease-meta-cell {
+    grid-column: 1;
+  }
+
+  .disease-status-cell {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .disease-meta-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+  }
+
+  .disease-meta-cell p {
+    margin-top: 0;
+  }
+
+  .cell-label {
+    display: block;
+    width: 100%;
+  }
+
+  .card-actions {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+  }
+}
+
+@media (max-width: 900px) {
+  .disease-editor {
+    width: calc(100dvw - 32px);
+    height: calc(100dvh - 32px);
+    max-height: calc(100dvh - 32px);
+  }
+
+  .disease-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .overview-statistics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summary-row,
+  .list-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .summary-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+
+  .add-disease-button {
+    width: 100%;
+  }
+
+  .filters {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .filters input {
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .history-filter-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field--span-5,
+  .field--span-6,
+  .field--span-7,
+  .field--span-12 {
+    grid-column: 1;
+  }
+
+  .panel {
+    padding: 17px;
+  }
+
+  .editor-backdrop {
+    align-items: start;
+    padding: 12px;
+  }
+
+  .disease-editor {
+    width: calc(100dvw - 24px);
+    height: calc(100dvh - 24px);
+    max-height: calc(100dvh - 24px);
+    padding: 0;
+  }
+
+  .disease-editor > .panel-heading {
+    align-items: center;
+    flex-direction: row;
+    padding: 18px 18px 15px;
+  }
+
+  .disease-editor > .panel-heading h3 {
+    font-size: 19px;
+  }
+
+  .form-sections {
+    padding: 18px;
+  }
+
+  .form-section + .form-section {
+    margin-top: 23px;
+    padding-top: 21px;
+  }
+
+  .disease-editor > .form-actions {
+    padding: 14px 18px 16px;
+  }
+
+  .panel-heading,
+  .form-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .disease-card {
+    grid-template-columns: 1fr;
+  }
+
+  .disease-main-cell,
+  .disease-status-cell,
+  .disease-meta-cell,
+  .card-actions {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .disease-visual {
+    width: 68px;
+    height: 62px;
+  }
+
+  .card-actions {
+    justify-content: flex-start;
+  }
+
+  .action-menu-trigger {
+    width: 36px;
+  }
+
+  .action-dropdown {
+    right: auto;
+    left: 0;
+    width: min(240px, calc(100vw - 66px));
+  }
+
+  .reject-box,
+  .delete-box {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inline-action-buttons {
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  .summary-stats {
+    width: 100%;
+  }
+
+  .summary-stats span {
+    flex: 1;
+  }
+
+  .overview-statistics {
+    grid-template-columns: 1fr;
+  }
+
+  .recent-history-heading,
+  .history-explorer-heading,
+  .history-pagination {
+    align-items: flex-start;
+  }
+
+  .recent-history-heading,
+  .history-pagination {
+    flex-direction: column;
+  }
+
+  .global-history-title {
+    flex-wrap: wrap;
+  }
+
+  .global-history-title time {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .history-dialog {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .history-explorer {
+    height: 100dvh;
+    max-height: none;
+  }
+
+  .history-filter-toolbar {
+    grid-template-columns: 1fr;
+    max-height: 42vh;
+    overflow-y: auto;
+  }
+
+  .history-pagination > div {
+    width: 100%;
+  }
+
+  .form-action-buttons,
+  .form-action-buttons button {
+    width: 100%;
+  }
+
+  .thumbnail-upload {
+    grid-template-columns: 1fr;
+  }
+
+  .thumbnail-preview {
+    width: 100%;
+    height: 150px;
+  }
+}

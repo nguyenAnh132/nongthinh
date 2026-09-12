@@ -1,0 +1,264 @@
+<div class="community-page">
+  <div class="community-grid">
+    <app-community-sidebar [activeFilter]="activeFilter()" (filterChange)="selectFilter($event)" />
+
+    <main class="feed-column">
+      @if (detailMode()) {
+        <a class="back-to-community" routerLink="/app/community">
+          <img src="/icons/business/left.png" alt="" aria-hidden="true" />
+          Quay lại
+        </a>
+      }
+      @if (!detailMode()) {
+        <section class="feed-intro">
+          <div>
+            <h1>{{ feedTitle() }}</h1>
+          </div>
+          <button type="button" class="new-post-button" (click)="openCreatePost(null)">
+            <span
+              class="community-icon new-post-icon"
+              style="--community-icon: url('/icons/community/square-plus.png')"
+              aria-hidden="true"
+            ></span>
+            Tạo bài viết
+          </button>
+        </section>
+      }
+
+      @if (!currentUser()) {
+        <div class="me-state" role="status">
+          <span class="me-state__avatar"></span>
+          <span>
+            <i></i>
+            <i></i>
+          </span>
+          <p>Đang tải thông tin tài khoản từ <code>/me</code>...</p>
+        </div>
+      }
+
+      @if (!detailMode()) {
+        <app-create-post-card
+          [userName]="userName()"
+          [avatarUrl]="userAvatarUrl()"
+          [loading]="userLoading()"
+          (startPost)="openCreatePost($event)"
+        />
+
+        <div class="feed-toolbar">
+          @if (searchTerm()) {
+            <span class="feed-filter-status">Đang lọc theo từ khóa tìm kiếm</span>
+          }
+          <button type="button" disabled aria-label="Bài viết đang sắp xếp mới nhất trước">
+            Mới nhất <span aria-hidden="true">⌄</span>
+          </button>
+        </div>
+      }
+
+      @if (feedError()) {
+        <section class="feed-state feed-state--error" role="alert">
+          <strong>{{ detailMode() ? 'Không thể tải bài viết' : 'Không thể tải bảng tin' }}</strong>
+          <p>{{ feedError() }}</p>
+          <button type="button" (click)="retryFeed()">Thử lại</button>
+        </section>
+      } @else if (feedLoading()) {
+        <section
+          class="feed-skeleton"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+          aria-label="Đang tải bảng tin"
+        >
+          <span class="sr-only">Đang tải bài viết...</span>
+
+          @for (item of [0, 1, 2]; track item) {
+            <article
+              class="post-skeleton"
+              [class.post-skeleton--compact]="item === 1"
+              aria-hidden="true"
+            >
+              <header class="post-skeleton__header">
+                <span class="skeleton-shape post-skeleton__avatar"></span>
+                <span class="post-skeleton__author">
+                  <i class="skeleton-shape"></i>
+                  <i class="skeleton-shape"></i>
+                  <i class="skeleton-shape"></i>
+                </span>
+                <span class="skeleton-shape post-skeleton__menu"></span>
+              </header>
+
+              <div class="post-skeleton__body">
+                <div class="post-skeleton__tags">
+                  <span class="skeleton-shape"></span>
+                  <span class="skeleton-shape"></span>
+                </div>
+                <span class="skeleton-shape post-skeleton__line"></span>
+                <span class="skeleton-shape post-skeleton__line"></span>
+                <span class="skeleton-shape post-skeleton__line"></span>
+              </div>
+
+              @if (item !== 1) {
+                <div class="skeleton-shape post-skeleton__media"></div>
+              }
+
+              <div class="post-skeleton__stats">
+                <span class="skeleton-shape"></span>
+                <span class="skeleton-shape"></span>
+              </div>
+              <div class="post-skeleton__actions">
+                @for (action of [0, 1, 2, 3]; track action) {
+                  <span class="skeleton-shape"></span>
+                }
+              </div>
+            </article>
+          }
+        </section>
+      } @else {
+        <app-post-feed
+          [posts]="filteredPosts()"
+          [detailMode]="detailMode()"
+          (detailRequested)="openPost($event)"
+          (reactionUsersRequested)="showReactionUsers($event)"
+          [currentUserId]="currentUserId()"
+          [currentUserName]="userName()"
+          [currentUserAvatarUrl]="userAvatarUrl()"
+          [interactionsEnabled]="interactionsEnabled()"
+          [emptyTitle]="searchTerm() ? 'Không tìm thấy bài viết' : 'Chưa có bài viết ở mục này'"
+          [emptyDescription]="emptyDescription()"
+          (startPost)="openCreatePost($event)"
+          (reactionChanged)="changeReaction($event)"
+          (commentsRequested)="loadComments($event)"
+          (commentCreated)="createComment($event)"
+          (commentUpdated)="updateComment($event)"
+          (commentDeleted)="deleteComment($event)"
+          (bookmarkToggled)="toggleBookmark($event)"
+          (shareRequested)="sharePost($event)"
+          (deleteRequested)="deletePost($event)"
+          (reportRequested)="reportPost($event)"
+        />
+
+        @if (hasNextPage()) {
+          <button
+            type="button"
+            class="load-more-button"
+            [disabled]="loadingMore()"
+            (click)="loadMore()"
+          >
+            {{ loadingMore() ? 'Đang tải...' : 'Xem thêm bài viết' }}
+          </button>
+        }
+      }
+    </main>
+
+    <app-community-right-sidebar />
+  </div>
+
+  <nav class="mobile-community-nav" aria-label="Điều hướng cộng đồng trên điện thoại">
+    @for (item of mobileNavItems; track item.id) {
+      <button
+        type="button"
+        [class.active]="activeFilter() === item.id"
+        [attr.aria-current]="activeFilter() === item.id ? 'page' : null"
+        (click)="selectFilter(item.id)"
+      >
+        <span
+          class="community-icon"
+          [style.--community-icon]="'url(' + item.iconUrl + ')'"
+          aria-hidden="true"
+        ></span>
+        {{ item.label }}
+      </button>
+    }
+    <button type="button" class="mobile-create" (click)="openCreatePost(null)">
+      <span class="mobile-create-icon" aria-hidden="true">
+        <span
+          class="community-icon"
+          style="--community-icon: url('/icons/community/square-plus.png')"
+        ></span>
+      </span>
+      Đăng bài
+    </button>
+  </nav>
+
+  @if (modalOpen()) {
+    <app-create-post-modal
+      [userName]="userName()"
+      [avatarUrl]="userAvatarUrl()"
+      [initialCategory]="modalCategory()"
+      [postTypes]="postTypes()"
+      [postTopics]="postTopics()"
+      [cropTypes]="cropTypes()"
+      [cropTypesError]="cropTypesError()"
+      [submitting]="creatingPost()"
+      [serverError]="createPostError()"
+      (dismissed)="closeCreatePost()"
+      (postCreated)="createPost($event)"
+    />
+  }
+
+  @if (reactionDialogOpen()) {
+    <div class="reaction-dialog-backdrop" (click)="closeReactionUsersFromBackdrop($event)">
+      <section
+        id="reaction-users"
+        class="reaction-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reaction-users-title"
+        [attr.aria-busy]="reactionUsersLoading()"
+      >
+        <header class="reaction-dialog__header">
+          <h2 id="reaction-users-title">Người bày tỏ cảm xúc</h2>
+          <button type="button" class="reaction-dialog__close" aria-label="Đóng" (click)="closeReactionUsers()">×</button>
+        </header>
+
+        <nav class="reaction-dialog__tabs" aria-label="Lọc theo cảm xúc">
+          <button type="button" [class.active]="activeReactionFilter() === null" (click)="selectReactionFilter(null)">
+            Tất cả <span>{{ posts()[0]?.reactionTotal ?? 0 }}</span>
+          </button>
+          @for (type of reactionFilterOptions(); track type) {
+            <button type="button" [class.active]="activeReactionFilter() === type" (click)="selectReactionFilter(type)">
+              {{ reactionLabels[type] }} <span>{{ posts()[0]?.reactionCounts?.[type] ?? 0 }}</span>
+            </button>
+          }
+        </nav>
+
+        <div class="reaction-dialog__body">
+          @if (reactionUsersLoading()) {
+            <p class="reaction-dialog__state" role="status">Đang tải danh sách cảm xúc...</p>
+          } @else if (reactionUsersError()) {
+            <div class="reaction-dialog__state" role="alert">
+              <p>{{ reactionUsersError() }}</p>
+              <button type="button" (click)="loadReactionUsers(reactionUsersPage())">Thử lại</button>
+            </div>
+          } @else {
+            <ul class="reaction-users__list">
+              @for (reaction of reactionUsers(); track reaction.actorId) {
+                <li>
+                  <app-user-avatar [name]="reaction.author.name" [avatarUrl]="reaction.author.avatarUrl" [size]="44" />
+                  <strong>{{ reaction.author.name }}</strong>
+                  <span>{{ reactionLabels[reaction.reactionType] }}</span>
+                </li>
+              } @empty {
+                <li class="reaction-dialog__state">Chưa có ai bày tỏ cảm xúc này.</li>
+              }
+            </ul>
+          }
+        </div>
+
+        @if (!reactionUsersLoading() && !reactionUsersError() && reactionUsersTotalPages() > 1) {
+          <nav class="reaction-users__pagination" aria-label="Phân trang người bày tỏ cảm xúc">
+            <button type="button" [disabled]="reactionUsersPage() === 0" (click)="loadReactionUsers(reactionUsersPage() - 1)">Trước</button>
+            <span aria-live="polite">{{ reactionUsersPage() + 1 }} / {{ reactionUsersTotalPages() }}</span>
+            <button type="button" [disabled]="reactionUsersPage() + 1 >= reactionUsersTotalPages()" (click)="loadReactionUsers(reactionUsersPage() + 1)">Sau</button>
+          </nav>
+        }
+      </section>
+    </div>
+  }
+
+  @if (announcement()) {
+    <div class="community-toast" role="status" aria-live="polite">
+      <span aria-hidden="true">✓</span>
+      {{ announcement() }}
+    </div>
+  }
+</div>

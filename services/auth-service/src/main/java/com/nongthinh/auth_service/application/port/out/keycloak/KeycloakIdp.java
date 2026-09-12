@@ -1,0 +1,20 @@
+package com.nongthinh.auth_service.application.port.out.keycloak;
+
+import java.util.UUID;
+import com.nongthinh.auth_service.application.view.RefreshTokenView;
+
+public interface KeycloakIdp {
+
+    String createUser(UUID userId, String email, String password, boolean temporary, boolean enabled, String token);
+
+    String exchangeClientToken();
+
+    RefreshTokenView refreshToken(String refreshToken);
+
+    void logout(String refreshToken);
+
+    RoleRecord getRoleByName(String name, String token);
+
+    void assignRealmRoles(String keycloakUserId, java.util.Collection<String> roleNames, String token);
+
+}

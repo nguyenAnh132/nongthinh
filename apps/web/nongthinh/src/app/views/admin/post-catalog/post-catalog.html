@@ -1,0 +1,291 @@
+<section class="crop-type-page">
+  <div class="summary-row admin-content-header">
+    <div>
+      <h1>Danh mục bài viết</h1>
+    </div>
+    <button class="primary-button" type="button" (click)="openCreate()">
+      <span class="material-symbols-outlined" aria-hidden="true">add</span>
+      Thêm {{ entityLabel }}
+    </button>
+  </div>
+
+  <div class="catalog-tabs" role="tablist" aria-label="Chọn danh mục bài viết">
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="activeKind === 'type'"
+      [class.is-active]="activeKind === 'type'"
+      (click)="selectKind('type')"
+    >
+      Loại bài viết
+      <strong>{{ postTypes.length }}</strong>
+    </button>
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="activeKind === 'topic'"
+      [class.is-active]="activeKind === 'topic'"
+      (click)="selectKind('topic')"
+    >
+      Chủ đề
+      <strong>{{ postTopics.length }}</strong>
+    </button>
+  </div>
+
+  <section class="statistics" [attr.aria-label]="'Tổng quan ' + entityLabel">
+    <article class="stat-card">
+      <span>Tổng số</span>
+      <strong>{{ totalCount }}</strong>
+    </article>
+    <article class="stat-card stat-card--active">
+      <span>Đang hoạt động</span>
+      <strong>{{ activeCount }}</strong>
+    </article>
+    <article class="stat-card stat-card--inactive">
+      <span>Đã tạm ngưng</span>
+      <strong>{{ totalCount - activeCount }}</strong>
+    </article>
+  </section>
+
+  <section class="panel crop-type-overview">
+    <div class="list-toolbar">
+      <div>
+        <h2>Danh sách {{ entityLabel }}</h2>
+        <p>{{ rows.length }} kết quả</p>
+      </div>
+      <div class="list-actions">
+        <label class="search-field">
+          <span class="material-symbols-outlined" aria-hidden="true">search</span>
+          <input
+            type="search"
+            [value]="searchTerm"
+            [placeholder]="'Tìm theo ' + identifierLabel.toLowerCase() + ' hoặc tên'"
+            (input)="searchTerm = $any($event.target).value"
+          />
+        </label>
+        <button
+          class="secondary-button refresh-button"
+          type="button"
+          [disabled]="loading"
+          (click)="loadCatalog()"
+        >
+          <span class="material-symbols-outlined" [class.is-spinning]="loading">refresh</span>
+          Tải lại
+        </button>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="state-box">
+        <span class="loading-spinner" aria-hidden="true"></span>
+        <p>Đang tải danh mục bài viết...</p>
+      </div>
+    } @else if (loadError) {
+      <div class="state-box state-box--error">
+        <span class="material-symbols-outlined" aria-hidden="true">error</span>
+        <h3>Không thể tải dữ liệu</h3>
+        <p>{{ loadError }}</p>
+        <button class="secondary-button" type="button" (click)="loadCatalog()">Thử lại</button>
+      </div>
+    } @else {
+      <div class="crop-type-table-header" aria-hidden="true">
+        <span>{{ activeKind === 'type' ? 'Loại bài viết' : 'Chủ đề' }}</span>
+        <span>{{ identifierLabel }}</span>
+        <span>Trạng thái</span>
+        <span>Hành động</span>
+      </div>
+      <div class="crop-type-list">
+        @for (row of rows; track row.id) {
+          <article class="crop-type-card">
+            <div class="crop-type-main-cell">
+              <div class="crop-type-visual">
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  {{ activeKind === 'type' ? 'post' : 'tag' }}
+                </span>
+              </div>
+              <div class="crop-type-details">
+                <h3>{{ row.name }}</h3>
+                <p>{{ row.description || 'Chưa có mô tả.' }}</p>
+                <small>Thứ tự hiển thị: {{ row.displayOrder }}</small>
+              </div>
+            </div>
+            <div class="crop-type-code-cell">
+              <span class="cell-label">{{ identifierLabel }}</span>
+              <code>{{ row.identifier }}</code>
+            </div>
+            <div class="crop-type-status-cell">
+              <span class="cell-label">Trạng thái</span>
+              <span class="status-label" [class.status-label--inactive]="!row.active">
+                {{ row.active ? 'Đang hoạt động' : 'Tạm ngưng' }}
+              </span>
+            </div>
+            <div class="crop-type-actions">
+              <button
+                class="action-button"
+                type="button"
+                title="Chỉnh sửa"
+                [disabled]="deletingId === row.id"
+                (click)="startEdit(row)"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+                <span class="sr-only">Chỉnh sửa {{ row.name }}</span>
+              </button>
+              <button
+                class="action-button action-button--danger"
+                type="button"
+                title="Xóa"
+                [disabled]="deletingId === row.id"
+                (click)="requestDelete(row.id)"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                <span class="sr-only">Xóa {{ row.name }}</span>
+              </button>
+            </div>
+
+            @if (deleteConfirmationId === row.id) {
+              <div class="delete-confirmation">
+                <div>
+                  <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+                  <p>
+                    Xóa {{ entityLabel }} “{{ row.name }}”? Không thể xóa nếu đã được bài viết sử
+                    dụng.
+                  </p>
+                </div>
+                <div class="confirmation-actions">
+                  <button type="button" (click)="cancelDelete()">Hủy</button>
+                  <button
+                    class="confirmation-delete"
+                    type="button"
+                    [disabled]="deletingId === row.id"
+                    (click)="delete(row)"
+                  >
+                    {{ deletingId === row.id ? 'Đang xóa...' : 'Xóa' }}
+                  </button>
+                </div>
+              </div>
+            }
+          </article>
+        } @empty {
+          <div class="state-box">
+            <span class="material-symbols-outlined empty-icon" aria-hidden="true">category</span>
+            <h3>Chưa có {{ entityLabel }} phù hợp</h3>
+            <p>Hãy tạo {{ entityLabel }} đầu tiên hoặc thay đổi từ khóa tìm kiếm.</p>
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  @if (editorOpen) {
+    <div class="editor-backdrop" role="presentation" (click)="closeEditorFromBackdrop($event)">
+      <form
+        class="panel crop-type-editor"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="post-catalog-editor-title"
+        [formGroup]="catalogForm"
+        (click)="$event.stopPropagation()"
+        (ngSubmit)="submit()"
+      >
+        <div class="editor-heading">
+          <div>
+            <h2 id="post-catalog-editor-title">
+              {{ editingId ? 'Chỉnh sửa' : 'Thêm' }} {{ entityLabel }}
+            </h2>
+          </div>
+          <button
+            class="close-editor-button"
+            type="button"
+            aria-label="Đóng biểu mẫu"
+            [disabled]="saving"
+            (click)="closeEditor()"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </div>
+
+        <div class="form-content">
+          <div class="form-grid">
+            <label class="field field--span-4">
+              <span>{{ identifierLabel }} <b>*</b></span>
+              <input
+                formControlName="identifier"
+                maxlength="180"
+                [placeholder]="activeKind === 'type' ? 'Ví dụ: QUESTION' : 'Ví dụ: sau-benh'"
+                autocomplete="off"
+                [readonly]="!!editingId"
+                (input)="normalizeIdentifier()"
+              />
+              @if (
+                catalogForm.controls.identifier.touched && catalogForm.controls.identifier.invalid
+              ) {
+                <small>Vui lòng nhập {{ identifierLabel.toLowerCase() }} hợp lệ.</small>
+              }
+            </label>
+            <label class="field field--span-8">
+              <span>Tên hiển thị <b>*</b></span>
+              <input
+                formControlName="name"
+                maxlength="150"
+                placeholder="Tên hiển thị trên cộng đồng"
+              />
+              @if (catalogForm.controls.name.touched && catalogForm.controls.name.invalid) {
+                <small>Vui lòng nhập tên, tối đa 150 ký tự.</small>
+              }
+            </label>
+            <label class="field field--span-4">
+              <span>Thứ tự hiển thị <b>*</b></span>
+              <input formControlName="displayOrder" type="number" min="0" max="1000000" />
+              @if (
+                catalogForm.controls.displayOrder.touched &&
+                catalogForm.controls.displayOrder.invalid
+              ) {
+                <small>Thứ tự phải là số từ 0 trở lên.</small>
+              }
+            </label>
+            <label class="field field--span-8">
+              <span>Mô tả</span>
+              <textarea
+                formControlName="description"
+                maxlength="500"
+                rows="4"
+                placeholder="Mô tả ngắn, tối đa 500 ký tự"
+              ></textarea>
+            </label>
+          </div>
+
+          @if (editingId) {
+            <label class="status-field">
+              <span>
+                <strong>{{ entityLabel }} đang hoạt động</strong>
+              </span>
+              <span class="switch">
+                <input type="checkbox" formControlName="active" aria-label="Trạng thái hoạt động" />
+                <span class="switch-track"></span>
+              </span>
+            </label>
+          }
+        </div>
+
+        <div class="form-actions">
+          <div class="form-action-buttons">
+            <button
+              class="secondary-button"
+              type="button"
+              [disabled]="saving"
+              (click)="closeEditor()"
+            >
+              Hủy
+            </button>
+            <button class="primary-button" type="submit" [disabled]="saving">
+              <span class="material-symbols-outlined" aria-hidden="true">{{
+                editingId ? 'save' : 'add'
+              }}</span>
+              {{ saving ? 'Đang lưu...' : editingId ? 'Lưu thay đổi' : 'Tạo mới' }}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  }
+</section>

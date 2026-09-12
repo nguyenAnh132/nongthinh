@@ -1,0 +1,232 @@
+.me-test-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.me-test-header {
+  margin-bottom: 32px;
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 8px;
+  }
+
+  .me-test-subtitle {
+    color: #6b7280;
+    font-size: 0.9rem;
+
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: #059669;
+    }
+  }
+}
+
+// ── Info grid ──────────────────────────────────────────────────────
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.info-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+}
+
+.info-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+}
+
+.info-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1f2937;
+  word-break: break-all;
+
+  &.mono {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
+  }
+
+  &.badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #059669, #10b981);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    width: fit-content;
+  }
+}
+
+// ── Section cards ──────────────────────────────────────────────────
+
+.section-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 0.9rem;
+
+  & > span:first-child {
+    color: #6b7280;
+    font-weight: 500;
+  }
+
+  & > span:last-child {
+    color: #1f2937;
+    text-align: right;
+  }
+
+  .badge {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1d4ed8;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+  }
+}
+
+// ── Permissions ────────────────────────────────────────────────────
+
+.permissions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.perm-badge {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+// ── JSON block ─────────────────────────────────────────────────────
+
+.json-block {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 16px;
+  border-radius: 8px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+// ── No user ────────────────────────────────────────────────────────
+
+.no-user {
+  text-align: center;
+  padding: 48px 24px;
+  color: #9ca3af;
+  font-size: 1rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 1px dashed #d1d5db;
+}
+
+// ── Actions ────────────────────────────────────────────────────────
+
+.me-test-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+
+  &:hover:not(:disabled) {
+    background: #e5e7eb;
+  }
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+  }
+}
+
+// ── Utility ────────────────────────────────────────────────────────
+
+.text-ok {
+  color: #059669;
+}
+
+.text-warn {
+  color: #d97706;
+}
+
+.text-muted {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}

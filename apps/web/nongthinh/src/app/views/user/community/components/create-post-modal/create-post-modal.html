@@ -1,0 +1,253 @@
+<div class="modal-backdrop" (click)="onBackdropClick($event)">
+  <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="create-post-title">
+    <header class="modal-header">
+      <h2 id="create-post-title">Tạo bài viết</h2>
+      <button type="button" class="close-button" aria-label="Đóng" (click)="dismissed.emit()">
+        ×
+      </button>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <input
+        #fileInput
+        id="post-media"
+        type="file"
+        multiple
+        accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
+        (change)="onMediaSelected($event)"
+      />
+
+      <div class="author-row">
+        <app-user-avatar [name]="userName" [avatarUrl]="avatarUrl" [size]="44" />
+        <div class="author-details">
+          <strong>{{ userName || 'Thành viên Nông Thịnh' }}</strong>
+          <div class="author-controls">
+            <label class="sr-only" for="post-category">Loại bài viết</label>
+            <select id="post-category" formControlName="postTypeId" aria-label="Loại bài viết">
+              <option value="">Không chọn loại bài viết</option>
+              @for (postType of postTypes; track postType.id) {
+                <option [value]="postType.id">{{ postType.name }}</option>
+              }
+            </select>
+            <span class="visibility-chip">
+              <span
+                class="community-icon"
+                style="--community-icon: url('/icons/community/globe.png')"
+                aria-hidden="true"
+              ></span>
+              Công khai
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="content-field">
+        <label class="sr-only" for="post-content">Nội dung bài viết</label>
+        <textarea
+          id="post-content"
+          formControlName="content"
+          rows="6"
+          maxlength="2000"
+          placeholder="Bác đang nghĩ gì thế?"
+          autofocus
+        ></textarea>
+        <div class="field-meta">
+          @if (form.controls.content.touched && form.controls.content.invalid) {
+            <span class="field-error">Vui lòng nhập nội dung bài viết.</span>
+          } @else {
+            <span></span>
+          }
+          <small>{{ form.controls.content.value.length }}/2000</small>
+        </div>
+      </div>
+
+      @if (selectedMedia.length) {
+        <div class="media-preview-grid" [attr.data-count]="selectedMedia.length">
+          @for (item of selectedMedia; track item.previewUrl; let index = $index) {
+            <div class="media-preview-item">
+              @if (item.mediaType === 'VIDEO') {
+                <video [src]="item.previewUrl" controls preload="metadata">
+                  Trình duyệt của bạn không hỗ trợ phát video.
+                </video>
+              } @else {
+                <img [src]="item.previewUrl" [alt]="'Xem trước ảnh ' + (index + 1)" />
+              }
+              <button
+                type="button"
+                [attr.aria-label]="'Xóa tệp đa phương tiện ' + (index + 1)"
+                (click)="removeMedia(index)"
+              >
+                ×
+              </button>
+            </div>
+          }
+        </div>
+      }
+
+      @if (mediaError) {
+        <p class="field-error media-error">{{ mediaError }}</p>
+      }
+
+      <section class="post-options" aria-labelledby="post-options-title">
+        <div class="post-options__header">
+          <strong id="post-options-title">Thêm vào bài viết của bạn</strong>
+          <div class="option-icons">
+            <button
+              type="button"
+              class="option-entry"
+              aria-label="Chọn ảnh hoặc video"
+              (click)="openMediaPicker(fileInput)"
+            >
+              <span class="option-icon option-icon--media" aria-hidden="true">
+                <span
+                  class="community-icon"
+                  style="--community-icon: url('/icons/community/copy-image.png')"
+                ></span>
+              </span>
+              <small>Ảnh / video</small>
+            </button>
+            <button
+              type="button"
+              class="option-entry"
+              [class.option-entry--active]="activeOption === 'TOPIC'"
+              [attr.aria-expanded]="activeOption === 'TOPIC'"
+              aria-controls="post-topic-panel"
+              (click)="toggleOption('TOPIC')"
+            >
+              <span class="option-icon option-icon--topic" aria-hidden="true">
+                <span
+                  class="community-icon"
+                  style="--community-icon: url('/icons/community/catalog-alt.png')"
+                ></span>
+              </span>
+              <small>Chủ đề</small>
+            </button>
+            <button
+              type="button"
+              class="option-entry"
+              [class.option-entry--active]="activeOption === 'CROP'"
+              [attr.aria-expanded]="activeOption === 'CROP'"
+              aria-controls="post-crop-panel"
+              (click)="toggleOption('CROP')"
+            >
+              <span class="option-icon option-icon--crop" aria-hidden="true">
+                <span
+                  class="community-icon"
+                  style="--community-icon: url('/icons/community/trees.png')"
+                ></span>
+              </span>
+              <small>Cây trồng</small>
+            </button>
+            <button
+              type="button"
+              class="option-entry option-entry--disabled"
+              aria-label="Vị trí (sẽ được cập nhật sau)"
+              title="Vị trí sẽ được cập nhật sau"
+              disabled
+            >
+              <span class="option-icon option-icon--location" aria-hidden="true">
+                <span
+                  class="community-icon"
+                  style="--community-icon: url('/icons/community/marker.png')"
+                ></span>
+              </span>
+              <small>Vị trí</small>
+            </button>
+          </div>
+        </div>
+
+        @if (activeOption === 'TOPIC') {
+          <div id="post-topic-panel" class="post-options__content" role="region">
+            <label class="option-search" for="post-topic-search">
+              <span>Tìm kiếm chủ đề</span>
+              <input
+                id="post-topic-search"
+                type="search"
+                autocomplete="off"
+                placeholder="Nhập tên chủ đề..."
+                [value]="topicSearch"
+                (input)="updateTopicSearch($event)"
+              />
+            </label>
+
+            <fieldset class="selection-field">
+              <legend>Chọn chủ đề <span>(không bắt buộc)</span></legend>
+              <div class="selection-options selection-options--single">
+                <label>
+                  <input type="radio" formControlName="topicId" value="" />
+                  <span>Chủ đề chung</span>
+                </label>
+                @for (topic of filteredPostTopics(); track topic.id) {
+                  <label>
+                    <input type="radio" formControlName="topicId" [value]="topic.id" />
+                    <span>{{ topic.name }}</span>
+                  </label>
+                } @empty {
+                  @if (postTopics.length) {
+                    <p class="empty-option">Không tìm thấy chủ đề phù hợp.</p>
+                  } @else {
+                    <p class="empty-option">Chưa có chủ đề đang hoạt động.</p>
+                  }
+                }
+              </div>
+            </fieldset>
+          </div>
+        }
+
+        @if (activeOption === 'CROP') {
+          <div id="post-crop-panel" class="post-options__content" role="region">
+            <label class="option-search" for="post-crop-search">
+              <span>Tìm kiếm cây trồng</span>
+              <input
+                id="post-crop-search"
+                type="search"
+                autocomplete="off"
+                placeholder="Nhập tên cây trồng..."
+                [value]="cropSearch"
+                (input)="updateCropSearch($event)"
+              />
+            </label>
+
+            <fieldset class="selection-field">
+              <legend>Cây trồng liên quan <span>(không bắt buộc)</span></legend>
+              @if (cropTypes.length) {
+                <div class="selection-options selection-options--multiple">
+                  @for (cropType of filteredCropTypes(); track cropType.id) {
+                    <label>
+                      <input
+                        type="checkbox"
+                        [checked]="form.controls.cropTypeIds.value.includes(cropType.id)"
+                        (change)="toggleCropType(cropType.id, $any($event.target).checked)"
+                      />
+                      <span>{{ cropType.name }}</span>
+                    </label>
+                  } @empty {
+                    <p class="empty-option">Không tìm thấy cây trồng phù hợp.</p>
+                  }
+                </div>
+              } @else if (cropTypesError) {
+                <span class="field-error">{{ cropTypesError }}</span>
+              } @else {
+                <small>Chưa có loại cây trồng đang hoạt động.</small>
+              }
+            </fieldset>
+          </div>
+        }
+      </section>
+
+      @if (serverError) {
+        <p class="submit-error" role="alert">{{ serverError }}</p>
+      }
+
+      <footer class="modal-footer">
+        <button
+          type="submit"
+          class="primary-button"
+          [disabled]="form.invalid || submitting"
+        >
+          {{ submitting ? 'Đang đăng...' : 'Đăng' }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

@@ -1,0 +1,238 @@
+@if (isBrand) {
+  <app-brand-verification />
+} @else {
+  <main class="profile-page">
+    @if (loading()) {
+      <section
+        class="profile-loading"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+        aria-label="Đang tải hồ sơ"
+      >
+        <span class="visually-hidden">Đang tải hồ sơ...</span>
+
+        <div class="profile-loading__hero" aria-hidden="true">
+          <span class="profile-skeleton-shape profile-loading__cover"></span>
+          <div class="profile-loading__identity">
+            <span class="profile-skeleton-shape profile-loading__avatar"></span>
+            <span class="profile-loading__copy">
+              <i class="profile-skeleton-shape"></i>
+              <i class="profile-skeleton-shape"></i>
+            </span>
+            <span class="profile-skeleton-shape profile-loading__button"></span>
+          </div>
+        </div>
+
+        <div class="profile-loading__about" aria-hidden="true">
+          <span class="profile-skeleton-shape profile-loading__heading"></span>
+          <div class="profile-loading__info-list">
+            @for (item of [0, 1, 2, 3]; track item) {
+              <div class="profile-loading__info-row">
+                <span class="profile-skeleton-shape profile-loading__icon"></span>
+                <span class="profile-loading__info-copy">
+                  <i class="profile-skeleton-shape"></i>
+                  <i class="profile-skeleton-shape"></i>
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      </section>
+    } @else if (profile(); as farmer) {
+      <section class="profile-hero">
+        <div class="profile-cover"></div>
+        <div class="profile-identity">
+          <div class="avatar-shell">
+            <div class="avatar" aria-label="Ảnh đại diện">
+              @if (avatarPreviewUrl() || farmer.avatarUrl; as avatarUrl) {
+                <img [src]="avatarUrl" [alt]="displayName" />
+              } @else {
+                <span>{{ initials }}</span>
+              }
+              @if (uploadingAvatar()) {
+                <span class="avatar-upload-state" aria-live="polite">
+                  <span class="avatar-spinner" aria-hidden="true"></span>
+                  <span class="visually-hidden">Đang tải ảnh đại diện lên</span>
+                </span>
+              }
+            </div>
+            <input
+              #avatarInput
+              class="avatar-file-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              [disabled]="uploadingAvatar()"
+              (change)="onAvatarSelected($event)"
+            />
+            <button
+              class="avatar-update-button"
+              type="button"
+              aria-label="Thay ảnh đại diện"
+              title="Thay ảnh đại diện (JPEG, PNG hoặc WebP, tối đa 2 MB)"
+              [disabled]="uploadingAvatar()"
+              (click)="avatarInput.click()"
+            >
+              <span class="avatar-update-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+          <div class="identity-copy">
+            <h1>{{ displayName }}</h1>
+            <p>Nông dân · {{ locationLabel }}</p>
+          </div>
+          <button class="btn-edit" type="button" (click)="startEditing()">
+            <span class="edit-icon" aria-hidden="true"></span>
+            Chỉnh sửa hồ sơ
+          </button>
+        </div>
+      </section>
+
+      <section class="about-card">
+        <div class="section-heading">
+          <div>
+            <h2>Giới thiệu</h2>
+          </div>
+        </div>
+
+        <div class="info-list">
+          <div class="info-row">
+            <span
+              class="info-icon"
+              style="--info-icon: url('/icons/profile/land-layer-location.png')"
+              aria-hidden="true"
+            ></span>
+            <div>
+              <span class="info-label">Địa chỉ</span>
+              <strong>{{ locationLabel }}</strong>
+              @if (farmer.addressDetail) {
+                <small>{{ farmer.addressDetail }}</small>
+              }
+            </div>
+          </div>
+          <div class="info-row">
+            <span
+              class="info-icon"
+              style="--info-icon: url('/icons/profile/phone-call.png')"
+              aria-hidden="true"
+            ></span>
+            <div>
+              <span class="info-label">Số điện thoại</span>
+              <strong>{{ farmer.phone || 'Chưa cập nhật' }}</strong>
+            </div>
+          </div>
+          <div class="info-row">
+            <span
+              class="info-icon"
+              style="--info-icon: url('/icons/profile/envelope.png')"
+              aria-hidden="true"
+            ></span>
+            <div>
+              <span class="info-label">Email</span>
+              <strong>{{ email || 'Chưa cập nhật' }}</strong>
+            </div>
+          </div>
+          <div class="info-row">
+            <span
+              class="info-icon"
+              style="--info-icon: url('/icons/profile/venus-mars.png')"
+              aria-hidden="true"
+            ></span>
+            <div>
+              <span class="info-label">Giới tính</span>
+              <strong>{{ genderLabel }}</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+    } @else {
+      <section class="profile-empty">
+        <span class="material-symbols-outlined" aria-hidden="true">person_off</span>
+        <h1>Chưa có thông tin hồ sơ</h1>
+        <p>Không thể hiển thị hồ sơ farmer ở thời điểm này.</p>
+      </section>
+    }
+  </main>
+
+  @if (editing()) {
+    <div class="dialog-backdrop">
+      <section class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+        <header class="dialog-header">
+          <div>
+            <h2 id="edit-title">Chỉnh sửa hồ sơ</h2>
+          </div>
+          <button class="btn-close" type="button" aria-label="Đóng" (click)="cancelEditing()">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+          </button>
+        </header>
+
+        <form class="profile-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+          <div class="form-grid">
+            @for (field of profileFields; track field.key) {
+              <div class="input-group" [class.full-width]="field.key === 'addressDetail'">
+                <label [for]="'profile-' + field.key">{{ field.label }}</label>
+                @if (field.key === 'provinceId') {
+                  <select
+                    [id]="'profile-' + field.key"
+                    [formControlName]="field.key"
+                    (change)="onProvinceChange($event)"
+                  >
+                    <option value="">Chọn tỉnh/thành phố</option>
+                    @for (province of provinces(); track province.id) {
+                      <option [value]="province.id">{{ province.name }}</option>
+                    }
+                  </select>
+                } @else if (field.key === 'communeId') {
+                  <select
+                    [id]="'profile-' + field.key"
+                    [formControlName]="field.key"
+                    [disabled]="!form.get('provinceId')?.value || loadingLocations()"
+                  >
+                    <option value="">
+                      {{ loadingLocations() ? 'Đang tải phường/xã...' : 'Chọn phường/xã' }}
+                    </option>
+                    @for (commune of communes(); track commune.id) {
+                      <option [value]="commune.id">{{ commune.name }}</option>
+                    }
+                  </select>
+                } @else if (field.controlType === 'select' && field.options) {
+                  <select [id]="'profile-' + field.key" [formControlName]="field.key">
+                    <option value="">{{ field.placeholder }}</option>
+                    @for (option of field.options; track option.value) {
+                      <option [value]="option.value">{{ option.label }}</option>
+                    }
+                  </select>
+                } @else {
+                  <input
+                    [id]="'profile-' + field.key"
+                    [type]="field.type"
+                    [formControlName]="field.key"
+                    [placeholder]="field.placeholder"
+                  />
+                }
+                @if (form.get(field.key)?.touched && form.get(field.key)?.hasError('required')) {
+                  <small class="field-error"
+                    >Vui lòng nhập {{ field.label.toLocaleLowerCase('vi') }}.</small
+                  >
+                }
+              </div>
+            }
+          </div>
+
+          <footer class="dialog-actions">
+            <button
+              class="btn-cancel"
+              type="button"
+              [disabled]="saving()"
+              (click)="cancelEditing()"
+            >
+              Hủy
+            </button>
+            <button class="btn-save" type="submit" [disabled]="saving() || loadingLocations()">
+              {{ saving() ? 'Đang lưu...' : 'Lưu thay đổi' }}
+            </button>
+          </footer>
+        </form>
+      </section>
+    </div>
+  }
+}

@@ -1,0 +1,628 @@
+<section class="disease-manager" [class.disease-manager--admin]="adminMode">
+  <div class="summary-row admin-content-header">
+    <div>
+      <h1>Bệnh cây trồng</h1>
+    </div>
+    <div class="summary-actions">
+      @if (!adminMode) {
+      <div class="summary-stats">
+        <span><strong>{{ diseases.length }}</strong>Tổng số</span>
+        <span class="pending"><strong>{{ pendingCount }}</strong>Chờ duyệt</span>
+      </div>
+      }
+      <button class="primary-button add-disease-button" type="button" (click)="openCreate()">
+        Thêm bệnh cây trồng
+      </button>
+    </div>
+  </div>
+
+  @if (adminMode) {
+  <section class="disease-overview-grid" aria-label="Tổng quan duyệt bệnh">
+    <div class="overview-statistics">
+      <article class="overview-stat-card">
+        <div>
+          <span>Tổng số</span>
+          <strong>{{ diseases.length }}</strong>
+        </div>
+      </article>
+      <article class="overview-stat-card overview-stat-card--pending">
+        <div>
+          <span>Chờ duyệt</span>
+          <strong>{{ pendingCount }}</strong>
+        </div>
+      </article>
+    </div>
+
+    <article class="panel recent-history-card">
+      <div class="recent-history-heading">
+        <div>
+          <h2>Lịch sử</h2>
+        </div>
+        <button class="text-button" type="button" (click)="openHistoryExplorer()">
+          Xem tất cả lịch sử
+        </button>
+      </div>
+
+      @if (recentHistoriesLoading) {
+      <div class="recent-history-skeleton" aria-label="Đang tải lịch sử duyệt">
+        <span></span><span></span><span></span>
+      </div>
+      } @else if (recentHistoriesError) {
+      <div class="recent-history-state recent-history-state--error">
+        <p>{{ recentHistoriesError }}</p>
+        <button class="secondary-button" type="button" (click)="loadRecentHistories()">
+          Thử lại
+        </button>
+      </div>
+      } @else {
+      <div class="recent-history-list">
+        @for (history of recentHistories; track history.id) {
+        <article class="global-history-entry">
+          <div class="global-history-content">
+            <div class="global-history-title">
+              <strong>{{ history.diseaseName }}</strong>
+              <span class="history-action">{{ reviewActionLabel(history.action) }}</span>
+              <time>{{ history.createdAt | date: 'dd/MM/yyyy HH:mm':'+0700' }}</time>
+            </div>
+            <div class="global-history-meta">
+              <span class="history-status-bar">
+                @if (history.previousStatus) {
+                <span class="history-status-segment history-status-segment--previous">
+                  {{ statusLabel(history.previousStatus) }}
+                </span>
+                }
+                <strong
+                  class="history-status-segment history-status-segment--current history-status-segment--{{ history.newStatus.toLowerCase() }}">
+                  {{ statusLabel(history.newStatus) }}
+                </strong>
+              </span>
+              <span class="history-actor">
+                <strong>{{ actorLabel(history.actorType) }}</strong>
+              </span>
+            </div>
+            @if (history.comment) {
+            <blockquote>{{ history.comment }}</blockquote>
+            }
+          </div>
+        </article>
+        } @empty {
+        <div class="recent-history-state">Chưa có lịch sử duyệt bệnh.</div>
+        }
+      </div>
+      }
+    </article>
+  </section>
+
+  <dialog #historyDialog class="history-dialog" aria-labelledby="history-dialog-title"
+    (close)="onHistoryDialogClosed()">
+    <section class="history-explorer">
+      <header class="history-explorer-heading">
+        <div>
+          <h2 id="history-dialog-title">Toàn bộ lịch sử duyệt bệnh</h2>
+        </div>
+        <button class="close-editor-button" type="button" aria-label="Đóng lịch sử duyệt"
+          (click)="closeHistoryExplorer()">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <div class="history-filter-toolbar">
+        <label class="history-search-filter">
+          <span>Tìm tên bệnh</span>
+          <input type="search" placeholder="Tên hoặc slug bệnh..." [ngModel]="historyFilters.keyword"
+            (ngModelChange)="onHistoryKeywordInput($event)" />
+        </label>
+        <label>
+          <span>Hành động</span>
+          <select [(ngModel)]="historyFilters.action" (ngModelChange)="onHistoryFilterChange()">
+            <option value="">Tất cả</option>
+            <option value="CREATED">Tạo hồ sơ</option>
+            <option value="SUBMITTED">Gửi duyệt</option>
+            <option value="APPROVED">Phê duyệt</option>
+            <option value="REJECTED">Từ chối</option>
+            <option value="HIDDEN">Ẩn</option>
+            <option value="RESTORED">Khôi phục</option>
+          </select>
+        </label>
+        <label>
+          <span>Trạng thái sau</span>
+          <select [(ngModel)]="historyFilters.newStatus" (ngModelChange)="onHistoryFilterChange()">
+            <option value="">Tất cả</option>
+            <option value="DRAFT">Bản nháp</option>
+            <option value="PENDING_REVIEW">Chờ duyệt</option>
+            <option value="APPROVED">Đã duyệt</option>
+            <option value="REJECTED">Bị từ chối</option>
+            <option value="HIDDEN">Đã ẩn</option>
+          </select>
+        </label>
+        <label>
+          <span>Người thực hiện</span>
+          <select [(ngModel)]="historyFilters.actorType" (ngModelChange)="onHistoryFilterChange()">
+            <option value="">Tất cả</option>
+            <option value="BRAND">Thương hiệu</option>
+            <option value="ADMIN">Quản trị viên</option>
+            <option value="SYSTEM">Hệ thống</option>
+          </select>
+        </label>
+        <label>
+          <span>Từ ngày</span>
+          <input type="date" [(ngModel)]="historyFilters.fromDate" (ngModelChange)="onHistoryFilterChange()" />
+        </label>
+        <label>
+          <span>Đến ngày</span>
+          <input type="date" [(ngModel)]="historyFilters.toDate" (ngModelChange)="onHistoryFilterChange()" />
+        </label>
+        <button class="secondary-button history-reset-button" type="button" (click)="resetHistoryFilters()">
+          Đặt lại bộ lọc
+        </button>
+      </div>
+
+      <div class="history-results" aria-live="polite">
+        @if (historyLoading) {
+        <div class="history-explorer-state">Đang tải lịch sử duyệt...</div>
+        } @else if (historyError) {
+        <div class="history-explorer-state history-explorer-state--error">
+          <p>{{ historyError }}</p>
+          <button class="secondary-button" type="button" (click)="loadHistoryPage(historyPage?.page || 0)">
+            Thử lại
+          </button>
+        </div>
+        } @else {
+        <div class="history-explorer-list">
+          @for (history of historyPage?.items || []; track history.id) {
+          <article class="global-history-entry global-history-entry--large">
+            <div class="global-history-content">
+              <div class="global-history-title">
+                <strong>{{ history.diseaseName }}</strong>
+                <span class="history-action">{{ reviewActionLabel(history.action) }}</span>
+                <time>{{ history.createdAt | date: 'dd/MM/yyyy HH:mm':'+0700' }}</time>
+              </div>
+              <div class="global-history-meta">
+                <span class="history-crop-type">{{ cropTypeLabel(history.cropTypeId) }}</span>
+                <span class="history-status-bar">
+                  @if (history.previousStatus) {
+                  <span class="history-status-segment history-status-segment--previous">
+                    {{ statusLabel(history.previousStatus) }}
+                  </span>
+                  }
+                  <strong
+                    class="history-status-segment history-status-segment--current history-status-segment--{{ history.newStatus.toLowerCase() }}">
+                    {{ statusLabel(history.newStatus) }}
+                  </strong>
+                </span>
+                <span class="history-actor">
+                  Thực hiện bởi <strong>{{ actorLabel(history.actorType) }}</strong>
+                </span>
+              </div>
+              @if (history.comment) {
+              <blockquote>{{ history.comment }}</blockquote>
+              }
+            </div>
+          </article>
+          } @empty {
+          <div class="history-explorer-state">Không có lịch sử phù hợp bộ lọc.</div>
+          }
+        </div>
+        }
+      </div>
+
+      <footer class="history-pagination">
+        <span>{{ historyPage?.totalElements || 0 }} kết quả</span>
+        <div>
+          <button class="secondary-button" type="button"
+            [disabled]="historyLoading || !historyPage || historyPage.page === 0" (click)="changeHistoryPage(-1)">
+            Trang trước
+          </button>
+          <span>
+            Trang
+            {{ historyPage?.totalPages ? (historyPage?.page || 0) + 1 : 0 }}
+            / {{ historyPage?.totalPages || 0 }}
+          </span>
+          <button class="secondary-button" type="button" [disabled]="historyLoading || !historyPage?.hasNext"
+            (click)="changeHistoryPage(1)">
+            Trang sau
+          </button>
+        </div>
+      </footer>
+    </section>
+  </dialog>
+  }
+
+  @if (editorOpen) {
+  <div class="editor-backdrop" role="presentation" (click)="cancelEdit()">
+    <form class="panel disease-editor" role="dialog" aria-modal="true"
+      [attr.aria-labelledby]="editingDisease ? 'edit-disease-title' : 'create-disease-title'" [formGroup]="diseaseForm"
+      (click)="$event.stopPropagation()" (ngSubmit)="submitForm()">
+      <div class="panel-heading">
+        <div>
+          <h3 [id]="editingDisease ? 'edit-disease-title' : 'create-disease-title'">
+            {{ editingDisease ? 'Chỉnh sửa bệnh cây trồng' : 'Thêm bệnh cây trồng' }}
+          </h3>
+        </div>
+        <button class="close-editor-button" type="button" aria-label="Đóng popup" [disabled]="saving || uploadingImage"
+          (click)="cancelEdit()">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </div>
+
+      <div class="form-sections">
+        <section class="form-section" aria-labelledby="disease-basic-information">
+          <div class="form-section-heading">
+            <h4 id="disease-basic-information">Thông tin cơ bản</h4>
+          </div>
+          <div class="form-grid">
+            <label class="field field--span-7">
+              <span>Tên bệnh <b>*</b></span>
+              <input formControlName="name" maxlength="255" placeholder="Ví dụ: Bệnh đạo ôn lúa"
+                (input)="onNameInput()" />
+              @if (diseaseForm.controls.name.touched && diseaseForm.controls.name.invalid) {
+              <small>Vui lòng nhập tên bệnh, tối đa 255 ký tự.</small>
+              }
+            </label>
+            <label class="field field--span-5">
+              <span>Đường dẫn (slug) <b>*</b></span>
+              <input formControlName="slug" maxlength="280" placeholder="benh-dao-on-lua" />
+            </label>
+            <label class="field field--span-6">
+              <span>Tên khoa học</span>
+              <input formControlName="scientificName" maxlength="255" placeholder="Pyricularia oryzae" />
+            </label>
+            <label class="field field--span-6">
+              <span>Loại cây trồng <b>*</b></span>
+              <select formControlName="cropTypeId" [disabled]="cropTypesLoading">
+                <option value="" disabled>Chọn loại cây trồng</option>
+                @for (cropType of cropTypes; track cropType.id) {
+                <option [value]="cropType.id">{{ cropType.name }} ({{ cropType.code }})</option>
+                }
+              </select>
+            </label>
+            <label class="field field--span-6">
+              <span>Bộ phận bị ảnh hưởng</span>
+              <input formControlName="affectedPart" maxlength="100" placeholder="Lá, thân, rễ..." />
+            </label>
+            <label class="field field--span-6">
+              <span>Loại tác nhân</span>
+              <input formControlName="pathogenType" maxlength="50" placeholder="Nấm, vi khuẩn, virus..." />
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="disease-image-description">
+          <div class="form-section-heading">
+            <h4 id="disease-image-description">Hình ảnh và mô tả</h4>
+          </div>
+          <div class="form-grid">
+            <div class="field field--span-5">
+              <span>Ảnh đại diện</span>
+              <div class="thumbnail-upload">
+                <div class="thumbnail-preview">
+                  @if (diseaseForm.controls.thumbnailUrl.value) {
+                  <img [src]="diseaseForm.controls.thumbnailUrl.value" alt="Xem trước ảnh đại diện bệnh" />
+                  } @else {
+                  <span class="material-symbols-outlined">add_photo_alternate</span>
+                  }
+                </div>
+                <div class="thumbnail-upload-content">
+                  <label class="secondary-button upload-button">
+                    <input type="file" accept="image/jpeg,image/png,image/webp" [disabled]="uploadingImage"
+                      (change)="onThumbnailSelected($event)" />
+                    {{ uploadingImage ? 'Đang tải ảnh...' : 'Chọn ảnh' }}
+                  </label>
+                  <small>JPEG, PNG hoặc WebP · tối đa 5 MB</small>
+                  @if (imageFileName) {
+                  <strong>{{ imageFileName }}</strong>
+                  }
+                  @if (diseaseForm.controls.thumbnailUrl.value) {
+                  <button class="danger-link remove-thumbnail" type="button" [disabled]="uploadingImage"
+                    (click)="removeThumbnail()">
+                    Bỏ ảnh
+                  </button>
+                  }
+                  @if (imageError) {
+                  <p class="image-error">{{ imageError }}</p>
+                  }
+                </div>
+              </div>
+            </div>
+            <label class="field field--span-7">
+              <span>Mô tả ngắn</span>
+              <textarea formControlName="shortDescription" maxlength="500" rows="4"
+                placeholder="Tóm tắt dấu hiệu nhận biết chính của bệnh..."></textarea>
+              <em>{{ diseaseForm.controls.shortDescription.value.length }}/500</em>
+            </label>
+            <label class="field field--span-12">
+              <span>Mô tả chi tiết</span>
+              <textarea formControlName="description" rows="4"
+                placeholder="Mô tả đặc điểm, mức độ ảnh hưởng và quá trình phát triển của bệnh..."></textarea>
+            </label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="disease-identification-treatment">
+          <div class="form-section-heading">
+            <h4 id="disease-identification-treatment">Nhận diện và xử lý</h4>
+          </div>
+          <div class="form-grid">
+            <label class="field field--span-6">
+              <span>Triệu chứng</span>
+              <textarea formControlName="symptoms" rows="5"
+                placeholder="Các dấu hiệu quan sát được trên cây..."></textarea>
+            </label>
+            <label class="field field--span-6">
+              <span>Nguyên nhân</span>
+              <textarea formControlName="causes" rows="5" placeholder="Tác nhân và nguyên nhân gây bệnh..."></textarea>
+            </label>
+            <label class="field field--span-6">
+              <span>Điều kiện phát sinh thuận lợi</span>
+              <textarea formControlName="favorableConditions" rows="5"
+                placeholder="Thời tiết, độ ẩm, mùa vụ hoặc điều kiện canh tác..."></textarea>
+            </label>
+            <label class="field field--span-6">
+              <span>Biện pháp phòng ngừa</span>
+              <textarea formControlName="preventionMethod" rows="5"
+                placeholder="Các biện pháp chủ động để hạn chế bệnh..."></textarea>
+            </label>
+            <label class="field field--span-12">
+              <span>Hướng dẫn điều trị</span>
+              <textarea formControlName="treatmentGuideline" rows="5"
+                placeholder="Các bước xử lý và điều trị khi phát hiện bệnh..."></textarea>
+            </label>
+          </div>
+        </section>
+      </div>
+      <div class="form-actions">
+        <span><b>*</b> Thông tin bắt buộc</span>
+        <div class="form-action-buttons">
+          <button class="secondary-button" type="button" [disabled]="saving || uploadingImage" (click)="cancelEdit()">
+            Huỷ
+          </button>
+          <button class="primary-button" type="submit" [disabled]="saving || uploadingImage">
+            {{ saving ? 'Đang lưu...' : editingDisease ? 'Lưu thay đổi' : 'Tạo bệnh' }}
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+  }
+
+  <section class="disease-list-panel" [class.panel]="adminMode">
+    <div class="list-toolbar">
+      <div>
+        <h3>Danh sách bệnh</h3>
+        <p>{{ filteredDiseases.length }} kết quả</p>
+      </div>
+      <div class="filters">
+        <input type="search" placeholder="Tìm tên bệnh, cây trồng..." [value]="searchTerm"
+          (input)="searchTerm = $any($event.target).value" />
+        <select [value]="statusFilter" (change)="statusFilter = $any($event.target).value">
+          <option value="ALL">Tất cả trạng thái</option>
+          <option value="DRAFT">Bản nháp</option>
+          <option value="PENDING_REVIEW">Chờ duyệt</option>
+          <option value="APPROVED">Đã duyệt</option>
+          <option value="REJECTED">Bị từ chối</option>
+          <option value="HIDDEN">Đã ẩn</option>
+        </select>
+        @if (adminMode) {
+        <select [value]="sourceFilter" (change)="sourceFilter = $any($event.target).value">
+          <option value="ALL">Tất cả nguồn tạo</option>
+          <option value="BRAND">Do thương hiệu tạo</option>
+          <option value="ADMIN">Do admin tạo</option>
+        </select>
+        }
+        <button class="icon-button" type="button" title="Tải lại" aria-label="Tải lại danh sách bệnh"
+          [disabled]="loading" (click)="loadDiseases()">
+          <span class="material-symbols-outlined">refresh</span>
+        </button>
+      </div>
+    </div>
+
+    @if (loading) {
+    <div class="empty-state">Đang tải danh sách bệnh...</div>
+    } @else if (loadError) {
+    <div class="empty-state empty-state--error">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <p>{{ loadError }}</p>
+      <button class="secondary-button" type="button" (click)="loadDiseases()">Thử lại</button>
+    </div>
+    } @else {
+    <div class="disease-table-header" aria-hidden="true">
+      <span>Thông tin bệnh</span>
+      <span>Trạng thái</span>
+      <span>Nguồn & ngày tạo</span>
+      <span>Hành động</span>
+    </div>
+    <div class="disease-list">
+      @for (disease of filteredDiseases; track disease.id) {
+      <article class="disease-card">
+        <div class="disease-main-cell">
+          <div class="disease-visual">
+            @if (disease.thumbnailUrl) {
+            <img [src]="disease.thumbnailUrl" [alt]="disease.name" />
+            } @else {
+            <img class="disease-placeholder" src="/icons/dashboard/noimage.png"
+              alt="Chưa có ảnh đại diện bệnh" />
+            }
+          </div>
+
+          <div class="disease-details">
+            <h4><span>Tên bệnh:</span> {{ disease.name }}</h4>
+            <p>
+              <strong>Tên khoa học:</strong>
+              {{ disease.scientificName || 'Chưa cập nhật' }}
+            </p>
+            <p><strong>Loại cây trồng:</strong> {{ cropTypeLabel(disease.cropTypeId) }}</p>
+          </div>
+        </div>
+
+        <div class="disease-status-cell">
+          <span class="cell-label">Trạng thái</span>
+          <span class="status-badge status-badge--{{ disease.reviewStatus.toLowerCase() }}">
+            {{ statusLabel(disease.reviewStatus) }}
+          </span>
+          @if (disease.rejectionReason) {
+          <div class="rejection-note">
+            <strong>Lý do từ chối:</strong>
+            {{ disease.rejectionReason }}
+          </div>
+          }
+        </div>
+
+        <div class="disease-meta-cell">
+          <span class="cell-label">Nguồn & ngày tạo</span>
+          <p>
+            <strong>Nguồn tạo:</strong>
+            {{ disease.createdSource === 'BRAND' ? 'Thương hiệu đề xuất' : 'Quản trị viên' }}
+          </p>
+          <p>
+            <strong>Ngày tạo:</strong>
+            {{ disease.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+        </div>
+
+        <div class="card-actions">
+          <button type="button" class="action-menu-trigger" aria-haspopup="menu"
+            [attr.aria-expanded]="actionMenuId === disease.id" [attr.aria-label]="'Mở hành động cho ' + disease.name"
+            title="Mở danh sách hành động" [disabled]="actionId === disease.id"
+            (click)="toggleActionMenu(disease.id, $event)">
+            <span class="material-symbols-outlined" aria-hidden="true">more_horiz</span>
+          </button>
+
+          @if (actionMenuId === disease.id) {
+          <div class="action-dropdown" role="menu">
+            <button type="button" role="menuitem" (click)="toggleReviewHistory(disease)">
+              <span class="material-symbols-outlined" aria-hidden="true">history</span>
+              {{ expandedHistoryId === disease.id ? 'Ẩn lịch sử duyệt' : 'Lịch sử duyệt' }}
+            </button>
+
+            @if (canEdit(disease)) {
+            <button type="button" role="menuitem" (click)="startEdit(disease)">
+              <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+              Chỉnh sửa
+            </button>
+            }
+
+            @if (
+            !adminMode &&
+            (disease.reviewStatus === 'DRAFT' || disease.reviewStatus === 'REJECTED')
+            ) {
+            <button type="button" role="menuitem" (click)="submitForReview(disease)">
+              <span class="material-symbols-outlined" aria-hidden="true">send</span>
+              Gửi duyệt
+            </button>
+            }
+
+            @if (adminMode && disease.reviewStatus === 'PENDING_REVIEW') {
+            <button type="button" role="menuitem" class="menu-item--success" (click)="approve(disease)">
+              <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+              Duyệt bệnh
+            </button>
+            <button type="button" role="menuitem" class="menu-item--danger" (click)="openReject(disease)">
+              <span class="material-symbols-outlined" aria-hidden="true">cancel</span>
+              Từ chối
+            </button>
+            }
+
+            @if (adminMode && disease.reviewStatus === 'APPROVED') {
+            <button type="button" role="menuitem" (click)="hide(disease)">
+              <span class="material-symbols-outlined" aria-hidden="true">visibility_off</span>
+              Ẩn bệnh
+            </button>
+            }
+
+            @if (adminMode && disease.reviewStatus === 'HIDDEN') {
+            <button type="button" role="menuitem" class="menu-item--success" (click)="restore(disease)">
+              <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+              Khôi phục bệnh
+            </button>
+            }
+
+            @if (canEdit(disease)) {
+            <button type="button" role="menuitem" class="menu-item--danger menu-item--separated"
+              (click)="deletingId = disease.id">
+              <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+              Xoá bệnh
+            </button>
+            }
+          </div>
+          }
+        </div>
+
+        @if (rejectionId === disease.id) {
+        <div class="reject-box row-expanded-panel">
+          <textarea maxlength="2000" rows="3" placeholder="Nêu rõ nội dung cần chỉnh sửa..."
+            [(ngModel)]="rejectionReason" [ngModelOptions]="{ standalone: true }"></textarea>
+          <div class="inline-action-buttons">
+            <button type="button" class="secondary-button" (click)="rejectionId = null">
+              Huỷ
+            </button>
+            <button type="button" class="danger-button" [disabled]="actionId === disease.id" (click)="reject(disease)">
+              Xác nhận từ chối
+            </button>
+          </div>
+        </div>
+        }
+
+        @if (deletingId === disease.id) {
+        <div class="delete-box row-expanded-panel">
+          <span>Xoá “{{ disease.name }}”? Dữ liệu sẽ không còn xuất hiện trong hệ thống.</span>
+          <div class="inline-action-buttons">
+            <button type="button" class="secondary-button" (click)="deletingId = null">
+              Huỷ
+            </button>
+            <button type="button" class="danger-button" [disabled]="actionId === disease.id"
+              (click)="deleteDisease(disease)">
+              Xác nhận xoá
+            </button>
+          </div>
+        </div>
+        }
+
+        @if (expandedHistoryId === disease.id) {
+        <section class="review-history">
+          <h5>Lịch sử xét duyệt</h5>
+          @if (historyLoadingId === disease.id) {
+          <p class="history-state">Đang tải lịch sử...</p>
+          } @else {
+          <div class="history-timeline">
+            @for (history of reviewHistories[disease.id] || []; track history.id) {
+            <article class="history-entry">
+              <span class="history-dot"></span>
+              <div>
+                <div class="history-entry-heading">
+                  <strong>{{ reviewActionLabel(history.action) }}</strong>
+                  <time>{{ history.createdAt | date: 'dd/MM/yyyy HH:mm' }}</time>
+                </div>
+                <div class="history-entry-meta">
+                  <span>{{ actorLabel(history.actorType) }}</span>
+                  <span class="history-status-bar">
+                    @if (history.previousStatus) {
+                    <span class="history-status-segment history-status-segment--previous">
+                      {{ statusLabel(history.previousStatus) }}
+                    </span>
+                    }
+                    <strong
+                      class="history-status-segment history-status-segment--current history-status-segment--{{ history.newStatus.toLowerCase() }}">
+                      {{ statusLabel(history.newStatus) }}
+                    </strong>
+                  </span>
+                </div>
+                @if (history.comment) {
+                <blockquote>{{ history.comment }}</blockquote>
+                }
+              </div>
+            </article>
+            } @empty {
+            <p class="history-state">Chưa có lịch sử xét duyệt.</p>
+            }
+          </div>
+          }
+        </section>
+        }
+      </article>
+      } @empty {
+      <div class="empty-state">Không có bệnh phù hợp với bộ lọc hiện tại.</div>
+      }
+    </div>
+    }
+  </section>
+</section>
