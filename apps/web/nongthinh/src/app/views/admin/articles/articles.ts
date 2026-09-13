@@ -11,7 +11,6 @@ import {
   PostStatus,
   PostView,
 } from '../../../core/api/post-api.service';
-import { UserApiService, UserView } from '../../../core/api/user-api.service';
 import { apiErrorMessage, unwrapApiResult } from '../../../core/models/api-response';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { PostHistories } from '../../shared/post-histories/post-histories';
@@ -35,7 +34,6 @@ const STATUS_LABELS: Record<PostStatus, string> = {
 })
 export class Articles implements OnInit {
   private readonly postApi = inject(PostApiService);
-  private readonly userApi = inject(UserApiService);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly pageSize = 12;
@@ -43,7 +41,6 @@ export class Articles implements OnInit {
   readonly activeView = signal<ManagementView>('POSTS');
   readonly period = signal<StatisticsPeriod>('WEEK');
   readonly posts = signal<PostView[]>([]);
-  readonly users = signal<UserView[]>([]);
   readonly currentPage = signal(0);
   readonly totalElements = signal(0);
   readonly totalPages = signal(0);
@@ -54,9 +51,7 @@ export class Articles implements OnInit {
   readonly statisticsLoading = signal(true);
   readonly detail = signal<PostView | null>(null);
   readonly detailLoading = signal(false);
-  readonly userEmails = computed<Record<string, string>>(() =>
-    Object.fromEntries(this.users().map((user) => [user.id, user.email])),
-  );
+  readonly userEmails = signal<Record<string, string>>({});
   readonly chartMaximum = computed(() =>
     Math.max(1, ...(this.statistics()?.timeline ?? []).map((point) => point.count)),
   );
@@ -68,7 +63,6 @@ export class Articles implements OnInit {
   });
 
   searchUserQuery = '';
-  selectedAuthorId = '';
   contentKeyword = '';
   statusFilter: PostStatus | '' = '';
   filterError = '';
@@ -76,21 +70,8 @@ export class Articles implements OnInit {
   customTo = this.customFrom;
 
   ngOnInit(): void {
-    this.loadUsers();
     this.loadPosts(0);
     this.loadStatistics();
-  }
-
-  get userSuggestions(): UserView[] {
-    const query = this.searchUserQuery.trim().toLocaleLowerCase('vi-VN');
-    if (query.length < 2) return [];
-    return this.users()
-      .filter(
-        (user) =>
-          user.email.toLocaleLowerCase('vi-VN').includes(query) ||
-          user.id.toLocaleLowerCase('vi-VN').includes(query),
-      )
-      .slice(0, 6);
   }
 
   selectView(view: ManagementView): void {
@@ -108,24 +89,12 @@ export class Articles implements OnInit {
     this.loadStatistics();
   }
 
-  selectUser(user: UserView): void {
-    this.searchUserQuery = user.email;
-    this.selectedAuthorId = user.id;
-    this.filterError = '';
-  }
-
-  onUserSearchChange(): void {
-    const selected = this.users().find((user) => user.id === this.selectedAuthorId);
-    if (selected && this.searchUserQuery.trim() !== selected.email) this.selectedAuthorId = '';
-  }
-
   applyFilters(): void {
     this.loadPosts(0);
   }
 
   clearFilters(): void {
     this.searchUserQuery = '';
-    this.selectedAuthorId = '';
     this.contentKeyword = '';
     this.statusFilter = '';
     this.filterError = '';
@@ -270,38 +239,12 @@ export class Articles implements OnInit {
     return value.length > 12 ? `${value.slice(0, 8)}…${value.slice(-4)}` : value;
   }
 
-  private loadUsers(): void {
-    this.userApi
-      .getUsers()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (response) => this.users.set(unwrapApiResult<UserView[]>(response) ?? []),
-        error: () =>
-          this.toast.warning('Không tải được danh bạ email; bạn vẫn có thể tìm bằng UUID.'),
-      });
-  }
-
   private resolveAuthorId(): string | null {
     this.filterError = '';
     const query = this.searchUserQuery.trim();
     if (!query) return null;
-    if (this.selectedAuthorId) return this.selectedAuthorId;
     if (UUID_PATTERN.test(query)) return query;
-
-    const normalized = query.toLocaleLowerCase('vi-VN');
-    const exact = this.users().find((user) => user.email.toLocaleLowerCase('vi-VN') === normalized);
-    if (exact) {
-      this.selectedAuthorId = exact.id;
-      return exact.id;
-    }
-    const matches = this.userSuggestions;
-    if (matches.length === 1) {
-      this.selectUser(matches[0]);
-      return matches[0].id;
-    }
-    this.filterError = matches.length
-      ? 'Có nhiều người dùng phù hợp. Hãy chọn đúng email trong danh sách gợi ý.'
-      : 'Không tìm thấy người dùng theo email hoặc ID đã nhập.';
+    this.filterError = 'UUID người đăng không hợp lệ.';
     return null;
   }
 

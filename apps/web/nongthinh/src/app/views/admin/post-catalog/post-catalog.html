@@ -98,11 +98,11 @@
         @for (row of rows; track row.id) {
           <article class="crop-type-card">
             <div class="crop-type-main-cell">
-              <div class="crop-type-visual">
-                <span class="material-symbols-outlined" aria-hidden="true">
-                  {{ activeKind === 'type' ? 'post' : 'tag' }}
-                </span>
-              </div>
+              @if (activeKind === 'topic') {
+                <div class="crop-type-visual">
+                  <span class="material-symbols-outlined" aria-hidden="true">tag</span>
+                </div>
+              }
               <div class="crop-type-details">
                 <h3>{{ row.name }}</h3>
                 <p>{{ row.description || 'Chưa có mô tả.' }}</p>

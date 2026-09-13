@@ -54,6 +54,7 @@ export class PostFeed {
   @Output() reactionUsersRequested = new EventEmitter<string>();
   @Input() emptyTitle = 'Chưa có bài viết phù hợp';
   @Input() emptyDescription = 'Hãy thử một mục khác hoặc bắt đầu chia sẻ với cộng đồng.';
+  @Input() showEmptyAction = true;
   @Output() reactionChanged = new EventEmitter<CommunityReactionEvent>();
   @Output() commentsRequested = new EventEmitter<CommunityCommentsRequestEvent>();
   @Output() commentCreated = new EventEmitter<CommunityCommentCreateEvent>();

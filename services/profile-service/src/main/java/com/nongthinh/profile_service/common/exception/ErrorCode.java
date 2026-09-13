@@ -1,6 +1,7 @@
 package com.nongthinh.profile_service.common.exception;
 
 public enum ErrorCode {
+    SELF_FOLLOW_NOT_ALLOWED("PRO_SELF_FOLLOW_NOT_ALLOWED", "Cannot follow yourself", ErrorType.BUSINESS_RULE),
 
     PROFILE_UNDER_REVIEW("PRO_PROFILE_UNDER_REVIEW", "Profile is under review", ErrorType.BUSINESS_RULE),
     PROFILE_NEEDS_REVISION("PRO_PROFILE_NEEDS_REVISION", "Profile needs revision", ErrorType.BUSINESS_RULE),

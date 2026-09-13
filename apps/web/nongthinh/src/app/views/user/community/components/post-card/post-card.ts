@@ -13,6 +13,9 @@ import {
   viewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { FollowApiService } from '../../../../../core/api/follow-api.service';
+import { FollowButton } from '../../../../../shared/follow-button/follow-button';
 import {
   POST_REACTION_TYPES,
   POST_REPORT_REASONS,
@@ -95,11 +98,12 @@ const REPORT_REASON_META: Record<PostReportReason, Omit<ReportReasonOption, 'val
 @Component({
   selector: 'app-community-post-card',
   standalone: true,
-  imports: [FormsModule, UserAvatarComponent, ConfirmDialogComponent],
+  imports: [FormsModule, UserAvatarComponent, ConfirmDialogComponent, RouterLink, FollowButton],
   templateUrl: './post-card.html',
   styleUrl: './post-card.scss',
 })
 export class PostCard implements OnChanges, OnDestroy {
+  readonly follows = inject(FollowApiService);
   private readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly imageLightbox = viewChild<ElementRef<HTMLElement>>('imageLightbox');
   private reactionPressTimer: ReturnType<typeof setTimeout> | null = null;

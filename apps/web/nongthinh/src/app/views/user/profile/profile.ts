@@ -18,6 +18,7 @@ import { FileApiService } from '../../../core/api/file-api.service';
 import { Commune, LocationService, Province } from '../../../core/service/location.service';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { BrandVerification } from '../brand-verification/brand-verification';
+import { FollowPanel } from '../../../shared/follow-panel/follow-panel';
 
 const AVATAR_ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const AVATAR_MAX_SIZE_BYTES = 2 * 1024 * 1024;
@@ -25,7 +26,7 @@ const AVATAR_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, BrandVerification],
+  imports: [CommonModule, ReactiveFormsModule, BrandVerification, FollowPanel],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })

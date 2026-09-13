@@ -229,9 +229,9 @@ class LocalPostSchemaVerificationTest {
                 Set.of(new CropTypeId(cropTypeId)), now, 10
         ));
 
-        var publicPage = posts.findPublic(typeId, null, cropTypeId, "page query", 0, 20);
+        var publicPage = posts.findPublic(typeId, null, cropTypeId, null, "page query", 0, 20);
         var publicPageWithoutKeyword = posts.findPublic(
-                typeId, null, cropTypeId, null, 0, 20);
+                typeId, null, cropTypeId, null, null, 0, 20);
         var authorPage = posts.findByAuthor(authorId, PostStatus.PUBLISHED, 0, 20);
 
         assertThat(publicPage.items()).singleElement().satisfies(post -> {

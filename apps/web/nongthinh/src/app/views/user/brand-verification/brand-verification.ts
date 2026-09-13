@@ -15,6 +15,7 @@ import {
   unwrapApiResult,
 } from '../../../core/models/api-response';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { FollowPanel } from '../../../shared/follow-panel/follow-panel';
 import {
   brandUserStatusLabel,
   brandUserStatusTone,
@@ -33,7 +34,7 @@ const BRAND_PROFILE_READ_ONLY_STATUSES = new Set(['LOCKED', 'DISABLED', 'DELETED
 @Component({
   selector: 'app-brand-verification',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NzAlertModule],
+  imports: [CommonModule, ReactiveFormsModule, NzAlertModule, FollowPanel],
   templateUrl: './brand-verification.html',
   styleUrl: './brand-verification.scss',
 })

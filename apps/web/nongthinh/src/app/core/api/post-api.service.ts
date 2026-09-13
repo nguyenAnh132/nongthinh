@@ -230,6 +230,7 @@ export interface PostStatisticsView {
 }
 
 export interface ListPublicPostsParams {
+  authorUserId?: string | null;
   postTypeId?: string | null;
   topicId?: string | null;
   cropTypeId?: string | null;
@@ -381,6 +382,7 @@ export class PostApiService {
       topicId: params.topicId,
       cropTypeId: params.cropTypeId,
       keyword: params.keyword?.trim() || null,
+      authorUserId: params.authorUserId,
     };
     for (const [key, value] of Object.entries(optionalParams)) {
       if (value) httpParams = httpParams.set(key, value);

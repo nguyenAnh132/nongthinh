@@ -31,6 +31,7 @@ public interface JpaPostRepository extends JpaRepository<JpaPostEntity, UUID>,
             where p.deletedAt is null
               and p.status = 'PUBLISHED'
               and p.visibility = 'PUBLIC'
+              and (:authorUserId is null or p.authorUserId = :authorUserId)
               and (:postTypeId is null or p.postTypeId = :postTypeId)
               and (:topicId is null or p.topicId = :topicId)
               and (:cropTypeId is null or exists (
@@ -42,6 +43,7 @@ public interface JpaPostRepository extends JpaRepository<JpaPostEntity, UUID>,
             @Param("postTypeId") UUID postTypeId,
             @Param("topicId") UUID topicId,
             @Param("cropTypeId") UUID cropTypeId,
+            @Param("authorUserId") UUID authorUserId,
             Pageable pageable
     );
 
@@ -50,6 +52,7 @@ public interface JpaPostRepository extends JpaRepository<JpaPostEntity, UUID>,
             where p.deletedAt is null
               and p.status = 'PUBLISHED'
               and p.visibility = 'PUBLIC'
+              and (:authorUserId is null or p.authorUserId = :authorUserId)
               and (:postTypeId is null or p.postTypeId = :postTypeId)
               and (:topicId is null or p.topicId = :topicId)
               and (:cropTypeId is null or exists (
@@ -62,6 +65,7 @@ public interface JpaPostRepository extends JpaRepository<JpaPostEntity, UUID>,
             @Param("postTypeId") UUID postTypeId,
             @Param("topicId") UUID topicId,
             @Param("cropTypeId") UUID cropTypeId,
+            @Param("authorUserId") UUID authorUserId,
             @Param("keyword") String keyword,
             Pageable pageable
     );

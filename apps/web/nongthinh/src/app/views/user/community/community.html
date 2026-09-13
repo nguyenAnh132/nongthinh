@@ -1,6 +1,8 @@
-<div class="community-page">
+<div class="community-page" [class.community-page--embedded]="embedded()">
   <div class="community-grid">
-    <app-community-sidebar [activeFilter]="activeFilter()" (filterChange)="selectFilter($event)" />
+    @if (!embedded()) {
+      <app-community-sidebar [activeFilter]="activeFilter()" (filterChange)="selectFilter($event)" />
+    }
 
     <main class="feed-column">
       @if (detailMode()) {
@@ -9,7 +11,7 @@
           Quay lại
         </a>
       }
-      @if (!detailMode()) {
+      @if (!detailMode() && !embedded()) {
         <section class="feed-intro">
           <div>
             <h1>{{ feedTitle() }}</h1>
@@ -36,7 +38,7 @@
         </div>
       }
 
-      @if (!detailMode()) {
+      @if (!detailMode() && !embedded()) {
         <app-create-post-card
           [userName]="userName()"
           [avatarUrl]="userAvatarUrl()"
@@ -122,8 +124,9 @@
           [currentUserName]="userName()"
           [currentUserAvatarUrl]="userAvatarUrl()"
           [interactionsEnabled]="interactionsEnabled()"
-          [emptyTitle]="searchTerm() ? 'Không tìm thấy bài viết' : 'Chưa có bài viết ở mục này'"
-          [emptyDescription]="emptyDescription()"
+          [emptyTitle]="embedded() ? 'Chưa có bài viết công khai' : searchTerm() ? 'Không tìm thấy bài viết' : 'Chưa có bài viết ở mục này'"
+          [emptyDescription]="embedded() ? 'Người dùng chưa chia sẻ bài viết công khai nào.' : emptyDescription()"
+          [showEmptyAction]="!embedded()"
           (startPost)="openCreatePost($event)"
           (reactionChanged)="changeReaction($event)"
           (commentsRequested)="loadComments($event)"
@@ -149,9 +152,12 @@
       }
     </main>
 
-    <app-community-right-sidebar />
+    @if (!embedded()) {
+      <app-community-right-sidebar />
+    }
   </div>
 
+  @if (!embedded()) {
   <nav class="mobile-community-nav" aria-label="Điều hướng cộng đồng trên điện thoại">
     @for (item of mobileNavItems; track item.id) {
       <button
@@ -178,6 +184,7 @@
       Đăng bài
     </button>
   </nav>
+  }
 
   @if (modalOpen()) {
     <app-create-post-modal

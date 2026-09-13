@@ -40,31 +40,42 @@ class PostRepositoryImplTest {
 
     @Test
     void usesQueryWithoutTextFunctionsWhenKeywordIsNull() {
-        when(posts.findPublic(isNull(), isNull(), isNull(), any(Pageable.class)))
+        when(posts.findPublic(isNull(), isNull(), isNull(), isNull(), any(Pageable.class)))
                 .thenReturn(Page.empty());
 
-        repository.findPublic(null, null, null, null, 0, 20);
+        repository.findPublic(null, null, null, null, null, 0, 20);
 
-        verify(posts).findPublic(isNull(), isNull(), isNull(), any(Pageable.class));
+        verify(posts).findPublic(isNull(), isNull(), isNull(), isNull(), any(Pageable.class));
         verify(posts, never()).findPublicByKeyword(
-                any(), any(), any(), any(), any(Pageable.class));
+                any(), any(), any(), any(), any(), any(Pageable.class));
     }
 
     @Test
     void usesSearchQueryWhenKeywordIsPresent() {
         UUID postTypeId = UUID.randomUUID();
         when(posts.findPublicByKeyword(
-                eq(postTypeId), isNull(), isNull(), eq("lúa"),
+                eq(postTypeId), isNull(), isNull(), isNull(), eq("lúa"),
                 any(Pageable.class)))
                 .thenReturn(Page.empty());
 
-        repository.findPublic(postTypeId, null, null, "lúa", 0, 20);
+        repository.findPublic(postTypeId, null, null, null, "lúa", 0, 20);
 
         verify(posts).findPublicByKeyword(
-                eq(postTypeId), isNull(), isNull(), eq("lúa"),
+                eq(postTypeId), isNull(), isNull(), isNull(), eq("lúa"),
                 any(Pageable.class));
         verify(posts, never()).findPublic(
-                eq(postTypeId), isNull(), isNull(), any(Pageable.class));
+                eq(postTypeId), isNull(), isNull(), isNull(), any(Pageable.class));
+    }
+
+    @Test
+    void passesAuthorFilterToThePublicPostQuery() {
+        UUID authorId = UUID.randomUUID();
+        when(posts.findPublic(isNull(), isNull(), isNull(), eq(authorId), any(Pageable.class)))
+                .thenReturn(Page.empty());
+
+        repository.findPublic(null, null, null, authorId, null, 0, 20);
+
+        verify(posts).findPublic(isNull(), isNull(), isNull(), eq(authorId), any(Pageable.class));
     }
 
     @Test

@@ -41,6 +41,11 @@ export const routes: Routes = [
           import('./views/user/diagnosis/diagnosis').then((m) => m.FarmerDiagnosis),
       },
       {
+        path: 'people/:userId',
+        loadComponent: () =>
+          import('./views/user/profile/community-profile').then((m) => m.CommunityProfile),
+      },
+      {
         path: 'profile',
         loadComponent: () => import('./views/user/profile/profile').then((m) => m.UserProfile),
       },

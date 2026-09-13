@@ -16,7 +16,7 @@ public class PostEngagementEventDecoder {
                 || event.occurredAt() == null || event.actorUserId() == null || event.version() < 1
                 || event.payload() == null || event.eventType() == null
                 || !Set.of("post.reaction.updated", "post.comment.updated",
-                           "post.report.resolved", "post.report.rejected").contains(event.eventType())
+                           "post.report.resolved", "post.report.rejected", "post.published").contains(event.eventType())
                 || (event.notificationType() != null
                     && !Set.of("POST_REACTION", "POST_COMMENT", "COMMENT_REPLY",
                                "REPORT_RESOLVED", "REPORT_REJECTED", "POST_HIDDEN",

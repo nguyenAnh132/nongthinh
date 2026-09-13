@@ -17,11 +17,12 @@ public class ListPublicPostsUseCaseImpl implements ListPublicPostsUseCase {
     private final PostUseCaseSupport support;
 
     @Override
-    public PageView<PostView> execute(UUID postTypeId, UUID topicId, UUID cropTypeId,
+    public PageView<PostView> execute(UUID postTypeId, UUID topicId, UUID cropTypeId, UUID authorUserId,
                                       String keyword, int page, int size) {
         support.validatePage(page, size);
         PostPage result = repository.findPublic(
-                postTypeId, topicId, cropTypeId, support.normalizeKeyword(keyword), page, size);
+                postTypeId, topicId, cropTypeId, authorUserId,
+                support.normalizeKeyword(keyword), page, size);
         return new PageView<>(result.items().stream().map(PostView::from).toList(),
                 result.page(), result.size(), result.totalElements(), result.totalPages(),
                 result.hasNext());

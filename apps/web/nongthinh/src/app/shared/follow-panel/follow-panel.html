@@ -1,0 +1,47 @@
+@if (profile(); as person) {
+  <section class="follow-panel" [class.follow-panel--standalone]="showIdentity()">
+    @if (showIdentity()) {
+      <div class="identity">
+        <app-user-avatar [name]="person.displayName" [avatarUrl]="person.avatarUrl" [size]="80" />
+        <div><h1>{{ person.displayName }}</h1><p>{{ person.role === 'BRAND' ? 'Thương hiệu' : 'Nông dân' }}</p></div>
+        <app-follow-button [userId]="person.userId" />
+      </div>
+    }
+    <div class="counts">
+      <button type="button" (click)="open('followers', $event)"><strong>{{ person.followerCount }}</strong> người theo dõi</button>
+      <button type="button" (click)="open('following', $event)">Đang theo dõi <strong>{{ person.followingCount }}</strong> người</button>
+    </div>
+  </section>
+} @else if (error()) {
+  <p role="alert">{{ error() }} <button type="button" (click)="reload()">Thử lại</button></p>
+} @else {
+  <p role="status">Đang tải thông tin theo dõi…</p>
+}
+<dialog #dialog (cancel)="close()" (click)="backdrop($event)" aria-label="Danh sách theo dõi">
+  <header><h2>{{ kind() === 'followers' ? 'Người theo dõi' : 'Đang theo dõi' }}</h2>
+    <button type="button" class="close" aria-label="Đóng danh sách" (click)="close()">×</button></header>
+  <nav aria-label="Chọn danh sách">
+    <button type="button" [class.active]="kind() === 'followers'" (click)="kind.set('followers')">Người theo dõi</button>
+    <button type="button" [class.active]="kind() === 'following'" (click)="kind.set('following')">Đang theo dõi</button>
+  </nav>
+  <div #members class="members" (scroll)="onScroll($event)" [attr.aria-busy]="loading()">
+    @for (member of result()?.items ?? []; track member.userId) {
+      <div class="member">
+        <a [routerLink]="['/app/people', member.userId]" (click)="close()">
+          <app-user-avatar [name]="member.displayName" [avatarUrl]="member.avatarUrl" [size]="48" />
+          <span><strong>{{ member.displayName }}</strong><small>{{ member.role === 'BRAND' ? 'Thương hiệu' : 'Nông dân' }}</small></span>
+        </a>
+        <app-follow-button [userId]="member.userId" />
+      </div>
+    } @empty {
+      @if (!loading() && !listError()) {
+        <p class="empty">{{ kind() === 'followers' ? 'Chưa có người theo dõi.' : 'Chưa theo dõi người nào.' }}</p>
+      }
+    }
+    @if (loading()) {
+      <p role="status">Đang tải danh sách…</p>
+    } @else if (listError()) {
+      <p role="alert">{{ listError() }} <button type="button" (click)="retryList()">Thử lại</button></p>
+    }
+  </div>
+</dialog>

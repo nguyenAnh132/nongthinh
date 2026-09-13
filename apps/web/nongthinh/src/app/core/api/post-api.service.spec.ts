@@ -56,13 +56,16 @@ describe('PostApiService', () => {
 
   it('loads the public feed with backend pagination and filters', () => {
     service
-      .listPublicPosts({ postTypeId: 'type-1', keyword: '  cây lúa  ', page: 2, size: 10 })
+      .listPublicPosts({
+        postTypeId: 'type-1', authorUserId: 'author-1', keyword: '  cây lúa  ', page: 2, size: 10,
+      })
       .subscribe();
 
     const request = http.expectOne(
       (candidate) =>
         candidate.url === '/api/v1/posts/' &&
-        candidate.params.get('postTypeId') === 'type-1' &&
+          candidate.params.get('postTypeId') === 'type-1' &&
+          candidate.params.get('authorUserId') === 'author-1' &&
         candidate.params.get('keyword') === 'cây lúa' &&
         candidate.params.get('page') === '2' &&
         candidate.params.get('size') === '10',

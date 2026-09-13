@@ -50,12 +50,13 @@ public class PostController {
             @RequestParam(required = false) UUID postTypeId,
             @RequestParam(required = false) UUID topicId,
             @RequestParam(required = false) UUID cropTypeId,
+            @RequestParam(required = false) UUID authorUserId,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size
     ) {
         PageView<PostView> result = listPublicPostsUseCase.execute(
-                postTypeId, topicId, cropTypeId, keyword, page, size);
+                postTypeId, topicId, cropTypeId, authorUserId, keyword, page, size);
         return ResponseEntity.ok(ApiResponse.<PageView<PostView>>builder()
                 .message("Posts retrieved successfully").result(result).build());
     }

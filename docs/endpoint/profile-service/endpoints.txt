@@ -8,6 +8,30 @@ Context path (dev): /profile
 Port (dev): 9092
 
 --------------------------------------------------------------------------------
+FOLLOW (ROLE_FARMER / ROLE_BRAND)
+--------------------------------------------------------------------------------
+GET    /users/{userId}/follow-profile
+       result: {userId, displayName, avatarUrl, role, followerCount, followingCount, following}
+PUT    /users/{userId}/follow          (không cần body; idempotent)
+DELETE /users/{userId}/follow          (idempotent)
+GET    /users/{userId}/followers?page=0&size=20
+GET    /users/{userId}/following?page=0&size=20
+       result: {items: [FollowProfile], page, size, hasNext}; size: 1..100.
+GET    /users/following-status?userIds=<uuid>,<uuid>
+       result: danh sách userId đang theo dõi trong nhóm được hỏi (tối đa 100).
+
+Quan hệ lưu trong PostgreSQL của profile-service (migration V9).
+Chỉ hồ sơ ACTIVE được follow và xuất hiện trong danh sách/bộ đếm công khai.
+Không cho tự follow. Người thao tác lấy từ JWT, không lấy từ request body.
+Thông báo NEW_FOLLOWER và FOLLOWED_USER_POST đi qua transactional outbox.
+Post-service phát post.published khi tạo/xuất bản bài công khai.
+Profile-service nhận POST_ENGAGEMENT_TOPIC (mặc định post.engagement.v1),
+gửi PROFILE_NOTIFICATION_TOPIC (mặc định profile.notifications.v1) cho notification-service.
+Sự kiện lỗi sau retry đi vào topic .DLT; cần cấu hình broker/ACL cho các topic này.
+Người follow sau thời điểm đăng bài không nhận thông báo về bài cũ.
+Không triển khai gợi ý kết nối.
+
+--------------------------------------------------------------------------------
 HEADERS
 --------------------------------------------------------------------------------
 Authorization: Bearer <access_token>

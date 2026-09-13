@@ -72,10 +72,12 @@ export interface BrandProfilePublicResponse {
   description: string | null;
   officeProvinceId: string | null;
   officeCommuneId: string | null;
+  phone: string | null;
   representativeName: string | null;
   logoUrl: string | null;
   bannerUrl: string | null;
   websiteUrl: string | null;
+  verified: boolean;
 }
 
 export interface UpdateFarmerProfilePayload {

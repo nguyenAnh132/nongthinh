@@ -1,13 +1,11 @@
 <section class="histories-page">
   <header class="histories-heading">
     <div>
-      <span class="heading-eyebrow">Nhật ký nội dung</span>
       @if (embedded()) {
         <h2>Lịch sử thay đổi</h2>
       } @else {
         <h1>Lịch sử bài viết</h1>
       }
-      <p>Tra cứu dấu vết thay đổi bài viết để hỗ trợ kiểm duyệt và xử lý sự cố.</p>
     </div>
     <button type="button" class="refresh-button" [disabled]="loading()" (click)="loadHistories()">
       <span class="material-symbols-outlined" [class.is-spinning]="loading()" aria-hidden="true"
@@ -88,7 +86,6 @@
     <header class="panel-heading">
       <div>
         <h2>Danh sách thay đổi</h2>
-        <p>Mỗi bản ghi lưu ảnh chụp nội dung tại thời điểm thao tác.</p>
       </div>
       <span class="filter-summary">{{ displayedRange() }}</span>
     </header>

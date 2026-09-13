@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 public class PostHistoryRecorder {
     private final PostHistoryRepository repository;
     private final IdGenerator idGenerator;
+    private final PostPublicationRecorder publicationRecorder;
 
     public void record(Post post, UUID actorId, PostHistoryAction action,
                        PostStatus previousStatus, PostVisibility previousVisibility,
@@ -29,6 +30,9 @@ public class PostHistoryRecorder {
                 previousVisibility, post.getVisibility(), null, null, null,
                 PostSnapshot.from(post), now
         ));
+        if (action == PostHistoryAction.CREATED || action == PostHistoryAction.PUBLISHED) {
+            publicationRecorder.record(post, now);
+        }
     }
 
     public void recordModeration(Post post, UUID moderatorId, PostHistoryAction action,
