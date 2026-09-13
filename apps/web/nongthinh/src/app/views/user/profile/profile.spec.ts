@@ -8,6 +8,7 @@ import { ApiResponse } from '../../../core/models/api-response';
 import { LocationService } from '../../../core/service/location.service';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { UserProfile } from './profile';
+import { FollowApiService } from '../../../core/api/follow-api.service';
 
 describe('UserProfile', () => {
   let profileResponse: Subject<ApiResponse<FarmerProfileResponse>>;
@@ -28,6 +29,9 @@ describe('UserProfile', () => {
     await TestBed.configureTestingModule({
       imports: [UserProfile],
       providers: [
+        { provide: FollowApiService, useValue: {
+          revision: signal(0), profile: vi.fn(() => of({ result: null })),
+        } },
         {
           provide: AuthService,
           useValue: {

@@ -1,0 +1,89 @@
+<main class="public-profile" [class.public-profile--brand]="isBrand()">
+  <a class="back-link" routerLink="/app/community" aria-label="Quay lại cộng đồng">
+    <img src="/icons/business/left.png" alt="" aria-hidden="true" />
+    Quay lại cộng đồng
+  </a>
+
+  @if (profileLoading()) {
+    <section class="profile-skeleton" aria-busy="true" aria-label="Đang tải hồ sơ">
+      <span class="skeleton skeleton-cover"></span>
+      <div><span class="skeleton skeleton-avatar"></span><span class="skeleton skeleton-line"></span></div>
+    </section>
+  } @else if (profileError()) {
+    <section class="state-card" role="alert">
+      <span class="state-icon" aria-hidden="true">!</span>
+      <h1>Không thể hiển thị hồ sơ</h1>
+      <p>{{ profileError() }}</p>
+      <button type="button" (click)="retryProfile()">Thử lại</button>
+    </section>
+  } @else if (profile(); as person) {
+    <section class="profile-hero">
+      <div class="cover" [class.cover--image]="bannerUrl()">
+        @if (bannerUrl()) {
+          <img [src]="bannerUrl()" [alt]="'Ảnh bìa của ' + displayName()" />
+        }
+        @if (person.kind === 'BRAND' && person.data.verified) {
+          <span class="verified-cover-badge">
+            <span class="material-symbols-outlined" aria-hidden="true">verified</span>
+            Đã xác minh
+          </span>
+        }
+      </div>
+      <div class="identity">
+        <div class="avatar-wrap">
+          <app-user-avatar [name]="displayName()" [avatarUrl]="avatarUrl()" [size]="148" />
+        </div>
+        <div class="identity-copy">
+          <div class="name-row">
+            <h1>{{ displayName() }}</h1>
+            @if (person.kind === 'BRAND' && person.data.verified) {
+              <span class="verified-name-icon material-symbols-outlined"
+                aria-label="Thương hiệu đã xác minh" title="Thương hiệu đã xác minh">verified</span>
+            }
+          </div>
+          <p class="role-line">
+            {{ person.kind === 'BRAND' ? 'Thương hiệu' : 'Nông dân' }}
+            @if (locationLabel()) { <span aria-hidden="true">·</span> {{ locationLabel() }} }
+          </p>
+        </div>
+        <app-follow-button [userId]="userId()" />
+      </div>
+      <app-follow-panel class="follow-counts" [userId]="userId()" />
+    </section>
+
+    <div class="profile-layout">
+      <aside class="about-card">
+        <h2>{{ person.kind === 'BRAND' ? 'Về thương hiệu' : 'Giới thiệu' }}</h2>
+        @if (person.kind === 'BRAND') {
+          @if (person.data.description) {
+            <p class="description">{{ person.data.description }}</p>
+          }
+          <dl>
+            @if (locationLabel()) { <div><dt>Văn phòng</dt><dd>{{ locationLabel() }}</dd></div> }
+            @if (person.data.phone) {
+              <div><dt>Liên hệ</dt><dd><a [href]="'tel:' + person.data.phone">{{ person.data.phone }}</a></dd></div>
+            }
+            @if (websiteHref()) {
+              <div><dt>Website</dt><dd><a [href]="websiteHref()" target="_blank" rel="noopener noreferrer">{{ person.data.websiteUrl }}</a></dd></div>
+            }
+          </dl>
+        } @else {
+          <dl>
+            @if (locationLabel()) { <div><dt>Đến từ</dt><dd>{{ locationLabel() }}</dd></div> }
+            @if (genderLabel()) { <div><dt>Giới tính</dt><dd>{{ genderLabel() }}</dd></div> }
+          </dl>
+          @if (!locationLabel() && !genderLabel()) {
+            <p class="muted">Người dùng chưa cập nhật thêm thông tin công khai.</p>
+          }
+        }
+      </aside>
+
+      <section class="posts-section" aria-labelledby="profile-posts-title">
+        <header class="posts-heading">
+          <h2 id="profile-posts-title">Bài viết</h2>
+        </header>
+        <app-community [embedded]="true" [authorUserId]="userId()" />
+      </section>
+    </div>
+  }
+</main>

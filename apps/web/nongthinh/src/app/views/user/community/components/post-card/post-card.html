@@ -9,41 +9,33 @@
     <app-user-avatar [name]="post.author.name" [avatarUrl]="post.author.avatarUrl" [size]="46" />
     <div class="author-copy">
       <div class="author-name-row">
-        <strong>{{ post.author.name }}</strong>
-        @if (post.author.verified) {
-          <span
-            class="verified"
-            role="img"
-            aria-label="Thương hiệu đã xác minh"
-            title="Thương hiệu đã xác minh"
-          >
-            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
-              <circle cx="10" cy="10" r="10" fill="currentColor" />
-              <path
-                d="m5.7 10.2 2.7 2.7 5.9-6"
-                fill="none"
-                stroke="white"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-              />
-            </svg>
-          </span>
-        }
-      </div>
-      @if (post.author.location || post.author.roleLabel) {
-        <span class="author-meta">
-          @if (post.author.location) {
-            {{ post.author.location }}
-          }
-          @if (post.author.location && post.author.roleLabel) {
-            <i aria-hidden="true">·</i>
-          }
-          @if (post.author.roleLabel) {
-            {{ post.author.roleLabel }}
+        <span class="author-identity">
+          <a class="author-profile-link" [routerLink]="['/app/people', post.author.id]" (click)="$event.stopPropagation()"><strong>{{ post.author.name }}</strong></a>
+          @if (post.author.verified) {
+            <span
+              class="verified"
+              role="img"
+              aria-label="Thương hiệu đã xác minh"
+              title="Thương hiệu đã xác minh"
+            >
+              <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+                <circle cx="10" cy="10" r="10" fill="currentColor" />
+                <path
+                  d="m5.7 10.2 2.7 2.7 5.9-6"
+                  fill="none"
+                  stroke="white"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
+            </span>
           }
         </span>
-      }
+        @if (follows.following()[post.author.id]) {
+          <span class="following-label">Đang theo dõi</span>
+        }
+      </div>
       <a class="post-detail-link" [href]="'/app/community/' + post.id" (click)="openDetails($event)" aria-label="Xem chi tiết bài viết">
         <small>{{ post.createdAt }} <i aria-hidden="true">·</i> Công khai</small>
       </a>
@@ -63,6 +55,9 @@
 
       @if (postMenuOpen()) {
         <div [id]="'post-menu-' + post.id" class="post-menu__panel" role="menu">
+          @if (interactionsEnabled && post.author.id !== currentUserId) {
+            <app-follow-button [userId]="post.author.id" />
+          }
           @if (canDeletePost()) {
             <button
               class="delete-post-button"

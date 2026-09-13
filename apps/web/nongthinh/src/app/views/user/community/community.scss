@@ -18,6 +18,17 @@
   padding: 25px 20px 55px;
 }
 
+.community-page--embedded {
+  min-height: 0;
+  background: transparent;
+}
+
+.community-page--embedded .community-grid {
+  display: block;
+  width: 100%;
+  padding: 0;
+}
+
 .feed-column {
   display: grid;
   min-width: 0;

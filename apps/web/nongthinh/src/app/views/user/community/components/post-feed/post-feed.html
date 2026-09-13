@@ -46,7 +46,9 @@
       ></span>
       <h2>{{ emptyTitle }}</h2>
       <p>{{ emptyDescription }}</p>
-      <button type="button" (click)="startPost.emit(null)">Tạo bài viết đầu tiên</button>
+      @if (showEmptyAction) {
+        <button type="button" (click)="startPost.emit(null)">Tạo bài viết đầu tiên</button>
+      }
     </section>
   }
 </div>

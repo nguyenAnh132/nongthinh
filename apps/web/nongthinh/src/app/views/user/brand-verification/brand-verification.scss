@@ -12,6 +12,10 @@
   gap: 18px;
 }
 
+.profile-follow-counts {
+  padding: 0 clamp(16px, 3vw, 28px) 22px;
+}
+
 .profile-hero,
 .about-card,
 .verification-card,

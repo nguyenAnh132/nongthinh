@@ -1,10 +1,18 @@
 import { TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { FollowApiService } from '../../../../../core/api/follow-api.service';
+import { AuthService } from '../../../../../core/auth/auth.service';
 import { CommunityPost } from '../../models/community.models';
 import { PostCard } from './post-card';
 
 describe('PostCard reaction gesture', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [PostCard] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [PostCard], providers: [
+      provideRouter([]),
+      { provide: FollowApiService, useValue: { following: signal({}), pending: signal({}) } },
+      { provide: AuthService, useValue: { currentUser: signal({ userId: 'viewer' }) } },
+    ] }).compileComponents();
   });
 
   it('uses LIKE for a normal click and toggles it off on the next click', () => {
@@ -78,30 +86,27 @@ describe('PostCard reaction gesture', () => {
     expect(actions).toEqual(['bookmark', 'share']);
   });
 
-  it('shows author location only when author metadata is available', () => {
+  it('does not render the author location and role line', () => {
     const fixture = TestBed.createComponent(PostCard);
-    const postWithoutMetadata = communityPost(null);
-    postWithoutMetadata.author.location = '';
-    fixture.componentRef.setInput('post', postWithoutMetadata);
-    fixture.detectChanges();
-
-    expect(fixture.nativeElement.querySelector('.author-meta')).toBeNull();
-
     fixture.componentRef.setInput('post', {
-      ...postWithoutMetadata,
-      author: { ...postWithoutMetadata.author, location: 'Đồng Tháp' },
+      ...communityPost(null),
+      author: { ...communityPost(null).author, location: 'NA', roleLabel: 'Nông dân' },
     });
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelector('.author-meta')?.textContent.trim()).toBe(
-      'Đồng Tháp',
-    );
+    expect(fixture.nativeElement.querySelector('.author-meta')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('NA · Nông dân');
   });
 
   it('renders a verification mark after a verified brand author name', () => {
     const fixture = TestBed.createComponent(PostCard);
     const post = communityPost(null);
-    post.author.verified = true;
+    post.author = {
+      ...post.author,
+      location: 'HCM',
+      roleLabel: 'Thương hiệu',
+      verified: true,
+    };
     fixture.componentRef.setInput('post', post);
     fixture.detectChanges();
 
@@ -109,6 +114,7 @@ describe('PostCard reaction gesture', () => {
     expect(verified).not.toBeNull();
     expect(verified.getAttribute('aria-label')).toBe('Thương hiệu đã xác minh');
     expect(verified.querySelector('svg')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.author-meta')).toBeNull();
     expect(fixture.nativeElement.querySelector('.author-name-row').textContent).toContain(
       'Nguyễn Văn A',
     );

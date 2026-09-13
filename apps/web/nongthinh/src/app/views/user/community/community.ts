@@ -1,4 +1,5 @@
-import { Component, DestroyRef, HostListener, Injector, afterNextRender, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, Injector, afterNextRender, computed, effect, inject, input, signal } from '@angular/core';
+import { FollowApiService } from '../../../core/api/follow-api.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
@@ -96,12 +97,15 @@ interface ShareEnrichment {
   styleUrl: './community.scss',
 })
 export class Community {
+  readonly embedded = input(false);
+  readonly authorUserId = input<string | null>(null);
   private readonly realtime = inject(RealtimeService);
   private readonly reactionBuffer = new Map<string, ReactionMetrics>();
   private readonly commentBuffer = new Map<string, CommentMetrics>();
   private focusedPostId: string | null = null;
   private readonly authService = inject(AuthService);
   private readonly postApi = inject(PostApiService);
+  private readonly follows = inject(FollowApiService);
   private readonly agriCatalogApi = inject(AgriCatalogApiService);
   private readonly fileApi = inject(FileApiService);
   private readonly profileApi = inject(ProfileApiService);
@@ -175,9 +179,13 @@ export class Community {
   });
 
   readonly filteredPosts = computed(() => {
+    const profileAuthorId = this.embedded() ? this.authorUserId() : null;
+    const visiblePosts = profileAuthorId
+      ? this.posts().filter((post) => post.author.id === profileAuthorId)
+      : this.posts();
     const query = this.searchTerm().trim().toLocaleLowerCase('vi-VN');
-    if (!query || !['MINE', 'SAVED'].includes(this.activeFilter())) return this.posts();
-    return this.posts().filter((post) =>
+    if (!query || !['MINE', 'SAVED'].includes(this.activeFilter())) return visiblePosts;
+    return visiblePosts.filter((post) =>
       [post.author.name, post.author.location, post.content, post.topic]
         .join(' ')
         .toLocaleLowerCase('vi-VN')
@@ -223,6 +231,10 @@ export class Community {
   ];
 
   constructor() {
+    effect(() => {
+      const authorUserId = this.authorUserId();
+      if (this.embedded() && authorUserId && this.catalogReady) this.loadPosts();
+    });
     this.realtime.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(event => this.applyRealtimeEvent(event));
     this.realtime.connected.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.syncVisibleMetrics());
     this.realtime.setCommunityActive(true);
@@ -302,6 +314,14 @@ export class Community {
   @HostListener('document:keydown.escape')
   closeReactionUsersWithEscape(): void {
     if (this.reactionDialogOpen()) this.closeReactionUsers();
+  }
+
+  @HostListener('window:scroll')
+  loadMoreOnEmbeddedScroll(): void {
+    if (!this.embedded() || !this.hasNextPage() || this.loadingMore()) return;
+    const progress = (window.scrollY + window.innerHeight)
+      / Math.max(document.documentElement.scrollHeight, 1);
+    if (progress >= 0.7) this.loadMore();
   }
 
   loadReactionUsers(page = 0): void {
@@ -910,7 +930,8 @@ export class Community {
   }
 
   private loadPosts(append = false): void {
-    const filter = this.activeFilter();
+    const filter = this.embedded() ? 'HOME' : this.activeFilter();
+    const profileAuthorId = this.embedded() ? this.authorUserId() : null;
     if (filter === 'GROUPS' && !this.detailMode()) {
       this.feedRequestId += 1;
       this.posts.set([]);
@@ -935,6 +956,7 @@ export class Community {
         : filter === 'SAVED'
           ? this.postApi.listMyBookmarkedPosts({ page, size: this.pageSize })
           : this.postApi.listPublicPosts({
+              authorUserId: profileAuthorId,
               postTypeId: this.postTypeIdForFilter(filter),
               keyword: this.searchTerm(),
               page,
@@ -945,7 +967,10 @@ export class Community {
       .pipe(
         switchMap((response) => {
           const result = response.result ?? this.emptyPage(page);
-          return this.enrichPosts(result.items, filter === 'SAVED').pipe(
+          const views = profileAuthorId
+            ? result.items.filter((post) => post.authorUserId === profileAuthorId)
+            : result.items;
+          return this.enrichPosts(views, filter === 'SAVED').pipe(
             map((items) => ({ result, items })),
           );
         }),
@@ -992,6 +1017,7 @@ export class Community {
     const authorIds = [...new Set(views.map((post) => post.authorUserId))];
     return forkJoin({
       authors: this.resolveAuthors(authorIds),
+      followStatuses: this.follows.statuses(authorIds).pipe(catchError(() => of(null))),
       reactions: this.loadReactionEnrichments(views),
       shares: this.loadShareEnrichments(views),
       bookmarks: this.loadBookmarkEnrichments(views, assumeBookmarked),
@@ -1499,7 +1525,7 @@ export class Community {
       avatarUrl: profile.logoUrl,
       location: profile.officeProvinceId?.trim() ?? '',
       roleLabel: 'Thương hiệu',
-      verified: true,
+      verified: profile.verified,
     };
   }
 

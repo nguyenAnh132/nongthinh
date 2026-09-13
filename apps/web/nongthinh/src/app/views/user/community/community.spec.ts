@@ -14,6 +14,7 @@ import {
   PostView,
 } from '../../../core/api/post-api.service';
 import { ProfileApiService } from '../../../core/api/profile-api.service';
+import { FollowApiService } from '../../../core/api/follow-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { RealtimeService } from '../../../core/realtime/realtime.service';
 import { RealtimeEvent } from '../../../core/realtime/realtime.models';
@@ -243,6 +244,9 @@ describe('Community interaction state', () => {
       imports: [Community],
       providers: [
         provideRouter([]),
+        { provide: FollowApiService, useValue: {
+          following: signal({}), pending: signal({}), statuses: vi.fn(() => of({ result: [] })),
+        } },
         { provide: RealtimeService, useValue: {
           events: realtimeEvents, connected, setCommunityActive: vi.fn(),
           features: signal({ notifications: false, postEngagement: false }),
@@ -320,6 +324,33 @@ describe('Community interaction state', () => {
     expect(navigate).not.toHaveBeenCalled();
     fixture.nativeElement.querySelector('.post-content-text').click();
     expect(navigate).toHaveBeenCalledWith(['/app/community', 'post-1']);
+  });
+
+  it('filters an embedded profile feed by author and keeps post interactions enabled', async () => {
+    const fixture = TestBed.createComponent(Community);
+    listPublicPosts.mockClear();
+    fixture.componentRef.setInput('embedded', true);
+    fixture.componentRef.setInput('authorUserId', 'user-1');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(listPublicPosts).toHaveBeenLastCalledWith(expect.objectContaining({
+      authorUserId: 'user-1',
+      page: 0,
+      size: 20,
+    }));
+    const ownPost = fixture.componentInstance.posts()[0];
+    fixture.componentInstance.posts.set([
+      ownPost,
+      { ...ownPost, id: 'other-post', author: { ...ownPost.author, id: 'other-user' } },
+    ]);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-community-sidebar')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.post-card')).toHaveLength(1);
+    expect((fixture.nativeElement.querySelector('.reaction-trigger') as HTMLButtonElement).disabled).toBe(false);
+    expect((fixture.nativeElement.querySelector('.share-action') as HTMLButtonElement).disabled).toBe(false);
+    expect((fixture.nativeElement.querySelector('.save-action') as HTMLButtonElement).disabled).toBe(false);
   });
 
   it('loads a detail URL and only opens paginated reaction users after clicking the count', () => {

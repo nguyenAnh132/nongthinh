@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { BrandProfileView } from '../../../core/api/brand-profile-api.service';
 import { AuthService } from '../../../core/auth/auth.service';
+import { FollowApiService } from '../../../core/api/follow-api.service';
 import { FileApiService } from '../../../core/api/file-api.service';
 import {
   MyBrandProfileApiService,
@@ -47,6 +48,10 @@ describe('BrandVerification', () => {
     await TestBed.configureTestingModule({
       imports: [BrandVerification],
       providers: [
+        {
+          provide: FollowApiService,
+          useValue: { revision: signal(0), profile: vi.fn(() => of({ result: null })) },
+        },
         {
           provide: AuthService,
           useValue: {
