@@ -37,6 +37,14 @@ describe('AdminPostCatalog', () => {
     expect(api['listPostTopics']).toHaveBeenCalledTimes(1);
     expect(fixture.componentInstance.postTypes).toEqual([postType()]);
     expect(fixture.componentInstance.postTopics).toEqual([postTopic()]);
+    expect(fixture.nativeElement.querySelector('.crop-type-visual')).toBeNull();
+  });
+
+  it('keeps the tag icon for topic records', () => {
+    const fixture = TestBed.createComponent(AdminPostCatalog);
+    fixture.componentInstance.activeKind = 'topic';
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.crop-type-visual')?.textContent.trim()).toBe('tag');
   });
 
   it('normalizes and creates an uppercase post type code', () => {
