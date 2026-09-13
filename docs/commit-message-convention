@@ -1,0 +1,10 @@
+| Type     | Ý nghĩa       | Khi sử dụng                                    | Ví dụ                                   |
+| -------- | ------------- | ---------------------------------------------- | --------------------------------------- |
+| feat     | Feature       | Thêm chức năng mới                             | `feat: add farmer registration`         |
+| fix      | Bug Fix       | Sửa lỗi                                        | `fix: resolve login validation issue`   |
+| refactor | Refactor      | Tái cấu trúc code, không thay đổi chức năng    | `refactor: restructure auth module`     |
+| docs     | Documentation | Thêm hoặc cập nhật tài liệu                    | `docs: update README`                   |
+| style    | Style/UI      | Thay đổi giao diện, định dạng code, CSS/SCSS   | `style: update dashboard layout`        |
+| chore    | Maintenance   | Công việc phụ trợ, cấu hình, script, gitignore | `chore: add root gitignore`             |
+| perf     | Performance   | Tối ưu hiệu năng                               | `perf: optimize rice query performance` |
+| vendor   | Dependency    | Cập nhật thư viện, package, dependency         | `vendor: upgrade angular version`       |
