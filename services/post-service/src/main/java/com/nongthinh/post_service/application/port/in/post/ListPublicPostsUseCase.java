@@ -5,6 +5,6 @@ import com.nongthinh.post_service.application.view.PostView;
 import java.util.UUID;
 
 public interface ListPublicPostsUseCase {
-    PageView<PostView> execute(UUID postTypeId, UUID topicId, UUID cropTypeId,
+    PageView<PostView> execute(UUID postTypeId, UUID topicId, UUID cropTypeId, UUID authorUserId,
                                String keyword, int page, int size);
 }

@@ -15,7 +15,8 @@ public interface PostRepository {
     Optional<Post> findByIdForUpdate(PostId id);
     Optional<Post> findByIdIncludingDeleted(PostId id);
     Optional<Post> findByIdForUpdateIncludingDeleted(PostId id);
-    PostPage findPublic(UUID postTypeId, UUID topicId, UUID cropTypeId, String keyword,
+    PostPage findPublic(UUID postTypeId, UUID topicId, UUID cropTypeId, UUID authorUserId,
+                        String keyword,
                         int page, int size);
     PostPage findByAuthor(UUID authorUserId, PostStatus status, int page, int size);
     PostPage findAllForAdmin(UUID authorUserId, PostStatus status, String keyword,

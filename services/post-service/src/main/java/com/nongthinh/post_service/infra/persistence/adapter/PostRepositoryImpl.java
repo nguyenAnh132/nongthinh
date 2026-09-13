@@ -93,14 +93,15 @@ public class PostRepositoryImpl implements PostRepository {
 
     @Override
     @Transactional(readOnly = true)
-    public PostPage findPublic(UUID postTypeId, UUID topicId, UUID cropTypeId, String keyword,
+    public PostPage findPublic(UUID postTypeId, UUID topicId, UUID cropTypeId, UUID authorUserId,
+                               String keyword,
                                int page, int size) {
         PageRequest pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Order.desc("publishedAt"), Sort.Order.desc("id")));
         Page<JpaPostEntity> result = keyword == null
-                ? posts.findPublic(postTypeId, topicId, cropTypeId, pageable)
+                ? posts.findPublic(postTypeId, topicId, cropTypeId, authorUserId, pageable)
                 : posts.findPublicByKeyword(
-                        postTypeId, topicId, cropTypeId, keyword, pageable);
+                        postTypeId, topicId, cropTypeId, authorUserId, keyword, pageable);
         return toPage(result);
     }
 

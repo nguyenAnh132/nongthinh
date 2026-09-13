@@ -80,7 +80,8 @@ class PostEndpointUseCasesTest {
                 new PostLimitsProperties(2_000, 10, 100),
                 new PostFeaturesProperties(Set.of(PostVisibility.PUBLIC), Set.of(MediaType.IMAGE))
         );
-        historyRecorder = new PostHistoryRecorder(historyRepository, idGenerator);
+        historyRecorder = new PostHistoryRecorder(historyRepository, idGenerator,
+                org.mockito.Mockito.mock(com.nongthinh.post_service.application.service.PostPublicationRecorder.class));
     }
 
     @Test
