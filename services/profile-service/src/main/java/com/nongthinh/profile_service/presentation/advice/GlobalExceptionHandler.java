@@ -54,6 +54,14 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
+    @ExceptionHandler({org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class,
+            org.springframework.web.bind.MissingServletRequestParameterException.class})
+    public ResponseEntity<ApiResponse<Void>> handleInvalidParameter(Exception ex) {
+        return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
+                .code(ErrorCode.VALIDATION_FAILED.getCode())
+                .message(ErrorCode.VALIDATION_FAILED.getDefaultMessage()).build());
+    }
+
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     ResponseEntity<ApiResponse<Void>> handlingValidation(MethodArgumentNotValidException exception) {
         String enumKey = exception.getFieldError().getDefaultMessage();
