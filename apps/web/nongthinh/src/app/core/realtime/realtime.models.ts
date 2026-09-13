@@ -27,6 +27,8 @@ export interface InAppNotification {
   id: string;
   actorUserId: string;
   type:
+    | 'NEW_FOLLOWER'
+    | 'FOLLOWED_USER_POST'
     | 'POST_REACTION'
     | 'POST_COMMENT'
     | 'COMMENT_REPLY'

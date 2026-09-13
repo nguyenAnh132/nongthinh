@@ -34,6 +34,14 @@ export class NotificationPopover {
   visit(item: InAppNotification): void {
     if (!item.readAt) this.store.markRead(item.id);
     this.open.set(false);
+    if (item.type === 'NEW_FOLLOWER') {
+      void this.router.navigate(['/app/people', item.entityId]);
+      return;
+    }
+    if (item.type === 'FOLLOWED_USER_POST') {
+      void this.router.navigate(['/app/community', item.entityId]);
+      return;
+    }
     if (item.type === 'POST_REACTION' || item.type === 'POST_COMMENT'
         || item.type === 'COMMENT_REPLY' || item.type === 'POST_HIDDEN') {
       void this.router.navigate(['/app/community', item.entityId]);
@@ -42,6 +50,8 @@ export class NotificationPopover {
     void this.router.navigate(['/app/community']);
   }
   label(item: InAppNotification): string {
+    if (item.type === 'NEW_FOLLOWER') return 'Có người mới theo dõi bạn.';
+    if (item.type === 'FOLLOWED_USER_POST') return 'Người bạn đang theo dõi vừa đăng bài viết mới.';
     if (item.type === 'POST_REACTION') return 'Có người bày tỏ cảm xúc về bài viết của bạn.';
     if (item.type === 'COMMENT_REPLY') return 'Có người trả lời bình luận của bạn.';
     if (item.type === 'POST_COMMENT') return 'Có người bình luận về bài viết của bạn.';
