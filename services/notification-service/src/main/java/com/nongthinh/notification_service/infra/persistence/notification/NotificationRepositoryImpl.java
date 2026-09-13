@@ -59,6 +59,17 @@ public class NotificationRepositoryImpl implements NotificationRepository {
                 page, size, items.size() > size);
     }
 
+    public boolean createSocial(com.nongthinh.notification_service.application.event.SocialNotificationEvent event, UUID id) {
+        return jdbc.update("""
+                INSERT INTO notifications(id, recipient_user_id, actor_user_id, type, entity_type,
+                    entity_id, source_event_id, source_version, payload, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1, '{}'::jsonb, ?)
+                ON CONFLICT(source_event_id) DO NOTHING
+                """, id, event.recipientUserId(), event.actorUserId(), event.notificationType(),
+                "NEW_FOLLOWER".equals(event.notificationType()) ? "USER" : "POST",
+                event.entityId(), event.eventId(), Timestamp.from(event.occurredAt())) == 1;
+    }
+
     public NotificationStateView state(UUID userId) {
         return states(List.of(userId)).getFirst();
     }
