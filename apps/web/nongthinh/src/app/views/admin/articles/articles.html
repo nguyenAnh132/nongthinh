@@ -46,7 +46,6 @@
     <header class="chart-heading">
       <div>
         <h2>Bài viết theo thời gian</h2>
-        <p>Thống kê theo giờ trong ngày hoặc theo ngày trong tuần.</p>
       </div>
       <div class="period-tabs" aria-label="Chọn khoảng thống kê">
         <button
@@ -129,29 +128,18 @@
 
   @if (activeView() === 'POSTS') {
     <form class="filter-panel" (ngSubmit)="applyFilters()">
-      <label class="user-search-field">
-        <span>Người đăng</span>
+      <label>
+        <span>UUID người đăng</span>
         <div class="input-with-icon">
           <span class="material-symbols-outlined" aria-hidden="true">person_search</span>
           <input
             type="text"
             name="searchUserQuery"
             [(ngModel)]="searchUserQuery"
-            (ngModelChange)="onUserSearchChange()"
-            placeholder="Tìm theo email hoặc UUID"
+            placeholder="Nhập UUID người đăng"
             autocomplete="off"
           />
         </div>
-        @if (!selectedAuthorId && userSuggestions.length) {
-          <div class="user-suggestions">
-            @for (user of userSuggestions; track user.id) {
-              <button type="button" (click)="selectUser(user)">
-                <strong>{{ user.email }}</strong>
-                <small>{{ user.id }}</small>
-              </button>
-            }
-          </div>
-        }
       </label>
       <label>
         <span>Nội dung</span>

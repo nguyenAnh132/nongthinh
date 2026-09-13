@@ -368,53 +368,6 @@ button:disabled {
   padding-left: 34px;
 }
 
-.user-search-field {
-  position: relative;
-}
-
-.user-suggestions {
-  position: absolute;
-  z-index: 20;
-  top: calc(100% + 5px);
-  right: 0;
-  left: 0;
-  display: grid;
-  overflow: hidden;
-  border: 1px solid #d5e1d8;
-  border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 12px 30px rgba(24, 55, 34, 0.16);
-}
-
-.user-suggestions button {
-  display: grid;
-  gap: 3px;
-  padding: 9px 11px;
-  border-top: 1px solid #edf1ee;
-  background: #fff;
-  color: #374c3e;
-  text-align: left;
-}
-
-.user-suggestions button:first-child {
-  border-top: 0;
-}
-
-.user-suggestions button:hover {
-  background: #f1f7f3;
-}
-
-.user-suggestions strong {
-  font-size: 11px;
-}
-
-.user-suggestions small {
-  overflow: hidden;
-  color: #7b8981;
-  font-size: 9px;
-  text-overflow: ellipsis;
-}
-
 .filter-actions {
   display: flex;
   gap: 7px;

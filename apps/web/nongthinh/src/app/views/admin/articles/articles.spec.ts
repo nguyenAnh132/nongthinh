@@ -1,7 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { PostApiService, PostStatisticsView, PostView } from '../../../core/api/post-api.service';
-import { UserApiService } from '../../../core/api/user-api.service';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { Articles } from './articles';
 
@@ -20,14 +19,6 @@ describe('Articles management', () => {
       imports: [Articles],
       providers: [
         { provide: PostApiService, useValue: postApi },
-        {
-          provide: UserApiService,
-          useValue: {
-            getUsers: vi.fn(() =>
-              of({ result: [{ id: AUTHOR_ID, email: 'farmer@example.com', status: 'ACTIVE' }] }),
-            ),
-          },
-        },
         {
           provide: ToastService,
           useValue: { error: vi.fn(), warning: vi.fn(), info: vi.fn(), success: vi.fn() },
@@ -52,12 +43,12 @@ describe('Articles management', () => {
     });
   });
 
-  it('resolves an email to the author UUID before searching', () => {
+  it('filters posts directly by author UUID without loading an email directory', () => {
     const fixture = TestBed.createComponent(Articles);
     fixture.detectChanges();
     const component = fixture.componentInstance;
 
-    component.searchUserQuery = 'farmer@example.com';
+    component.searchUserQuery = AUTHOR_ID;
     component.applyFilters();
 
     expect(postApi['listAdminPosts']).toHaveBeenLastCalledWith({
@@ -67,6 +58,19 @@ describe('Articles management', () => {
       page: 0,
       size: 12,
     });
+  });
+
+  it('rejects an email value instead of sending an invalid author filter', () => {
+    const fixture = TestBed.createComponent(Articles);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    postApi['listAdminPosts'].mockClear();
+
+    component.searchUserQuery = 'farmer@example.com';
+    component.applyFilters();
+
+    expect(component.filterError).toBe('UUID người đăng không hợp lệ.');
+    expect(postApi['listAdminPosts']).not.toHaveBeenCalled();
   });
 
   it('opens complete post content and media in detail', () => {
