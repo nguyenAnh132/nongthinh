@@ -154,7 +154,6 @@
               }
             </div>
             <div class="product-meta">
-              <span>SKU: {{ product.sku || 'Chưa cập nhật' }}</span>
               <span>Cập nhật {{ product.updatedAt | date: 'dd/MM/yyyy' : '+0700' }}</span>
             </div>
             @if (product.moderationStatus === 'LOCKED') {

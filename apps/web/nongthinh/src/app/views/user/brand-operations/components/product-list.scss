@@ -193,26 +193,27 @@ select:focus-visible {
 }
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
   padding: 4px 0 26px;
 }
 .product-card {
   position: relative;
   display: grid;
-  grid-template-rows: 154px auto;
+  grid-template-rows: auto 1fr;
   min-width: 0;
   overflow: hidden;
-  border: 0;
-  border-radius: 14px;
+  border: 1px solid #e7ebe8;
+  border-radius: 8px;
   background: #fff;
-  box-shadow: 0 7px 22px rgb(28 48 35 / 9%);
+  box-shadow: 0 2px 8px rgb(28 48 35 / 7%);
   transition:
     box-shadow var(--transition-fast, 160ms ease),
     transform var(--transition-fast, 160ms ease);
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgb(28 48 35 / 14%);
+    border-color: #c9d8ce;
+    box-shadow: 0 8px 20px rgb(28 48 35 / 13%);
   }
   &.menu-open {
     z-index: 5;
@@ -220,6 +221,7 @@ select:focus-visible {
 }
 .product-card-media {
   position: relative;
+  aspect-ratio: 1;
   min-width: 0;
   overflow: hidden;
   background: #edf1ee;
@@ -235,11 +237,7 @@ select:focus-visible {
   img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    transition: transform 220ms ease;
-  }
-  &:hover img {
-    transform: scale(1.035);
+    object-fit: contain;
   }
 }
 .product-image-placeholder {
@@ -260,10 +258,11 @@ select:focus-visible {
 }
 .product-card-body {
   display: grid;
-  justify-items: center;
-  gap: 5px;
-  padding: 16px 14px 15px;
-  text-align: center;
+  align-content: start;
+  justify-items: stretch;
+  gap: 6px;
+  padding: 12px;
+  text-align: left;
 }
 .category-label {
   display: block;
@@ -283,10 +282,10 @@ select:focus-visible {
   border: 0;
   background: transparent;
   color: inherit;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.5;
-  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  text-align: left;
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -297,7 +296,7 @@ select:focus-visible {
 .product-rating {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 4px;
   min-height: 20px;
   color: #7a817c;
@@ -504,7 +503,7 @@ select:focus-visible {
 .skeleton-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 18px;
+  gap: 12px;
   padding: 4px 0 26px;
   > div {
     display: grid;
@@ -521,7 +520,7 @@ select:focus-visible {
   }
   i {
     width: 100%;
-    aspect-ratio: 1 / 0.82;
+    aspect-ratio: 1;
     border-radius: 0;
   }
   span {
@@ -564,9 +563,6 @@ select:focus-visible {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
     padding-inline: 0;
-  }
-  .product-card {
-    grid-template-rows: 210px auto;
   }
   .product-card-media {
     min-height: 0;
