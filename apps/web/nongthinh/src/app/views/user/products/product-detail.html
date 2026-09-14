@@ -1,0 +1,61 @@
+<section class="detail-page">
+  <a routerLink="/app/products" queryParamsHandling="preserve" class="back-link">
+    <img src="/icons/business/left.png" alt="" aria-hidden="true" />
+    Tất cả sản phẩm
+  </a>
+  <h1>Chi tiết sản phẩm</h1>
+  @if (loading()) { <p role="status">Đang tải chi tiết sản phẩm...</p> }
+  @else if (error()) { <div role="alert"><p>{{ error() }}</p><button type="button" (click)="load()">Thử lại</button></div> }
+  @else if (detail(); as data) {
+    @let product = data.product;
+    <article class="product-detail-view">
+      <div class="detail-overview">
+        <div class="detail-image">
+          @if (product.thumbnailUrl) { <img [src]="product.thumbnailUrl" [alt]="product.name" /> }
+          @else { <span class="material-symbols-outlined" aria-hidden="true">inventory_2</span><small>Chưa có ảnh sản phẩm</small> }
+        </div>
+        <div class="detail-copy">
+          <div class="detail-title-row">
+            <h2>{{ product.name }}</h2>
+            @if (safePurchaseUrl(product.purchaseUrl); as url) {
+              <a class="purchase-button" [href]="url" target="_blank" rel="noopener noreferrer">
+                Mua sản phẩm
+              </a>
+            }
+          </div>
+          <p>{{ data.categoryName || 'Danh mục chưa khả dụng' }}</p>
+          <div class="detail-rating">★ @if (product.reviewCount > 0) {
+            <strong>{{ product.averageRating | number: '1.1-1' }}/5</strong> · {{ product.reviewCount }} đánh giá
+          } @else { Chưa có đánh giá }</div>
+          <p>{{ product.shortDescription || 'Chưa có mô tả ngắn.' }}</p>
+          <small>Cập nhật {{ product.updatedAt | date: 'dd/MM/yyyy HH:mm' : '+0700' }}</small>
+        </div>
+      </div>
+      <section class="detail-section"><h3>Thông tin sản phẩm</h3>
+        <dl class="detail-facts">@for (field of detailFields; track field.key) {
+          <div><dt>{{ field.label }}</dt><dd>{{ product[field.key] || 'Chưa cập nhật' }}</dd></div>
+        }</dl>
+      </section>
+      <section class="detail-section"><h3>Mô tả & hướng dẫn sử dụng</h3>
+        @for (field of descriptionFields; track field.key) {
+          <div class="detail-description"><h4>{{ field.label }}</h4><p>{{ product[field.key] || 'Chưa cập nhật' }}</p></div>
+        }
+      </section>
+      <section class="detail-section"><h3>Bệnh cây trồng được điều trị <span>{{ data.treatments.length }}</span></h3>
+        @for (item of data.treatments; track item.treatment.id) {
+          @let treatment = item.treatment;
+          <article class="treatment-summary"><h4>{{ item.diseaseName }}</h4>
+            <dl class="detail-facts">
+              <div><dt>Mức hiệu quả</dt><dd>{{ effectivenessLabel(treatment.effectivenessLevel) }}</dd></div>
+              <div><dt>Liều dùng</dt><dd>{{ treatment.dosage || 'Chưa cập nhật' }}</dd></div>
+              <div><dt>Phương pháp áp dụng</dt><dd>{{ treatment.applicationMethod || 'Chưa cập nhật' }}</dd></div>
+              <div><dt>Thời điểm áp dụng</dt><dd>{{ treatment.applicationTiming || 'Chưa cập nhật' }}</dd></div>
+              <div><dt>Tần suất</dt><dd>{{ treatment.frequencyInstruction || 'Chưa cập nhật' }}</dd></div>
+            </dl>
+            @if (treatment.treatmentNote) { <p>{{ treatment.treatmentNote }}</p> }
+          </article>
+        } @empty { <p>Chưa có thông tin điều trị.</p> }
+      </section>
+    </article>
+  }
+</section>

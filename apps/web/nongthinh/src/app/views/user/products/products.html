@@ -1,0 +1,47 @@
+<section class="catalog-page">
+  <header><h1>Sản phẩm</h1></header>
+  <form class="filters" (ngSubmit)="search()" role="search">
+    <label>Tìm kiếm<input type="search" name="keyword" [(ngModel)]="keyword" maxlength="255" placeholder="Tìm theo tên sản phẩm hoặc tên bệnh" /></label>
+    <button type="submit" class="primary">Tìm kiếm</button>
+  </form>
+  <div aria-live="polite" [attr.aria-busy]="loading()">
+    @if (loading()) {
+      <p class="state" role="status">Đang tải sản phẩm...</p>
+    } @else if (error()) {
+      <div class="state" role="alert"><p>{{ error() }}</p><button (click)="load()">Thử lại</button></div>
+    } @else if (result(); as page) {
+      <p class="product-count">{{ page.totalElements }} sản phẩm</p>
+      <div class="product-grid">
+        @for (product of page.items; track product.id) {
+          <a class="product-card" [routerLink]="['/app/products', product.id]" queryParamsHandling="preserve"
+            [attr.aria-label]="'Xem chi tiết ' + product.name">
+            <div class="product-image">
+              <img class="product-placeholder-icon" src="/icons/business/box-open.png" alt="" aria-hidden="true" />
+              @if (product.thumbnailUrl) {
+                <img class="product-thumbnail" [src]="product.thumbnailUrl" [alt]="product.name" loading="lazy" (error)="hideBrokenImage($event)" />
+              }
+            </div>
+            <div class="product-copy">
+              <h2>{{ product.name }}</h2>
+              <p class="brand-name">Thương hiệu: <strong>{{ brandName(product.brandId) }}</strong></p>
+              <p class="rating">★ @if (product.reviewCount > 0) {
+                {{ product.averageRating | number: '1.1-1' }}/5 · {{ product.reviewCount }} đánh giá
+              } @else { Chưa có đánh giá }</p>
+              <p>{{ product.shortDescription || 'Chưa có mô tả ngắn.' }}</p>
+              @if (product.manufacturerName) { <small>Nhà sản xuất: {{ product.manufacturerName }}</small> }
+            </div>
+          </a>
+        } @empty {
+          <p class="state">Không tìm thấy sản phẩm phù hợp. Hãy thử tên hoặc bệnh khác.</p>
+        }
+      </div>
+      @if (page.totalPages > 1 || page.page > 0) {
+        <nav class="pagination" aria-label="Phân trang sản phẩm">
+          <button type="button" [disabled]="page.page === 0" (click)="changePage(page.page - 1)">Trang trước</button>
+          <span>Trang {{ page.page + 1 }} / {{ page.totalPages }}</span>
+          <button type="button" [disabled]="!page.hasNext" (click)="changePage(page.page + 1)">Trang sau</button>
+        </nav>
+      }
+    }
+  </div>
+</section>

@@ -38,6 +38,14 @@
             ></span>
             Cộng đồng
           </a>
+          <a routerLink="/app/products" routerLinkActive="active">
+            <span
+              class="nav-icon"
+              style="--nav-icon: url('/icons/business/box-open.png')"
+              aria-hidden="true"
+            ></span>
+            Sản phẩm
+          </a>
         }
         @if (isFarmer()) {
           <a routerLink="/app/diagnosis" routerLinkActive="active">
@@ -88,6 +96,7 @@
                 <span>{{ user.email }}</span>
               </div>
               <a routerLink="/app/profile">Xem hồ sơ cá nhân</a>
+              <a routerLink="/app/products">Khám phá sản phẩm</a>
               <button type="button" (click)="logout()">Đăng xuất</button>
             </div>
           </details>

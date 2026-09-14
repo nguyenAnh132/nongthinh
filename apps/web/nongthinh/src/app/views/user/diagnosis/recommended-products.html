@@ -1,0 +1,70 @@
+<div class="recommendations-backdrop" (click)="closed.emit()">
+  <section #dialog class="recommendations-dialog" role="dialog" aria-modal="true"
+    aria-labelledby="recommendations-title" tabindex="-1"
+    (click)="$event.stopPropagation()" (keydown)="trapFocus($event)">
+    <header>
+      <h2 id="recommendations-title">Thuốc bảo vệ thực vật được gợi ý</h2>
+      <button type="button" class="close-button" aria-label="Đóng sản phẩm gợi ý" (click)="closed.emit()">×</button>
+    </header>
+    @if (diseases.length) {
+      <div class="recommendations-filter">
+        <label for="recommendation-disease">Bệnh cần điều trị</label>
+        <select id="recommendation-disease" [value]="selectedDiseaseId"
+          (change)="selectDisease($any($event.target).value)">
+          @for (disease of diseases; track disease.id) {
+            <option [value]="disease.id">{{ disease.displayName }}</option>
+          }
+        </select>
+        <p>Ưu tiên mức hiệu quả điều trị, sau đó đến điểm và số lượt đánh giá của nông dân.</p>
+      </div>
+    }
+    <div #viewport class="recommendations-viewport" (scroll)="onScroll()" [attr.aria-busy]="loading">
+      <div class="product-grid">
+        @for (item of products; track item.product.id) {
+          <article class="product-card">
+            <div class="product-image">
+              <span aria-hidden="true">🌿</span>
+              @if (safeUrl(item.product.thumbnailUrl); as imageUrl) {
+                <img [src]="imageUrl" [alt]="item.product.name" loading="lazy" (error)="hideBrokenImage($event)" />
+              }
+            </div>
+            <div class="product-copy">
+              <span class="effectiveness">Hiệu quả: {{ effectivenessLabel(item.treatment.effectivenessLevel) }}</span>
+              <h3>{{ item.product.name }}</h3>
+              @if (item.reviewCount) {
+                <p class="rating">★ {{ item.averageRating | number: '1.1-1' }}/5 · {{ item.reviewCount }} đánh giá</p>
+              } @else {
+                <p class="rating">Chưa có đánh giá</p>
+              }
+              @if (item.product.shortDescription) { <p>{{ item.product.shortDescription }}</p> }
+              @if (item.treatment.dosage) { <p><strong>Liều lượng:</strong> {{ item.treatment.dosage }}</p> }
+              @if (item.treatment.applicationMethod) { <p><strong>Cách dùng:</strong> {{ item.treatment.applicationMethod }}</p> }
+              @if (item.treatment.applicationTiming) { <p><strong>Thời điểm:</strong> {{ item.treatment.applicationTiming }}</p> }
+              @if (item.treatment.frequencyInstruction) { <p><strong>Tần suất:</strong> {{ item.treatment.frequencyInstruction }}</p> }
+              @if (item.treatment.treatmentNote) { <p>{{ item.treatment.treatmentNote }}</p> }
+              @if (safeUrl(item.product.purchaseUrl); as purchaseUrl) {
+                <a [href]="purchaseUrl" target="_blank" rel="noopener noreferrer">Xem sản phẩm ↗</a>
+              }
+            </div>
+          </article>
+        }
+      </div>
+      <div class="list-state" aria-live="polite">
+        @if (!diseases.length) {
+          <p>Kết quả quét chưa xác định bệnh để gợi ý thuốc bảo vệ thực vật.</p>
+        } @else if (error) {
+          <p class="error">{{ error }}</p>
+          <button type="button" (click)="loadMore()">Thử lại</button>
+        } @else if (loading) {
+          <p role="status">Đang tải sản phẩm được gợi ý...</p>
+        } @else if (!products.length) {
+          <p>Chưa có sản phẩm được gợi ý cho bệnh này.</p>
+        } @else if (hasNext) {
+          <button type="button" (click)="loadMore()">Xem thêm 10 sản phẩm</button>
+        } @else {
+          <p>Đã hiển thị tất cả sản phẩm được gợi ý.</p>
+        }
+      </div>
+    </div>
+  </section>
+</div>

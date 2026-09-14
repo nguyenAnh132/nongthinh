@@ -169,7 +169,7 @@
           </div>
           <div class="disease-modal__body" aria-live="polite">
             @if (loadingDisease) {
-              <p class="empty-copy">Đang tải chi tiết bệnh và khuyến nghị...</p>
+              <p class="empty-copy">Đang tải chi tiết bệnh...</p>
             } @else if (diseaseDetailError) {
               <p class="inline-state inline-state--error">{{ diseaseDetailError }}</p>
             } @else if (selectedDisease; as disease) {
@@ -196,22 +196,10 @@
                   <p><strong>Hướng dẫn xử lý:</strong> {{ disease.treatmentGuideline }}</p>
                 }
               </article>
-              <div class="recommendation-list">
-                <h3>Sản phẩm tham khảo</h3>
-                @for (recommendation of recommendations; track recommendation.product.id) {
-                  <article>
-                    <strong>{{ recommendation.product.name }}</strong>
-                    <span>{{
-                      recommendation.treatment.effectivenessLevel || 'Chưa xếp hạng hiệu quả'
-                    }}</span>
-                    @if (recommendation.treatment.dosage) {
-                      <p>{{ recommendation.treatment.dosage }}</p>
-                    }
-                  </article>
-                } @empty {
-                  <p class="empty-copy">Chưa có sản phẩm được đề xuất cho bệnh này.</p>
-                }
-              </div>
+              <button class="primary-button" type="button" aria-haspopup="dialog"
+                (click)="showSelectedDiseaseProducts()">
+                Thuốc bảo vệ thực vật được gợi ý
+              </button>
             }
           </div>
         </section>
@@ -291,6 +279,10 @@
                   >
                     Xem chi tiết
                   </button>
+                  <button type="button" aria-haspopup="dialog" [disabled]="loadingHistoryDetail"
+                    (click)="selectHistory(item, true)">
+                    Thuốc bảo vệ thực vật được gợi ý
+                  </button>
                 </div>
               </article>
             } @empty {
@@ -306,6 +298,10 @@
   </div>
 
   <ng-template #diagnosisSnapshot let-diagnosis="diagnosis">
+    <button class="primary-button" type="button" aria-haspopup="dialog"
+      (click)="recommendationSnapshot = diagnosis">
+      Thuốc bảo vệ thực vật được gợi ý
+    </button>
     <div class="result-image-grid">
       @for (image of diagnosis.images; track image.file.id) {
         <article class="result-image-card">
@@ -518,5 +514,8 @@
         </div>
       </section>
     </div>
+  }
+  @if (recommendationSnapshot; as snapshot) {
+    <app-recommended-products [groups]="snapshot.groups" (closed)="recommendationSnapshot = null" />
   }
 </section>

@@ -42,6 +42,9 @@ describe('FarmerDiagnosis', () => {
             listActiveCropTypes,
             getPublishedDisease,
             getDiseaseRecommendations: vi.fn(() => of({ result: [] })),
+            listDiseaseRecommendations: vi.fn(() => of({ result: {
+              items: [], page: 0, size: 10, totalElements: 0, totalPages: 0, hasNext: false,
+            } })),
           },
         },
         {
@@ -94,6 +97,36 @@ describe('FarmerDiagnosis', () => {
     expect(fixture.nativeElement.querySelector('.scan-skeleton')).toBeNull();
     expect(fixture.nativeElement.querySelector('.history-skeleton')).toBeNull();
     expect(fixture.nativeElement.querySelector('.scan-panel form')).not.toBeNull();
+  });
+
+  it('opens product suggestions from the completed scan without loading history', async () => {
+    const fixture = TestBed.createComponent(FarmerDiagnosis);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.result = diagnosisResult();
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('.result-panel .primary-button');
+    expect(button.textContent).toContain('Thuốc bảo vệ thực vật được gợi ý');
+    button.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-recommended-products')).not.toBeNull();
+    expect(getHistory).not.toHaveBeenCalled();
+    fixture.componentInstance.closeModalOnEscape();
+    expect(fixture.componentInstance.recommendationSnapshot).toBeNull();
+    fixture.destroy();
+  });
+
+  it('opens product suggestions using the selected history snapshot', async () => {
+    const fixture = TestBed.createComponent(FarmerDiagnosis);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.componentInstance.selectHistory(historySummary(), true);
+    fixture.detectChanges();
+    expect(getHistory).toHaveBeenCalledWith(historySummary().id);
+    expect(fixture.componentInstance.recommendationSnapshot?.diagnosisId).toBe(diagnosisResult().diagnosisId);
+    expect(fixture.nativeElement.querySelector('app-recommended-products')).not.toBeNull();
+    fixture.destroy();
   });
 
   it('shows a completed diagnosis immediately and prepends it to history', async () => {
@@ -219,13 +252,13 @@ describe('FarmerDiagnosis', () => {
     const fixture = TestBed.createComponent(FarmerDiagnosis);
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(fixture.nativeElement.querySelectorAll('.history-list button')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelectorAll('.history-list .history-card')).toHaveLength(1);
     listHistory.mockReturnValue(throwError(() => new Error('History unavailable')));
 
     (fixture.nativeElement.querySelector('.history-refresh') as HTMLButtonElement).click();
     await fixture.whenStable();
 
-    expect(fixture.nativeElement.querySelectorAll('.history-list button')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelectorAll('.history-list .history-card')).toHaveLength(1);
     expect(fixture.nativeElement.querySelector('.history-panel')?.textContent).toContain(
       'History unavailable',
     );

@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.PageRequest;
 import com.nongthinh.agri_catalog_service.application.model.PublicDiseaseProductRecommendation;
+import com.nongthinh.agri_catalog_service.application.view.PageView;
 import com.nongthinh.agri_catalog_service.application.port.out.repository.ProductDiseaseTreatmentRepository;
 import com.nongthinh.agri_catalog_service.domain.product.ProductDiseaseTreatment;
 import com.nongthinh.agri_catalog_service.infra.persistence.product.ProductPersistenceMapper;
@@ -76,6 +77,19 @@ public class ProductDiseaseTreatmentRepositoryImpl
     @Override
     public ProductDiseaseTreatment save(ProductDiseaseTreatment treatment) {
         return mapper.toDomain(jpaRepository.save(mapper.toEntity(treatment)));
+    }
+
+    @Override
+    public PageView<PublicDiseaseProductRecommendation> findRankedPublicRecommendationsByDiseaseId(
+            UUID diseaseId, int page, int size) {
+        var result = jpaRepository.findRankedPublicRecommendationsByDiseaseId(
+                diseaseId, PageRequest.of(page, size));
+        var items = result.getContent().stream()
+                .map(item -> new PublicDiseaseProductRecommendation(
+                        productMapper.toDomain(item.getProduct()), mapper.toDomain(item)))
+                .toList();
+        return new PageView<>(items, result.getNumber(), result.getSize(), result.getTotalElements(),
+                result.getTotalPages(), result.hasNext());
     }
 
     private List<ProductDiseaseTreatment> toDomains(

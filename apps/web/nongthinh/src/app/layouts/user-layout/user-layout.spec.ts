@@ -48,6 +48,11 @@ describe('UserLayout community access', () => {
     expect(links).toContain('Vận hành');
     expect(
       fixture.nativeElement
+        .querySelector('a[href="/app/products"] .nav-icon')
+        ?.getAttribute('style'),
+    ).toContain('/icons/business/box-open.png');
+    expect(
+      fixture.nativeElement
         .querySelector('a[href="/app/operations"] .nav-icon')
         ?.getAttribute('style'),
     ).toContain('/icons/business/vanhanh.png');
