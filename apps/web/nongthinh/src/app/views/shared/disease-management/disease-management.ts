@@ -82,6 +82,7 @@ export class DiseaseManagement {
   actionId: string | null = null;
   actionMenuId: string | null = null;
   editingId: string | null = null;
+  selectedDiseaseId: string | null = null;
   deletingId: string | null = null;
   rejectionId: string | null = null;
   rejectionReason = '';
@@ -119,6 +120,10 @@ export class DiseaseManagement {
 
   get editingDisease(): DiseaseView | null {
     return this.diseases.find((item) => item.id === this.editingId) ?? null;
+  }
+
+  get selectedDisease(): DiseaseView | null {
+    return this.diseases.find((item) => item.id === this.selectedDiseaseId) ?? null;
   }
 
   get filteredDiseases(): DiseaseView[] {
@@ -261,8 +266,27 @@ export class DiseaseManagement {
 
   openCreate(): void {
     this.resetForm();
+    this.selectedDiseaseId = null;
     this.editingId = null;
     this.editorOpen = true;
+  }
+
+  openDetail(disease: DiseaseView): void {
+    if (this.adminMode) return;
+    this.actionMenuId = null;
+    this.deletingId = null;
+    this.selectedDiseaseId = disease.id;
+  }
+
+  closeDetail(): void {
+    this.selectedDiseaseId = null;
+    this.deletingId = null;
+  }
+
+  onDiseaseCardKeydown(event: KeyboardEvent, disease: DiseaseView): void {
+    if (this.adminMode || (event.key !== 'Enter' && event.key !== ' ')) return;
+    event.preventDefault();
+    this.openDetail(disease);
   }
 
   submitForm(): void {
@@ -437,6 +461,7 @@ export class DiseaseManagement {
           this.syncView(() => {
             this.diseases = this.diseases.filter((item) => item.id !== disease.id);
             this.deletingId = null;
+            if (this.selectedDiseaseId === disease.id) this.selectedDiseaseId = null;
             if (this.editingId === disease.id) this.cancelEdit();
             this.toast.success(`Đã xoá bệnh “${disease.name}”.`);
           });
@@ -446,9 +471,7 @@ export class DiseaseManagement {
   }
 
   canEdit(disease: DiseaseView): boolean {
-    return (
-      this.adminMode || disease.reviewStatus === 'DRAFT' || disease.reviewStatus === 'REJECTED'
-    );
+    return this.adminMode || disease.createdSource === 'BRAND';
   }
 
   onNameInput(): void {

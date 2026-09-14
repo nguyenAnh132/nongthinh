@@ -1,4 +1,5 @@
 <section class="disease-manager" [class.disease-manager--admin]="adminMode">
+  @if (adminMode || (!editorOpen && !selectedDisease)) {
   <div class="summary-row admin-content-header">
     <div>
       <h1>Bệnh cây trồng</h1>
@@ -15,6 +16,7 @@
       </button>
     </div>
   </div>
+  }
 
   @if (adminMode) {
   <section class="disease-overview-grid" aria-label="Tổng quan duyệt bệnh">
@@ -229,20 +231,32 @@
   }
 
   @if (editorOpen) {
-  <div class="editor-backdrop" role="presentation" (click)="cancelEdit()">
-    <form class="panel disease-editor" role="dialog" aria-modal="true"
+  <div class="editor-backdrop" [class.editor-backdrop--page]="!adminMode" role="presentation"
+    (click)="adminMode && cancelEdit()">
+    <form class="panel disease-editor" [class.disease-editor--page]="!adminMode" role="dialog"
+      [attr.aria-modal]="adminMode ? true : null"
       [attr.aria-labelledby]="editingDisease ? 'edit-disease-title' : 'create-disease-title'" [formGroup]="diseaseForm"
       (click)="$event.stopPropagation()" (ngSubmit)="submitForm()">
       <div class="panel-heading">
         <div>
+          @if (!adminMode) {
+          <button class="back-link" type="button" [disabled]="saving || uploadingImage" (click)="cancelEdit()">
+            <img src="/icons/business/left.png" alt="" aria-hidden="true" />
+            {{ editingDisease ? 'Chi tiết bệnh' : 'Danh sách bệnh' }}
+          </button>
+          }
           <h3 [id]="editingDisease ? 'edit-disease-title' : 'create-disease-title'">
-            {{ editingDisease ? 'Chỉnh sửa bệnh cây trồng' : 'Thêm bệnh cây trồng' }}
+            {{ editingDisease ? 'Cập nhật bệnh cây trồng' : 'Thêm bệnh cây trồng' }}
           </h3>
         </div>
+        @if (adminMode) {
         <button class="close-editor-button" type="button" aria-label="Đóng popup" [disabled]="saving || uploadingImage"
           (click)="cancelEdit()">
           <span class="material-symbols-outlined" aria-hidden="true">close</span>
         </button>
+        } @else {
+        <span class="required-note"><b>*</b> Thông tin bắt buộc</span>
+        }
       </div>
 
       <div class="form-sections">
@@ -385,6 +399,121 @@
   </div>
   }
 
+  @if (!adminMode && !editorOpen && selectedDisease; as disease) {
+  <section class="disease-detail-view">
+    <header class="detail-heading">
+      <div>
+        <button class="back-link" type="button" (click)="closeDetail()">
+          <img src="/icons/business/left.png" alt="" aria-hidden="true" /> Tất cả bệnh cây trồng
+        </button>
+        <h1>Chi tiết bệnh cây trồng</h1>
+      </div>
+      <div class="detail-heading-actions">
+        <button
+          class="secondary-button detail-delete-button"
+          type="button"
+          [disabled]="!canEdit(disease) || actionId === disease.id"
+          [title]="canEdit(disease) ? 'Xóa bệnh' : 'Bạn không có quyền xóa bệnh này'"
+          (click)="deletingId = disease.id"
+        >
+          Xóa bệnh
+        </button>
+        <button
+          class="primary-button"
+          type="button"
+          [disabled]="!canEdit(disease) || actionId === disease.id"
+          [title]="canEdit(disease) ? 'Cập nhật bệnh' : 'Bạn không có quyền cập nhật bệnh này'"
+          (click)="startEdit(disease)"
+        >
+          Cập nhật bệnh
+        </button>
+      </div>
+    </header>
+
+    <div class="disease-detail-overview">
+      <div class="disease-detail-image">
+        @if (disease.thumbnailUrl) {
+        <img [src]="disease.thumbnailUrl" [alt]="disease.name" />
+        } @else {
+        <img src="/icons/dashboard/noimage.png" alt="Chưa có ảnh đại diện bệnh" />
+        }
+      </div>
+      <div class="disease-detail-copy">
+        <span class="status-badge status-badge--{{ disease.reviewStatus.toLowerCase() }}">
+          {{ statusLabel(disease.reviewStatus) }}
+        </span>
+        <h2>{{ disease.name }}</h2>
+        <p class="disease-detail-category">{{ cropTypeLabel(disease.cropTypeId) }}</p>
+        <p>{{ disease.shortDescription || 'Chưa có mô tả ngắn.' }}</p>
+        <small>Cập nhật {{ disease.updatedAt | date: 'dd/MM/yyyy HH:mm':'+0700' }}</small>
+        @if (disease.rejectionReason) {
+        <p class="disease-detail-rejection">Lý do từ chối: {{ disease.rejectionReason }}</p>
+        }
+      </div>
+    </div>
+
+    @if (deletingId === disease.id) {
+    <div class="detail-delete-confirmation" role="alert">
+      <span>Xoá “{{ disease.name }}”? Dữ liệu sẽ không còn xuất hiện trong hệ thống.</span>
+      <div class="inline-action-buttons">
+        <button type="button" class="secondary-button" (click)="deletingId = null">Huỷ</button>
+        <button type="button" class="danger-button" [disabled]="actionId === disease.id"
+          (click)="deleteDisease(disease)">
+          {{ actionId === disease.id ? 'Đang xoá...' : 'Xác nhận xoá' }}
+        </button>
+      </div>
+    </div>
+    }
+
+    <section class="disease-detail-section">
+      <h3>Thông tin bệnh</h3>
+      <dl class="disease-detail-facts">
+        <div><dt>Tên khoa học</dt><dd>{{ disease.scientificName || 'Chưa cập nhật' }}</dd></div>
+        <div><dt>Loại cây trồng</dt><dd>{{ cropTypeLabel(disease.cropTypeId) }}</dd></div>
+        <div><dt>Bộ phận bị ảnh hưởng</dt><dd>{{ disease.affectedPart || 'Chưa cập nhật' }}</dd></div>
+        <div><dt>Loại tác nhân</dt><dd>{{ disease.pathogenType || 'Chưa cập nhật' }}</dd></div>
+        <div><dt>Đường dẫn (slug)</dt><dd>{{ disease.slug }}</dd></div>
+        <div><dt>Nguồn tạo</dt><dd>{{ disease.createdSource === 'BRAND' ? 'Thương hiệu đề xuất' : 'Quản trị viên' }}</dd></div>
+        <div><dt>Ngày tạo</dt><dd>{{ disease.createdAt | date: 'dd/MM/yyyy HH:mm':'+0700' }}</dd></div>
+        <div><dt>Ngày cập nhật</dt><dd>{{ disease.updatedAt | date: 'dd/MM/yyyy HH:mm':'+0700' }}</dd></div>
+      </dl>
+    </section>
+
+    <section class="disease-detail-section">
+      <h3>Mô tả và nhận diện</h3>
+      <div class="disease-detail-description">
+        <h4>Mô tả chi tiết</h4>
+        <p>{{ disease.description || 'Chưa cập nhật' }}</p>
+      </div>
+      <div class="disease-detail-description">
+        <h4>Triệu chứng</h4>
+        <p>{{ disease.symptoms || 'Chưa cập nhật' }}</p>
+      </div>
+      <div class="disease-detail-description">
+        <h4>Nguyên nhân</h4>
+        <p>{{ disease.causes || 'Chưa cập nhật' }}</p>
+      </div>
+      <div class="disease-detail-description">
+        <h4>Điều kiện phát sinh thuận lợi</h4>
+        <p>{{ disease.favorableConditions || 'Chưa cập nhật' }}</p>
+      </div>
+    </section>
+
+    <section class="disease-detail-section">
+      <h3>Phòng ngừa và điều trị</h3>
+      <div class="disease-detail-description">
+        <h4>Biện pháp phòng ngừa</h4>
+        <p>{{ disease.preventionMethod || 'Chưa cập nhật' }}</p>
+      </div>
+      <div class="disease-detail-description">
+        <h4>Hướng dẫn điều trị</h4>
+        <p>{{ disease.treatmentGuideline || 'Chưa cập nhật' }}</p>
+      </div>
+    </section>
+  </section>
+  }
+
+  @if (adminMode || (!editorOpen && !selectedDisease)) {
   <section class="disease-list-panel" [class.panel]="adminMode">
     <div class="list-toolbar">
       <div>
@@ -433,7 +562,9 @@
     </div>
     <div class="disease-list">
       @for (disease of filteredDiseases; track disease.id) {
-      <article class="disease-card">
+      <article class="disease-card" [class.disease-card--clickable]="!adminMode"
+        [attr.role]="!adminMode ? 'button' : null" [attr.tabindex]="!adminMode ? 0 : null"
+        (click)="openDetail(disease)" (keydown)="onDiseaseCardKeydown($event, disease)">
         <div class="disease-main-cell">
           <div class="disease-visual">
             @if (disease.thumbnailUrl) {
@@ -445,12 +576,18 @@
           </div>
 
           <div class="disease-details">
-            <h4><span>Tên bệnh:</span> {{ disease.name }}</h4>
+            <h4>
+              @if (adminMode) { <span>Tên bệnh:</span> }
+              {{ disease.name }}
+            </h4>
             <p>
-              <strong>Tên khoa học:</strong>
+              @if (adminMode) { <strong>Tên khoa học:</strong> }
               {{ disease.scientificName || 'Chưa cập nhật' }}
+              @if (!adminMode) { · {{ cropTypeLabel(disease.cropTypeId) }} }
             </p>
+            @if (adminMode) {
             <p><strong>Loại cây trồng:</strong> {{ cropTypeLabel(disease.cropTypeId) }}</p>
+            }
           </div>
         </div>
 
@@ -479,7 +616,7 @@
           </p>
         </div>
 
-        <div class="card-actions">
+        <div class="card-actions" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()">
           <button type="button" class="action-menu-trigger" aria-haspopup="menu"
             [attr.aria-expanded]="actionMenuId === disease.id" [attr.aria-label]="'Mở hành động cho ' + disease.name"
             title="Mở danh sách hành động" [disabled]="actionId === disease.id"
@@ -494,7 +631,7 @@
               {{ expandedHistoryId === disease.id ? 'Ẩn lịch sử duyệt' : 'Lịch sử duyệt' }}
             </button>
 
-            @if (canEdit(disease)) {
+            @if (adminMode && canEdit(disease)) {
             <button type="button" role="menuitem" (click)="startEdit(disease)">
               <span class="material-symbols-outlined" aria-hidden="true">edit</span>
               Chỉnh sửa
@@ -536,7 +673,7 @@
             </button>
             }
 
-            @if (canEdit(disease)) {
+            @if (adminMode && canEdit(disease)) {
             <button type="button" role="menuitem" class="menu-item--danger menu-item--separated"
               (click)="deletingId = disease.id">
               <span class="material-symbols-outlined" aria-hidden="true">delete</span>
@@ -625,4 +762,5 @@
     </div>
     }
   </section>
+  }
 </section>

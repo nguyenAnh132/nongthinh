@@ -8,7 +8,6 @@ import com.nongthinh.agri_catalog_service.application.port.in.disease.DeleteDise
 import com.nongthinh.agri_catalog_service.application.port.out.ClockProvider;
 import com.nongthinh.agri_catalog_service.application.port.out.repository.DiseaseRepository;
 import com.nongthinh.agri_catalog_service.application.port.out.repository.ProductDiseaseTreatmentRepository;
-import com.nongthinh.agri_catalog_service.common.constant.RoleConstant;
 import com.nongthinh.agri_catalog_service.common.currentuser.CurrentUser;
 import com.nongthinh.agri_catalog_service.common.currentuser.CurrentUserProvider;
 import com.nongthinh.agri_catalog_service.domain.disease.Disease;
@@ -30,9 +29,6 @@ public class DeleteDiseaseUseCaseImpl implements DeleteDiseaseUseCase {
     public void execute(UUID id) {
         Disease disease = support.requireAccessibleDisease(id);
         CurrentUser currentUser = currentUserProvider.getCurrentUser();
-        if (currentUser.hasRole(RoleConstant.ROLE_BRAND)) {
-            support.requireBrandEditable(disease);
-        }
 
         UUID actorId = currentUser.getUserId();
         Instant now = clockProvider.now();

@@ -1,5 +1,6 @@
 package com.nongthinh.agri_catalog_service.application.port.in.disease.impl;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import com.nongthinh.agri_catalog_service.common.currentuser.CurrentUser;
 import com.nongthinh.agri_catalog_service.common.currentuser.CurrentUserProvider;
 import com.nongthinh.agri_catalog_service.common.exception.ErrorCode;
 import com.nongthinh.agri_catalog_service.domain.disease.Disease;
+import com.nongthinh.agri_catalog_service.domain.disease.valueobject.ReviewStatus;
 import com.nongthinh.agri_catalog_service.domain.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 
@@ -32,9 +34,7 @@ public class UpdateDiseaseUseCaseImpl implements UpdateDiseaseUseCase {
         Objects.requireNonNull(command, "command is required");
         Disease disease = support.requireAccessibleDisease(id);
         CurrentUser currentUser = currentUserProvider.getCurrentUser();
-        if (currentUser.hasRole(RoleConstant.ROLE_BRAND)) {
-            support.requireBrandEditable(disease);
-        }
+        Instant now = clockProvider.now();
 
         support.requireActiveCropType(command.cropTypeId());
         boolean uniqueKeyChanged = !disease.getSlug().equalsIgnoreCase(command.slug())
@@ -45,6 +45,12 @@ public class UpdateDiseaseUseCaseImpl implements UpdateDiseaseUseCase {
                         command.cropTypeId()
                 )) {
             throw new BusinessException(ErrorCode.DISEASE_SLUG_ALREADY_EXISTS);
+        }
+
+        if (currentUser.hasRole(RoleConstant.ROLE_BRAND)
+                && disease.getReviewStatus() != ReviewStatus.DRAFT
+                && disease.getReviewStatus() != ReviewStatus.REJECTED) {
+            disease.returnToDraft(currentUser.getUserId(), now);
         }
 
         disease.update(
@@ -63,7 +69,7 @@ public class UpdateDiseaseUseCaseImpl implements UpdateDiseaseUseCase {
                 command.treatmentGuideline(),
                 command.thumbnailUrl(),
                 currentUser.getUserId(),
-                clockProvider.now()
+                now
         );
         return DiseaseView.from(diseaseRepository.save(disease));
     }
