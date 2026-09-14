@@ -118,6 +118,8 @@ class DiseaseRecommendationPersistenceTest {
         mockMvc.perform(get("/public/diseases/{diseaseId}/recommendations/page", DISEASE_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.result.items[0].product.id").value(id(1).toString()))
+                .andExpect(jsonPath("$.result.items[0].product.brandId").value(ACTOR_ID.toString()))
+                .andExpect(jsonPath("$.result.items[0].product.manufacturerName").value("Manufacturer 1"))
                 .andExpect(jsonPath("$.result.size").value(10))
                 .andExpect(jsonPath("$.result.page").value(0))
                 .andExpect(jsonPath("$.result.hasNext").value(false));
@@ -133,6 +135,7 @@ class DiseaseRecommendationPersistenceTest {
     private JpaProductEntity product(int index, String effectiveness) {
         var product = JpaProductEntity.builder().id(id(index)).brandId(ACTOR_ID).categoryId(id(904))
                 .name("Product " + index).slug("recommendation-product-" + index)
+                .manufacturerName("Manufacturer " + index)
                 .publicationStatus("PUBLISHED").moderationStatus("NORMAL")
                 .createdAt(NOW).createdBy(ACTOR_ID).build();
         entityManager.persist(product);

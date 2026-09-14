@@ -1,32 +1,38 @@
 import { DecimalPipe } from '@angular/common';
 import {
-  ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit,
-  afterNextRender, inject, input, output, viewChild,
+  ChangeDetectorRef, Component, DestroyRef, ElementRef, OnDestroy, OnInit,
+  afterNextRender, inject, input, output, signal, viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import {
-  AgriCatalogApiService, DiseaseRecommendation, DiseaseRecommendationPage, EffectivenessLevel,
+  AgriCatalogApiService, DiseaseRecommendation, DiseaseRecommendationPage,
 } from '../../../core/api/agri-catalog-api.service';
 import { DiagnosisGroup, DiseaseReference } from '../../../core/api/diagnosis-api.service';
+import { BrandProfilePublicResponse, ProfileApiService } from '../../../core/api/profile-api.service';
 import { apiErrorMessage, unwrapApiResult } from '../../../core/models/api-response';
 
 @Component({
   selector: 'app-recommended-products',
   standalone: true,
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, RouterLink],
   templateUrl: './recommended-products.html',
   styleUrl: './recommended-products.scss',
 })
 export class RecommendedProducts implements OnInit, OnDestroy {
   private static readonly LOAD_THRESHOLD = 0.7;
   private readonly catalogApi = inject(AgriCatalogApiService);
+  private readonly profileApi = inject(ProfileApiService);
   private readonly changeDetectorRef = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly viewport = viewChild<ElementRef<HTMLElement>>('viewport');
   private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
   private request?: Subscription;
   private requestVersion = 0;
   private renderFrame?: number;
   private returnFocus: HTMLElement | null = null;
+  private readonly requestedBrandIds = new Set<string>();
 
   readonly groups = input.required<DiagnosisGroup[]>();
   readonly closed = output<void>();
@@ -37,6 +43,7 @@ export class RecommendedProducts implements OnInit, OnDestroy {
   hasNext = true;
   loading = false;
   error = '';
+  readonly brandNames = signal<Record<string, string>>({});
 
   constructor() {
     afterNextRender(() => {
@@ -91,7 +98,9 @@ export class RecommendedProducts implements OnInit, OnDestroy {
             this.error = 'Không thể đọc danh sách sản phẩm. Vui lòng thử lại.';
           } else {
             const existingIds = new Set(this.products.map(item => item.product.id));
-            this.products = [...this.products, ...page.items.filter(item => !existingIds.has(item.product.id))];
+            const newItems = page.items.filter(item => !existingIds.has(item.product.id));
+            this.products = [...this.products, ...newItems];
+            this.loadBrandNames(newItems);
             this.nextPage = page.page + 1;
             this.hasNext = page.hasNext && page.items.length > 0;
             this.renderFrame = requestAnimationFrame(() => this.onScroll());
@@ -115,9 +124,8 @@ export class RecommendedProducts implements OnInit, OnDestroy {
     }
   }
 
-  effectivenessLabel(level: EffectivenessLevel | null): string {
-    return level ? { VERY_HIGH: 'Rất cao', HIGH: 'Cao', MEDIUM: 'Trung bình', LOW: 'Thấp' }[level]
-      : 'Chưa xác định';
+  brandName(brandId: string): string {
+    return this.brandNames()[brandId] ?? 'Đang tải thương hiệu...';
   }
 
   safeUrl(value: string | null | undefined): string | null {
@@ -127,6 +135,27 @@ export class RecommendedProducts implements OnInit, OnDestroy {
 
   hideBrokenImage(event: Event): void {
     (event.target as HTMLImageElement).hidden = true;
+  }
+
+  private loadBrandNames(items: DiseaseRecommendation[]): void {
+    const brandIds = new Set(items.map(item => item.product.brandId).filter(Boolean));
+    for (const brandId of brandIds) {
+      if (this.requestedBrandIds.has(brandId)) continue;
+      this.requestedBrandIds.add(brandId);
+      this.profileApi.getPublicBrandProfileByUserId(brandId)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: response => {
+            const profile = unwrapApiResult<BrandProfilePublicResponse>(response);
+            this.setBrandName(brandId, profile?.brandName?.trim() || 'Thương hiệu chưa cập nhật');
+          },
+          error: () => this.setBrandName(brandId, 'Thương hiệu chưa cập nhật'),
+        });
+    }
+  }
+
+  private setBrandName(brandId: string, name: string): void {
+    this.brandNames.update(current => ({ ...current, [brandId]: name }));
   }
 
   trapFocus(event: KeyboardEvent): void {

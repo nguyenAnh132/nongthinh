@@ -1,16 +1,26 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { AgriCatalogApiService, DiseaseRecommendationPage } from '../../../core/api/agri-catalog-api.service';
+import { ProfileApiService } from '../../../core/api/profile-api.service';
 import { RecommendedProducts } from './recommended-products';
 
 describe('RecommendedProducts', () => {
   const list = vi.fn();
+  const getBrandProfile = vi.fn();
 
   beforeEach(async () => {
     list.mockReset().mockReturnValue(of({ result: page(0, false) }));
+    getBrandProfile.mockReset().mockReturnValue(of({ result: { brandName: 'Nông Thịnh' } }));
     await TestBed.configureTestingModule({
       imports: [RecommendedProducts],
-      providers: [{ provide: AgriCatalogApiService, useValue: { listDiseaseRecommendations: list } }],
+      providers: [
+        provideRouter([]),
+        { provide: AgriCatalogApiService, useValue: { listDiseaseRecommendations: list } },
+        { provide: ProfileApiService, useValue: {
+          getPublicBrandProfileByUserId: getBrandProfile,
+        } },
+      ],
     }).compileComponents();
   });
 
@@ -31,6 +41,13 @@ describe('RecommendedProducts', () => {
     const component = fixture.componentInstance;
     expect(list).toHaveBeenCalledWith('disease-1', 0);
     expect(fixture.nativeElement.querySelectorAll('.product-card')).toHaveLength(10);
+    expect(fixture.nativeElement.textContent).not.toContain('Ưu tiên mức hiệu quả điều trị');
+    expect(fixture.nativeElement.querySelector('.product-card').getAttribute('href'))
+      .toBe('/app/products/product-0');
+    expect(fixture.nativeElement.querySelector('.product-placeholder-icon').getAttribute('src'))
+      .toBe('/icons/business/box-open.png');
+    expect(fixture.nativeElement.querySelector('.brand-name').textContent).toContain('Nông Thịnh');
+    expect(fixture.nativeElement.textContent).not.toContain('Liều lượng:');
     const viewport = fixture.nativeElement.querySelector('.recommendations-viewport');
     Object.defineProperties(viewport, {
       clientHeight: { value: 200 }, scrollHeight: { value: 1000 },
@@ -100,7 +117,9 @@ describe('RecommendedProducts', () => {
   function page(index: number, hasNext: boolean): DiseaseRecommendationPage {
     return {
       items: Array.from({ length: 10 }, (_, offset) => ({
-        product: { id: `product-${index * 10 + offset}`, name: 'Sản phẩm', slug: 'product', thumbnailUrl: null },
+        product: { id: `product-${index * 10 + offset}`, brandId: 'brand', name: 'Sản phẩm',
+          slug: 'product', thumbnailUrl: null, shortDescription: 'Mô tả sản phẩm',
+          manufacturerName: 'Nhà sản xuất' },
         treatment: { id: 'treatment', productId: 'product', diseaseId: 'disease', brandId: 'brand',
           effectivenessLevel: 'HIGH', priority: 0, dosage: null, applicationMethod: null,
           applicationTiming: null, frequencyInstruction: null, treatmentNote: null },

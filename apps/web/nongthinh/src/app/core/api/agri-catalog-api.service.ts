@@ -337,10 +337,12 @@ export interface AiModelDeploymentView extends AiModelDeploymentPayload {
 export interface DiseaseRecommendation {
   product: {
     id: string;
+    brandId: string;
     name: string;
     slug: string;
     thumbnailUrl: string | null;
     shortDescription?: string | null;
+    manufacturerName?: string | null;
     purchaseUrl?: string | null;
   };
   treatment: ProductDiseaseTreatmentView;

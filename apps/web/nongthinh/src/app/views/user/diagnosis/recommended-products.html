@@ -15,38 +15,32 @@
             <option [value]="disease.id">{{ disease.displayName }}</option>
           }
         </select>
-        <p>Ưu tiên mức hiệu quả điều trị, sau đó đến điểm và số lượt đánh giá của nông dân.</p>
       </div>
     }
     <div #viewport class="recommendations-viewport" (scroll)="onScroll()" [attr.aria-busy]="loading">
       <div class="product-grid">
         @for (item of products; track item.product.id) {
-          <article class="product-card">
+          <a class="product-card" [routerLink]="['/app/products', item.product.id]"
+            [attr.aria-label]="'Xem chi tiết ' + item.product.name">
             <div class="product-image">
-              <span aria-hidden="true">🌿</span>
+              <img class="product-placeholder-icon" src="/icons/business/box-open.png" alt="" aria-hidden="true" />
               @if (safeUrl(item.product.thumbnailUrl); as imageUrl) {
-                <img [src]="imageUrl" [alt]="item.product.name" loading="lazy" (error)="hideBrokenImage($event)" />
+                <img class="product-thumbnail" [src]="imageUrl" [alt]="item.product.name"
+                  loading="lazy" (error)="hideBrokenImage($event)" />
               }
             </div>
             <div class="product-copy">
-              <span class="effectiveness">Hiệu quả: {{ effectivenessLabel(item.treatment.effectivenessLevel) }}</span>
               <h3>{{ item.product.name }}</h3>
-              @if (item.reviewCount) {
-                <p class="rating">★ {{ item.averageRating | number: '1.1-1' }}/5 · {{ item.reviewCount }} đánh giá</p>
-              } @else {
-                <p class="rating">Chưa có đánh giá</p>
-              }
-              @if (item.product.shortDescription) { <p>{{ item.product.shortDescription }}</p> }
-              @if (item.treatment.dosage) { <p><strong>Liều lượng:</strong> {{ item.treatment.dosage }}</p> }
-              @if (item.treatment.applicationMethod) { <p><strong>Cách dùng:</strong> {{ item.treatment.applicationMethod }}</p> }
-              @if (item.treatment.applicationTiming) { <p><strong>Thời điểm:</strong> {{ item.treatment.applicationTiming }}</p> }
-              @if (item.treatment.frequencyInstruction) { <p><strong>Tần suất:</strong> {{ item.treatment.frequencyInstruction }}</p> }
-              @if (item.treatment.treatmentNote) { <p>{{ item.treatment.treatmentNote }}</p> }
-              @if (safeUrl(item.product.purchaseUrl); as purchaseUrl) {
-                <a [href]="purchaseUrl" target="_blank" rel="noopener noreferrer">Xem sản phẩm ↗</a>
+              <p class="brand-name">Thương hiệu: <strong>{{ brandName(item.product.brandId) }}</strong></p>
+              <p class="rating">★ @if ((item.reviewCount ?? 0) > 0) {
+                {{ item.averageRating ?? 0 | number: '1.1-1' }}/5 · {{ item.reviewCount }} đánh giá
+              } @else { Chưa có đánh giá }</p>
+              <p>{{ item.product.shortDescription || 'Chưa có mô tả ngắn.' }}</p>
+              @if (item.product.manufacturerName) {
+                <small>Nhà sản xuất: {{ item.product.manufacturerName }}</small>
               }
             </div>
-          </article>
+          </a>
         }
       </div>
       <div class="list-state" aria-live="polite">
