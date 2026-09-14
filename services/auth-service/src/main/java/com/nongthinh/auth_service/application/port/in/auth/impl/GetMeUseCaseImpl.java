@@ -1,7 +1,6 @@
 package com.nongthinh.auth_service.application.port.in.auth.impl;
 
 import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import com.nongthinh.auth_service.application.port.in.auth.GetMeUseCase;
 import com.nongthinh.auth_service.application.port.out.ProfileQuery;
@@ -18,7 +17,6 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class GetMeUseCaseImpl implements GetMeUseCase {
 
     private final UserRepository userRepository;
@@ -35,7 +33,7 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
         boolean requiresProfileCompletion = requiresProfileCompletion(roles, profile);
         boolean brandRejected = isBrandRejected(profile);
 
-        MeView view = new MeView(
+        return new MeView(
                 user.getId(),
                 user.getEmail().getValue(),
                 user.isEnabled(),
@@ -47,9 +45,7 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
                         requiresEmailVerification,
                         requiresProfileCompletion,
                         brandRejected,
-                        brandRejected && profile != null ? profile.scheduledDeletionAt() : null));
-        log.info("Me: {}", view);
-        return view;
+                        brandRejected ? profile.scheduledDeletionAt() : null));
     }
 
     private ProfileView resolveProfile(UUID userId, Set<String> roles) {

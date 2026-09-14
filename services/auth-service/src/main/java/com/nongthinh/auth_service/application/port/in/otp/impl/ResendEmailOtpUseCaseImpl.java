@@ -1,16 +1,15 @@
 package com.nongthinh.auth_service.application.port.in.otp.impl;
 
-import java.time.Duration;
 import java.util.Objects;
-
+import com.nongthinh.auth_service.application.port.out.repository.OtpRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.nongthinh.auth_service.application.command.ResendEmailOtpCommand;
 import com.nongthinh.auth_service.application.port.in.otp.ResendEmailOtpUseCase;
 import com.nongthinh.auth_service.application.port.out.ClockProvider;
 import com.nongthinh.auth_service.application.port.out.SystemParam;
-import com.nongthinh.auth_service.application.port.out.otp.OtpRecord;
-import com.nongthinh.auth_service.application.port.out.otp.OtpStore;
+import com.nongthinh.auth_service.domain.otp.EmailOtp;
 import com.nongthinh.auth_service.application.port.out.repository.UserRepository;
 import com.nongthinh.auth_service.application.service.EmailOtpIssuer;
 import com.nongthinh.auth_service.application.view.OtpResendCooldownView;
@@ -28,12 +27,13 @@ import lombok.RequiredArgsConstructor;
 public class ResendEmailOtpUseCaseImpl implements ResendEmailOtpUseCase {
 
     private final UserRepository userRepository;
-    private final OtpStore otpStore;
+    private final OtpRepository otpRepository;
     private final EmailOtpIssuer emailOtpIssuer;
     private final ClockProvider clockProvider;
     private final SystemParam systemParam;
 
     @Override
+    @Transactional
     public OtpResendCooldownView execute(ResendEmailOtpCommand command) {
 
         long start = System.currentTimeMillis();
@@ -41,7 +41,7 @@ public class ResendEmailOtpUseCaseImpl implements ResendEmailOtpUseCase {
         Objects.requireNonNull(command, "command is required");
 
         String normalizedEmail = Email.normalize(command.email());
-        User user = userRepository.findByEmail(normalizedEmail)
+        User user = userRepository.findByEmailForUpdate(normalizedEmail)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         if (user.isEmailVerified()) {
@@ -55,22 +55,17 @@ public class ResendEmailOtpUseCaseImpl implements ResendEmailOtpUseCase {
                 SystemParamNameConstant.OTP_RESEND_COOLDOWN_SECONDS,
                 DefaultParamValueConstant.DEFAULT_OTP_RESEND_COOLDOWN_SECONDS);
 
-        OtpRecord existingRecord = otpStore.find(normalizedEmail).orElse(null);
+        EmailOtp existingRecord = otpRepository.findByEmailForUpdate(normalizedEmail).orElse(null);
         if (existingRecord != null) {
-            if (existingRecord.resendCount() >= maxResend) {
-                throw new BusinessException(ErrorCode.OTP_RESEND_LIMIT_EXCEEDED);
-            }
-
-            long elapsedSeconds = Duration.between(existingRecord.lastSentAt(), clockProvider.now()).getSeconds();
-            if (elapsedSeconds < cooldownSeconds) {
-                throw new BusinessException(ErrorCode.OTP_RESEND_TOO_FREQUENT);
-            }
+            existingRecord.ensureCanResend(clockProvider.now(), maxResend, cooldownSeconds);
 
             emailOtpIssuer.issueResend(
                     user.getId(),
                     normalizedEmail,
                     extractLocalPart(normalizedEmail),
-                    existingRecord);
+                    existingRecord,
+                    maxResend,
+                    cooldownSeconds);
         } else {
             emailOtpIssuer.issueInitial(
                     user.getId(),

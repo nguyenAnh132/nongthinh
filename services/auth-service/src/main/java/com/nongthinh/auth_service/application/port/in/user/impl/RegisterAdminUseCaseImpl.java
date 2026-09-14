@@ -78,7 +78,7 @@ public class RegisterAdminUseCaseImpl implements RegisterAdminUseCase {
             command.enabled(),
             now
         );
-        userRepository.save(newUser);//--
+        userRepository.save(newUser);
 
         eventPublisher.publish(new AdminProfileCreationRequestedEvent(//--
             idGenerator.generate(),

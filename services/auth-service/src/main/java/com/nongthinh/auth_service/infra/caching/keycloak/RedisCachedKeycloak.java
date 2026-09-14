@@ -46,11 +46,10 @@ public class RedisCachedKeycloak implements KeycloakIdp {
 
     @Override
     public String exchangeClientToken() {
-        log.info("exchangeClientToken from cache");
+        log.info("[Infra - ClientToken] Get client token from cache");
         return redisStringCache.get(KeycloakCacheKeys.clientToken()).orElseGet(() -> {
             String token = keycloakIdp.exchangeClientToken();
             int ttl = keycloakCacheProperties.getClientTokenTtlSeconds();
-            log.info("Client Token TTL: {}", ttl);
             redisStringCache.put(KeycloakCacheKeys.clientToken(), token, Duration.ofSeconds(ttl));
             return token;
         });
