@@ -220,6 +220,24 @@ describe('Brand product workspace', () => {
     expect(fixture.nativeElement.querySelector('.product-detail-view')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.product-detail-card')).toBeNull();
     expect(fixture.nativeElement.querySelector('.detail-rating').textContent).toContain('18 đánh giá');
+    expect(fixture.nativeElement.querySelector('.purchase-button')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Liên kết mua hàng');
+  });
+
+  it('shows a buy button beside the product name only when a purchase URL exists', () => {
+    api['getProduct'].mockReturnValue(
+      of({ result: { ...product(), purchaseUrl: 'https://shop.example.test/products/product-1' } }),
+    );
+    params.next(convertToParamMap({ view: 'detail', productId: 'product-1' }));
+    const fixture = TestBed.createComponent(BrandOperations);
+    fixture.detectChanges();
+
+    const titleRow = fixture.nativeElement.querySelector('.detail-title-row') as HTMLElement;
+    const buyButton = titleRow.querySelector('.purchase-button') as HTMLAnchorElement;
+    expect(titleRow.querySelector('h2')?.textContent).toContain('Phân bón hữu cơ');
+    expect(buyButton.textContent?.trim()).toBe('Mua sản phẩm');
+    expect(buyButton.href).toBe('https://shop.example.test/products/product-1');
+    expect(buyButton.target).toBe('_blank');
   });
 
   it('renders the product history without an outer operation card', () => {
