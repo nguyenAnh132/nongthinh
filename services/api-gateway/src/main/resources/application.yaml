@@ -1,21 +1,92 @@
 spring:
   application:
     name: api-gateway
+
   profiles:
     default: dev
-  http:
-    clients:
-      connect-timeout: 5s
-      # Read timeout is idle time between chunks; SSE heartbeats arrive every 15s.
-      read-timeout: 45s
+
   cloud:
     gateway:
       server:
         webmvc:
-          streaming-media-types:
-            - text/event-stream
-            - text/event-stream;charset=UTF-8
-            - application/x-ndjson
-  mvc:
-    async:
-      request-timeout: 30m
+          routes:
+            - id: auth-service
+              uri: ${services.auth.url}
+              predicates:
+                - Path=${app.api-prefix}/auth/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: bo-portal-service
+              uri: ${services.bo-portal.url}
+              predicates:
+                - Path=${app.api-prefix}/bo-portal/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: profile-service
+              uri: ${services.profile.url}
+              predicates:
+                - Path=${app.api-prefix}/profile/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: location-service
+              uri: ${services.location.url}
+              predicates:
+                - Path=${app.api-prefix}/location/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: notification-service
+              uri: ${services.notification.url}
+              predicates:
+                - Path=${app.api-prefix}/notification/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: brand-service
+              uri: ${services.brand.url}
+              predicates:
+                - Path=${app.api-prefix}/brand/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: file-service
+              uri: ${services.file.url}
+              predicates:
+                - Path=${app.api-prefix}/files/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: rice-disease-diagnosis-service
+              uri: ${services.rice-disease-diagnosis.url}
+              predicates:
+                - Path=${app.api-prefix}/diagnoses/**
+              filters:
+                - StripPrefix=2
+                - PrefixPath=/diagnosis
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: agri-catalog-service
+              uri: ${services.agri-catalog.url}
+              predicates:
+                - Path=${app.api-prefix}/agri-catalog/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
+
+            - id: post-service
+              uri: ${services.post.url}
+              predicates:
+                - Path=${app.api-prefix}/posts/**
+              filters:
+                - StripPrefix=2
+                - RemoveRequestHeader=X-API-KEY
