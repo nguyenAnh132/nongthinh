@@ -3,21 +3,27 @@ package com.nongthinh.auth_service.presentation.advice;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import com.nongthinh.auth_service.common.exception.AppException;
 import com.nongthinh.auth_service.common.exception.ErrorCode;
 import com.nongthinh.auth_service.common.exception.ErrorType;
 import com.nongthinh.auth_service.common.response.ApiResponse;
 import com.nongthinh.auth_service.common.trace.TraceContextProvider;
 import com.nongthinh.auth_service.domain.exception.BusinessException;
+import com.nongthinh.auth_service.infra.exception.InfrastructureException;
 
+import feign.FeignException;
 import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import java.util.Objects;
 
 @Slf4j
 @RestControllerAdvice
@@ -32,84 +38,127 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Void>> handleAppException(AppException ex) {
         ErrorCode errorCode = ex.getErrorCode();
-        return ResponseEntity.status(toHttpStatus(errorCode.getErrorType()))
-                .body(ApiResponse.<Void>builder()
-                        .code(errorCode.getCode())
-                        .message(ex.getMessage())
-                        .traceId(traceContextProvider.currentTraceId().orElse(null))
-                        .result(null)
-                        .build());
+        logAppException("AppException", ex);
+        return error(errorCode, ex.getMessage());
     }
 
     @ExceptionHandler(value = AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
         ErrorCode errorCode = ErrorCode.FORBIDDEN;
-        return ResponseEntity.status(toHttpStatus(errorCode.getErrorType()))
-                .body(ApiResponse.<Void>builder()
-                        .code(errorCode.getCode())
-                        .message(ex.getMessage())
-                        .traceId(traceContextProvider.currentTraceId().orElse(null))
-                        .result(null)
-                        .build());
+        log.warn("[Presentation - AccessDeniedException] Access denied | code={} exception={}",
+                errorCode.getCode(), ex.getClass().getSimpleName());
+        return error(errorCode, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpectedException(Exception ex) {
-        log.error("Unexpected error", ex);
         ErrorCode errorCode = ErrorCode.INTERNAL_ERROR;
-        return ResponseEntity.status(toHttpStatus(errorCode.getErrorType()))
-                .body(ApiResponse.<Void>builder()
-                        .code(errorCode.getCode())
-                        .message(errorCode.getDefaultMessage())
-                        .traceId(traceContextProvider.currentTraceId().orElse(null))
-                        .result(null)
-                        .build());
+        log.error("[Presentation - UnexpectedException] Unexpected error | code={}", errorCode.getCode(), ex);
+        return error(errorCode, errorCode.getDefaultMessage());
     }
 
     @ExceptionHandler(value = BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException ex) {
         ErrorCode errorCode = ex.getErrorCode();
-        log.error("Business exception: {}", ex.getMessage());
-        return ResponseEntity.status(toHttpStatus(errorCode.getErrorType()))
-                .body(ApiResponse.<Void>builder()
-                        .code(errorCode.getCode())
-                        .message(ex.getMessage())
-                        .traceId(traceContextProvider.currentTraceId().orElse(null))
-                        .result(null)
-                        .build());
+        logAppException("BusinessException", ex);
+        return error(errorCode, ex.getMessage());
+    }
+
+    @ExceptionHandler(InfrastructureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInfrastructureException(InfrastructureException ex) {
+        logAppException("InfrastructureException", ex);
+        return error(ex.getErrorCode(), ex.getMessage());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(AuthenticationException ex) {
+        ErrorCode errorCode = ErrorCode.UNAUTHENTICATED;
+        log.warn("[Presentation - AuthenticationException] Authentication failed | code={} exception={}",
+                errorCode.getCode(), ex.getClass().getSimpleName());
+        return error(errorCode, errorCode.getDefaultMessage());
+    }
+
+    @ExceptionHandler(FeignException.class)
+    public ResponseEntity<ApiResponse<Void>> handleFeignException(FeignException ex) {
+        ErrorCode errorCode = ErrorCode.INTERNAL_ERROR;
+        // Feign messages can contain upstream response bodies, including tokens.
+        log.error("[Presentation - FeignException] Upstream request failed | code={} upstreamStatus={} exception={}",
+                errorCode.getCode(), ex.status(), ex.getClass().getSimpleName());
+        return error(HttpStatus.BAD_GATEWAY, errorCode, errorCode.getDefaultMessage());
+    }
+
+    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
+            MissingServletRequestParameterException.class})
+    public ResponseEntity<ApiResponse<Void>> handleInvalidRequest(Exception ex) {
+        ErrorCode errorCode = ErrorCode.INVALID_KEY;
+        log.warn("[Presentation - InvalidRequest] Invalid request | code={} exception={}",
+                errorCode.getCode(), ex.getClass().getSimpleName());
+        return error(errorCode, errorCode.getDefaultMessage());
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConstraintViolationException(ConstraintViolationException ex) {
+        var violation = ex.getConstraintViolations().stream().findFirst().orElse(null);
+        ErrorCode errorCode = resolveErrorCode(violation == null ? null : violation.getMessage());
+        String message = violation == null ? errorCode.getDefaultMessage()
+                : mapAttribute(errorCode.getDefaultMessage(), violation.getConstraintDescriptor().getAttributes());
+        log.warn("[Presentation - ConstraintViolationException] Validation failed | code={} message={} violationCount={}",
+                errorCode.getCode(), message, ex.getConstraintViolations().size());
+        return error(errorCode, message);
     }
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     ResponseEntity<ApiResponse<Void>> handlingValidation(MethodArgumentNotValidException exception) {
-        String enumKey = exception.getFieldError().getDefaultMessage();
-
-        ErrorCode errorCode = ErrorCode.INVALID_KEY;
-        Map<String, Object> attributes = null;
-        try {
-            errorCode = ErrorCode.valueOf(enumKey);
-
-            var constraintViolation =
-                    exception.getBindingResult().getAllErrors().getFirst().unwrap(ConstraintViolation.class);
-
-            attributes = constraintViolation.getConstraintDescriptor().getAttributes();
-            log.info("attributes: {}", attributes);
-
-        } catch (IllegalArgumentException e) {
-
+        var bindingResult = exception.getBindingResult();
+        var validationError = bindingResult.getFieldError() != null
+                ? bindingResult.getFieldError() : bindingResult.getGlobalError();
+        ErrorCode errorCode = resolveErrorCode(validationError == null ? null : validationError.getDefaultMessage());
+        String message = errorCode.getDefaultMessage();
+        if (validationError != null && validationError.contains(ConstraintViolation.class)) {
+            ConstraintViolation<?> violation = validationError.unwrap(ConstraintViolation.class);
+            message = mapAttribute(message, violation.getConstraintDescriptor().getAttributes());
         }
 
-        ApiResponse<Void> apiResponse = new ApiResponse<>();
+        log.warn("[Presentation - MethodArgumentNotValidException] Validation failed | code={} message={} errorCount={}",
+                errorCode.getCode(), message, bindingResult.getErrorCount());
+        return error(errorCode, message);
+    }
 
-        apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(
-                Objects.nonNull(attributes)
-                        ? mapAttribute(errorCode.getDefaultMessage(), attributes)
-                        : errorCode.getDefaultMessage());
+    private ErrorCode resolveErrorCode(String key) {
+        if (key == null) {
+            return ErrorCode.INVALID_KEY;
+        }
+        try {
+            return ErrorCode.valueOf(key);
+        } catch (IllegalArgumentException ex) {
+            return ErrorCode.INVALID_KEY;
+        }
+    }
 
-        apiResponse.setTraceId(traceContextProvider.currentTraceId().orElse(null));
-        return ResponseEntity.status(
-            toHttpStatus(errorCode.getErrorType())
-            ).body(apiResponse);
+    private void logAppException(String handler, AppException ex) {
+        ErrorCode errorCode = ex.getErrorCode();
+        HttpStatus status = toHttpStatus(errorCode.getErrorType());
+        if (status.is5xxServerError()) {
+            log.error("[Presentation - {}] Request failed | code={} status={} message={}",
+                    handler, errorCode.getCode(), status.value(), ex.getMessage(), ex);
+        } else {
+            log.warn("[Presentation - {}] Request rejected | code={} status={} message={}",
+                    handler, errorCode.getCode(), status.value(), ex.getMessage());
+        }
+    }
+
+    private ResponseEntity<ApiResponse<Void>> error(ErrorCode errorCode, String message) {
+        return error(toHttpStatus(errorCode.getErrorType()), errorCode, message);
+    }
+
+    private ResponseEntity<ApiResponse<Void>> error(HttpStatus status, ErrorCode errorCode, String message) {
+        return ResponseEntity.status(status)
+                .body(ApiResponse.<Void>builder()
+                        .code(errorCode.getCode())
+                        .message(message)
+                        .traceId(traceContextProvider.currentTraceId().orElse(null))
+                        .result(null)
+                        .build());
     }
 
     private String mapAttribute(String message, Map<String, Object> attributes) {

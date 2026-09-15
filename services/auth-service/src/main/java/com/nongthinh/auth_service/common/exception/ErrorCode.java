@@ -27,13 +27,11 @@ public enum ErrorCode {
     PERMISSION_INVALID("BUS_PERMISSION_INVALID", "Permission is invalid", ErrorType.BUSINESS_RULE),
     EMAIL_ALREADY_EXISTS("BUS_EMAIL_ALREADY_EXISTS", "Email already exists", ErrorType.BUSINESS_RULE),
     ROLE_CANNOT_BE_DELETED("BUS_ROLE_CANNOT_BE_DELETED", "Role cannot be deleted", ErrorType.BUSINESS_RULE),
-    USER_DISABLED("BUS_USER_DISABLED", "User is disabled", ErrorType.BUSINESS_RULE),
     SESSION_REVOKED("BUS_SESSION_REVOKED", "Session is revoked", ErrorType.BUSINESS_RULE),
     SESSION_REVOKED_REASON_REQUIRED("BUS_SESSION_REVOKED_REASON_REQUIRED", "Session revoked reason is required", ErrorType.BUSINESS_RULE),
     SESSION_INVALID("BUS_SESSION_INVALID", "Session is invalid", ErrorType.BUSINESS_RULE),
     SESSION_EXPIRES_AT_INVALID("BUS_SESSION_EXPIRES_AT_INVALID", "Session expires at is invalid", ErrorType.BUSINESS_RULE),
     USER_LOCKED("BUS_USER_LOCKED", "User is locked", ErrorType.BUSINESS_RULE),
-    INVALID_AUTH_PROVIDER("BUS_INVALID_AUTH_PROVIDER", "Invalid auth provider for this operation", ErrorType.BUSINESS_RULE),
 
     
     //NOT FOUND ERROR

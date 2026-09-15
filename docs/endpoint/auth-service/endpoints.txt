@@ -65,7 +65,6 @@ Auth    : Authenticated (JWT từ cookie hoặc Authorization header)
 Response: 200 ApiResponse<MeView>
   result.userId       : UUID
   result.email        : String
-  result.isEnabled    : boolean
   result.role         : String (ROLE_FARMER | ROLE_BRAND | ROLE_ADMIN)
   result.permissions  : Set<String>
   result.profile      : ProfileView { profileId, type, displayName, avatarUrl, bannerUrl, status }

@@ -27,7 +27,6 @@ export interface MeFlags {
 export interface MeView {
   userId: string;
   email: string;
-  isEnabled: boolean;
   role: string;               // "ROLE_FARMER" | "ROLE_BRAND" | "ROLE_ADMIN"
   adminGroup: string | null;  // "SUPER_ADMIN" | "OPERATION" | null
   permissions: string[];

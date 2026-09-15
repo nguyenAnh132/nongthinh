@@ -1,21 +1,26 @@
-spring:
-  application:
-    name: rice-disease-diagnosis-service
-  datasource:
-    url: ${DIAGNOSIS_DB_URL}
-    username: ${DIAGNOSIS_DB_USERNAME}
-    password: ${DIAGNOSIS_DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: UTC
-  flyway:
-    enabled: true
-
 server:
-  port: ${SERVER_PORT:9099}
+  port: ${RICE_DISEASE_DIAGNOSIS_SERVICE_PORT:9099}
   servlet:
-    context-path: /diagnosis
+    context-path: ${RICE_DISEASE_DIAGNOSIS_CONTEXT_PATH:/diagnosis}
+
+spring:
+  datasource:
+    url: ${RICE_DISEASE_DIAGNOSIS_SERVICE_DB_URL}
+    username: ${RICE_DISEASE_DIAGNOSIS_SERVICE_DB_USERNAME}
+    password: ${RICE_DISEASE_DIAGNOSIS_SERVICE_DB_PASSWORD}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+    api-key:
+      current-service-key: ${RICE_DISEASE_DIAGNOSIS_SERVICE_API_KEY}
+      clients:
+        agri-catalog-service:
+          url: ${RICE_DISEASE_DIAGNOSIS_AGRI_CATALOG_URL}
+          api-key: ${RICE_DISEASE_DIAGNOSIS_AGRI_CATALOG_API_KEY}
+        file-service:
+          url: ${RICE_DISEASE_DIAGNOSIS_FILE_SERVICE_URL}
+          api-key: ${RICE_DISEASE_DIAGNOSIS_FILE_SERVICE_API_KEY}

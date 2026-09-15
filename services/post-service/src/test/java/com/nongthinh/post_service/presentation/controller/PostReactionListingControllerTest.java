@@ -37,7 +37,7 @@ class PostReactionListingControllerTest {
     @BeforeEach
     void setup() {
         mvc = MockMvcBuilders.standaloneSetup(new PostReactionController(summary, list, set, remove, mapper))
-                .setControllerAdvice(new GlobalExceptionHandler()).build();
+                .setControllerAdvice(new GlobalExceptionHandler(java.util.Optional.empty())).build();
     }
 
     @Test

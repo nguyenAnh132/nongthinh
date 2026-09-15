@@ -15,7 +15,6 @@ import com.nongthinh.auth_service.application.port.in.user.RegisterFarmerUseCase
 import com.nongthinh.auth_service.application.port.out.ClockProvider;
 import com.nongthinh.auth_service.application.port.out.EventPublisher;
 import com.nongthinh.auth_service.application.port.out.IdGenerator;
-import com.nongthinh.auth_service.application.port.out.PasswordHash;
 import com.nongthinh.auth_service.application.port.out.keycloak.KeycloakIdp;
 import com.nongthinh.auth_service.application.port.out.keycloak.RoleRecord;
 import com.nongthinh.auth_service.application.port.out.repository.UserRepository;
@@ -35,7 +34,6 @@ public class RegisterFarmerUseCaseImpl implements RegisterFarmerUseCase {
     private final IdGenerator idGenerator;
     private final ClockProvider clockProvider;
     private final KeycloakIdp keycloakIdp;
-    private final PasswordHash passwordHash;
     private final EventPublisher eventPublisher;
 
     @Override
@@ -68,8 +66,6 @@ public class RegisterFarmerUseCaseImpl implements RegisterFarmerUseCase {
             userId,
             keycloakUserId,
             Email.of(command.email()),
-            passwordHash.hash(command.email(), command.password()),
-            command.enabled(),
             now
         );
         userRepository.save(newUser);

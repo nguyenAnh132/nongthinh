@@ -6,7 +6,6 @@ import java.util.UUID;
 public record MeView(
     UUID userId,
     String email,
-    boolean isEnabled,
     String role,
     String adminGroup,
     Set<String> permissions,

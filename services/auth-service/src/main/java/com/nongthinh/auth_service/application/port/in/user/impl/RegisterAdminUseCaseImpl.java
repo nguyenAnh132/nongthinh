@@ -12,7 +12,6 @@ import com.nongthinh.auth_service.application.port.in.user.RegisterAdminUseCase;
 import com.nongthinh.auth_service.application.port.out.ClockProvider;
 import com.nongthinh.auth_service.application.port.out.EventPublisher;
 import com.nongthinh.auth_service.application.port.out.IdGenerator;
-import com.nongthinh.auth_service.application.port.out.PasswordHash;
 import com.nongthinh.auth_service.application.port.out.keycloak.KeycloakIdp;
 import com.nongthinh.auth_service.application.port.out.repository.UserRepository;
 import com.nongthinh.auth_service.common.constant.AdminGroupConstant;
@@ -31,7 +30,6 @@ public class RegisterAdminUseCaseImpl implements RegisterAdminUseCase {
     private final IdGenerator idGenerator;
     private final ClockProvider clockProvider;
     private final KeycloakIdp keycloakIdp;
-    private final PasswordHash passwordHash;
     private final EventPublisher eventPublisher;
 
     @Override
@@ -74,8 +72,6 @@ public class RegisterAdminUseCaseImpl implements RegisterAdminUseCase {
             userId,
             keycloakUserId,
             Email.of(command.email()),
-            passwordHash.hash(command.email(), command.password()),
-            command.enabled(),
             now
         );
         userRepository.save(newUser);

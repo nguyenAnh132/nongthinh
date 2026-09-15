@@ -1,7 +1,77 @@
 spring:
   application:
     name: auth-service
+
   profiles:
     default: dev
 
+  datasource:
+    driver-class-name: org.postgresql.Driver
 
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+    baseline-on-migrate: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            scope: openid
+            authorization-grant-type: authorization_code
+
+    api-key:
+      header-name: X-API-KEY
+
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+server:
+  forward-headers-strategy: framework
+
+  servlet:
+    session:
+      cookie:
+        path: /
+
+cookie:
+  http-only: true
+  access-token-name: access_token
+  refresh-token-name: refresh_token
+  same-site: Lax
+  access-path: /
+  refresh-path: /
+
+keycloak:
+  scope: openid
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+  observations:
+    enabled: true
+    http:
+      server:
+        requests:
+          enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.nongthinh: DEBUG

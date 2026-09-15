@@ -35,7 +35,6 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
         return new MeView(
                 user.getId(),
                 user.getEmail().getValue(),
-                user.isEnabled(),
                 roles.stream().findFirst().orElse(null),
                 adminGroup,
                 permissions,

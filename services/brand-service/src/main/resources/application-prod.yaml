@@ -1,0 +1,34 @@
+server:
+  port: ${BRAND_SERVICE_PORT:9097}
+  servlet:
+    context-path: ${BRAND_CONTEXT_PATH:/brand}
+
+spring:
+  datasource:
+    url: ${BRAND_SERVICE_DB_URL}
+    username: ${BRAND_SERVICE_DB_USERNAME}
+    password: ${BRAND_SERVICE_DB_PASSWORD}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+    api-key:
+      current-service-key: ${BRAND_SERVICE_API_KEY}
+      clients:
+        profile-service:
+          url: ${BRAND_PROFILE_SERVICE_URL}
+          api-key: ${BRAND_PROFILE_SERVICE_API_KEY}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+camunda:
+  bpm:
+    admin-user:
+      id: ${BRAND_CAMUNDA_ADMIN_USER_ID}
+      password: ${BRAND_CAMUNDA_ADMIN_USER_PASSWORD}
+    database:
+      schema-update: ${BRAND_CAMUNDA_DATABASE_SCHEMA_UPDATE:false}

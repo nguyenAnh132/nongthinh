@@ -1,8 +1,43 @@
 spring:
   application:
     name: agri-catalog-service
+
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+    default: dev
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+    baseline-on-migrate: true
+
+  security:
+    api-key:
+      header-name: X-API-KEY
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: ${INTERNAL_CLIENT_CONNECT_TIMEOUT_MS:2000}
+            readTimeout: ${INTERNAL_CLIENT_READ_TIMEOUT_MS:10000}
+            followRedirects: false
+
+cookie:
+  access-token-name: access_token
 
 management:
   endpoints:
@@ -16,3 +51,8 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+logging:
+  level:
+    root: INFO
+    com.nongthinh: DEBUG

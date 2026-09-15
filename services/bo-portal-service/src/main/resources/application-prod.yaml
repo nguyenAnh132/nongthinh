@@ -1,30 +1,19 @@
 server:
-  port: ${SERVER_PORT:}
+  port: ${BO_PORTAL_SERVICE_PORT:9096}
   servlet:
-    context-path: ${BO_PORTAL_CONTEXT_PATH:}
-
-cookie:
-  secure: ${COOKIE_SECURE:true}
-  http-only: ${COOKIE_HTTP_ONLY:true}
-  access-token-name: ${COOKIE_ACCESS_TOKEN_NAME:access_token}
-  refresh-token-name: ${COOKIE_REFRESH_TOKEN_NAME:refresh_token}
-  same-site: ${COOKIE_SAME_SITE:Lax}
-  access-path: ${COOKIE_ACCESS_PATH:/}
-  refresh-path: ${COOKIE_REFRESH_PATH:/}
-
-keycloak:
-  url: ${KEYCLOAK_URL:}
-  realm: ${KEYCLOAK_REALM:}
+    context-path: ${BO_PORTAL_CONTEXT_PATH:/bo-portal}
 
 spring:
-  application:
-    name: bo-portal-service
-  security:
-    api-key:
-      header-name: ${API_KEY_HEADER_NAME:X-API-KEY}
-      current-service-key: ${BO_PORTAL_API_KEY:}
-
   datasource:
-    url: ${DATABASE_URL:}
-    username: ${DATABASE_USERNAME:}
-    password: ${DATABASE_PASSWORD:}
+    url: ${BO_PORTAL_SERVICE_DB_URL}
+    username: ${BO_PORTAL_SERVICE_DB_USERNAME}
+    password: ${BO_PORTAL_SERVICE_DB_PASSWORD}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+    api-key:
+      current-service-key: ${BO_PORTAL_SERVICE_API_KEY}

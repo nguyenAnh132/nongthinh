@@ -177,7 +177,6 @@ const ERROR_MESSAGES: Record<string, string> = {
   BUS_EMAIL_ALREADY_EXISTS: 'Email đã được sử dụng.',
   BUS_EMAIL_INVALID: 'Email không hợp lệ.',
   BUS_EMAIL_FORMAT_INVALID: 'Định dạng email không hợp lệ.',
-  BUS_USER_DISABLED: 'Tài khoản đang bị vô hiệu hoá.',
   BUS_USER_LOCKED: 'Tài khoản đang bị khoá tạm thời do nhập sai mật khẩu nhiều lần.',
   NOT_FOUND_USER_NOT_FOUND: 'Không tìm thấy người dùng.',
   AUTH_INVALID_CREDENTIALS: 'Email hoặc mật khẩu không đúng.',
@@ -234,7 +233,6 @@ const LOGIN_CODE_MAP: Record<string, LoginErrorCode> = {
   '2018': 'USER_STATUS_DISABLED',
   '2020': 'USER_IS_LOCKED',
   AUTH_INVALID_CREDENTIALS: 'LOGIN_FAILED',
-  BUS_USER_DISABLED: 'USER_STATUS_DISABLED',
   BUS_USER_LOCKED: 'USER_IS_LOCKED',
 };
 

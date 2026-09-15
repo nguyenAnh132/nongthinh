@@ -14,5 +14,6 @@ public class ApiResponse<T> {
     @Builder.Default
     private String code = "1000";
     private String message;
+    private String traceId;
     private Optional<T> result;
 }

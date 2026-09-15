@@ -1,16 +1,26 @@
-cookie:
-  secure: ${COOKIE_SECURE:true}
-  http-only: ${COOKIE_HTTP_ONLY:true}
-  access-token-name: ${COOKIE_ACCESS_TOKEN_NAME:access_token}
-  refresh-token-name: ${COOKIE_REFRESH_TOKEN_NAME:refresh_token}
-  same-site: ${COOKIE_SAME_SITE:Lax}
-  access-path: ${COOKIE_ACCESS_PATH:/}
-  refresh-path: ${COOKIE_REFRESH_PATH:/}
-
-keycloak:
-  url: ${KEYCLOAK_URL:}
-  realm: ${KEYCLOAK_REALM:}
+server:
+  port: ${PROFILE_SERVICE_PORT:9092}
+  servlet:
+    context-path: ${PROFILE_CONTEXT_PATH:/profile}
 
 spring:
-  application:
-    name: profile-service
+  datasource:
+    url: ${PROFILE_SERVICE_DB_URL}
+    username: ${PROFILE_SERVICE_DB_USERNAME}
+    password: ${PROFILE_SERVICE_DB_PASSWORD}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+    api-key:
+      current-service-key: ${PROFILE_SERVICE_API_KEY}
+      clients:
+        location-service:
+          url: ${PROFILE_LOCATION_SERVICE_URL}
+          api-key: ${PROFILE_LOCATION_SERVICE_API_KEY}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}

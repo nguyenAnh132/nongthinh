@@ -23,16 +23,6 @@
         <span class="info-label">Admin Group</span>
         <span class="info-value badge">{{ user.adminGroup }}</span>
       </div>
-      <div class="info-card">
-        <span class="info-label">Enabled</span>
-        <span
-          class="info-value"
-          [class.text-ok]="user.isEnabled"
-          [class.text-warn]="!user.isEnabled"
-        >
-          {{ user.isEnabled ? 'Có' : 'Không' }}
-        </span>
-      </div>
     </div>
 
     <!-- Profile -->
