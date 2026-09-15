@@ -70,7 +70,7 @@ public class RegisterAdminUseCaseImpl implements RegisterAdminUseCase {
                 bearerToken
         );
 
-        User newUser = User.createPendingEmailVerification(
+        User newUser = User.create(
             userId,
             keycloakUserId,
             Email.of(command.email()),

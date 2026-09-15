@@ -125,58 +125,19 @@
         </form>
       </div>
 
-      <!-- OTP -->
-      <div class="form-wrapper" #otpForm style="display: none;">
+      <!-- Registration success -->
+      <div class="form-wrapper" #successForm style="display: none;" role="status" aria-live="polite">
         <div class="form-header">
-          <button class="btn-back" (click)="backToProfile()" type="button" aria-label="Quay lại">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-          </button>
-          <h3>Xác thực Email</h3>
-          <p>Mã OTP đã được gửi đến {{ registrationEmail || 'email của bạn' }}.</p>
+          <h3>Đăng ký thành công</h3>
+          <p>Tài khoản {{ registrationEmail }} đã được tạo.</p>
         </div>
-        <form [formGroup]="otpFormGroup" (ngSubmit)="onOtpSubmit()">
-          <div class="otp-inputs">
-            @for (key of otpDigitKeys; track key) {
-              <input
-                type="text"
-                inputmode="numeric"
-                autocomplete="one-time-code"
-                maxlength="1"
-                [formControlName]="key"
-                (input)="onOtpInput($event)"
-                (keydown)="onOtpKeydown($event)"
-              />
-            }
-          </div>
-          <button type="submit" class="btn btn-primary btn-full" [disabled]="isSubmitting">
-            {{ isSubmitting ? 'Đang xác minh...' : 'Xác nhận' }}
-          </button>
-          <div class="resend-otp">
-            @if (isResendCooldownActive) {
-              Gửi lại mã sau <span class="resend-countdown">{{ resendCountdownLabel }}</span>
-            } @else {
-              Chưa nhận được mã?
-              <a
-                href="javascript:void(0)"
-                [class.is-disabled]="!canResendOtp"
-                (click)="resendOtp($event)"
-              >Gửi lại ngay</a>
-            }
-          </div>
-        </form>
-      </div>
-
-      <!-- Brand pending approval -->
-      <div class="form-wrapper" #pendingForm style="display: none;">
-        <div class="form-header">
-          <h3>Đăng ký đã gửi</h3>
-          <p>Tài khoản thương hiệu đang chờ quản trị viên duyệt.</p>
-        </div>
-        <p>Sau khi quản trị viên duyệt, bạn có thể đăng nhập bằng email đã đăng ký.</p>
-        <button type="button" class="btn btn-primary btn-full mt-6" (click)="goToView('login', 'backward')">
-          Về trang đăng nhập
+        <p>Vui lòng đăng nhập để xác thực email và tiếp tục sử dụng.</p>
+        @if (selectedRole === 'BRAND') {
+          <p class="mt-6">Hồ sơ thương hiệu của bạn đang chờ quản trị viên duyệt.</p>
+        }
+        <button type="button" class="btn btn-primary btn-full mt-6"
+                [disabled]="isRedirecting" (click)="onLoginSubmit()">
+          {{ isRedirecting ? 'Đang chuyển đến đăng nhập...' : 'Đăng nhập' }}
         </button>
       </div>
 

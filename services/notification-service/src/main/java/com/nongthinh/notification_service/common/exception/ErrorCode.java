@@ -30,7 +30,6 @@ public enum ErrorCode {
     PURPOSE_NAME_REQUIRED("PURPOSE_NAME_REQUIRED", "Purpose name is required", ErrorType.VALIDATION),
     PURPOSE_CODE_REQUIRED("PURPOSE_CODE_REQUIRED", "Purpose code is required", ErrorType.VALIDATION),
     EMAIL_TO_REQUIRED("EMAIL_TO_REQUIRED", "Recipient email is required", ErrorType.VALIDATION),
-    OTP_REQUIRED("OTP_REQUIRED", "OTP is required", ErrorType.VALIDATION),
     PURPOSE_CODE_INVALID("PURPOSE_CODE_INVALID", "Purpose code is invalid", ErrorType.VALIDATION),
     ;
 

@@ -19,7 +19,6 @@ export interface ProfileView {
 }
 
 export interface MeFlags {
-  requiresEmailVerification: boolean;
   requiresProfileCompletion: boolean;
   brandRejected: boolean;
   canReRegisterAt: string | null;
@@ -71,24 +70,6 @@ export interface RegisterBrandPayload {
   websiteUrl?: string;
 }
 
-export interface VerifyEmailOtpPayload {
-  email: string;
-  otp: string;
-}
-
-export interface ResendEmailOtpPayload {
-  email: string;
-}
-
-export interface OtpResendCooldownView {
-  resendCooldownSeconds: number;
-}
-
-export interface OtpConfigView {
-  otpLength: number;
-  resendCooldownSeconds: number;
-}
-
 export type RegistrationType = 'FARMER' | 'BRAND';
 
 // ---------------------------------------------------------------------------
@@ -138,7 +119,7 @@ export class AuthApiService {
 
   // ── Đăng ký ──────────────────────────────────────────────────────────
 
-  /** POST /farmers — đăng ký nông dân (201 + OTP tự gửi email) */
+  /** POST /farmers — đăng ký nông dân (201) */
   registerFarmer(payload: RegisterFarmerPayload): Observable<void> {
     return this.http.post<void>(
       `${this.baseUrl}/farmers`,
@@ -147,7 +128,7 @@ export class AuthApiService {
     );
   }
 
-  /** POST /brands — đăng ký thương hiệu (201 + OTP tự gửi email) */
+  /** POST /brands — đăng ký thương hiệu (201) */
   registerBrand(payload: RegisterBrandPayload): Observable<void> {
     return this.http.post<void>(
       `${this.baseUrl}/brands`,
@@ -156,31 +137,4 @@ export class AuthApiService {
     );
   }
 
-  // ── OTP ──────────────────────────────────────────────────────────────
-
-  /** POST /otp/verify — xác thực OTP email sau đăng ký */
-  verifyEmailOtp(payload: VerifyEmailOtpPayload): Observable<void> {
-    return this.http.post<void>(
-      `${this.baseUrl}/otp/verify`,
-      payload,
-      { withCredentials: true },
-    );
-  }
-
-  /** GET /otp/config — lấy độ dài OTP và thời gian chờ gửi lại */
-  getOtpConfig(): Observable<ApiResponse<OtpConfigView>> {
-    return this.http.get<ApiResponse<OtpConfigView>>(
-      `${this.baseUrl}/otp/config`,
-      { withCredentials: true },
-    );
-  }
-
-  /** POST /otp/resend — gửi lại OTP email */
-  resendEmailOtp(payload: ResendEmailOtpPayload): Observable<ApiResponse<OtpResendCooldownView>> {
-    return this.http.post<ApiResponse<OtpResendCooldownView>>(
-      `${this.baseUrl}/otp/resend`,
-      payload,
-      { withCredentials: true },
-    );
-  }
 }

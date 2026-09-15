@@ -11,7 +11,6 @@ export interface UserView {
   id: string;
   email: string;
   status: string;
-  emailVerified: boolean;
   roles?: string[];
   createdAt?: string;
   updatedAt?: string;

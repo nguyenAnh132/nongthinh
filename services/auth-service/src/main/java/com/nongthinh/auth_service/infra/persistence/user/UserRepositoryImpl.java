@@ -27,12 +27,6 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public Optional<User> findByEmailForUpdate(String email) {
-        return jpaUserRepository.findByEmailForUpdate(Email.normalize(email))
-                .map(userPersistenceMapper::toDomain);
-    }
-
-    @Override
     public Optional<User> findById(UUID id) {
         return jpaUserRepository.findById(id)
                 .map(userPersistenceMapper::toDomain);

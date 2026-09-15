@@ -56,12 +56,6 @@
     <div class="section-card" *ngIf="user.flags">
       <h3>Flags</h3>
       <div class="detail-row">
-        <span>Requires Email Verification:</span>
-        <span [class.text-warn]="user.flags.requiresEmailVerification">
-          {{ user.flags.requiresEmailVerification ? 'Có' : 'Không' }}
-        </span>
-      </div>
-      <div class="detail-row">
         <span>Requires Profile Completion:</span>
         <span [class.text-warn]="user.flags.requiresProfileCompletion">
           {{ user.flags.requiresProfileCompletion ? 'Có' : 'Không' }}

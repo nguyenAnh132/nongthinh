@@ -29,7 +29,6 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
 
         ProfileView profile = resolveProfile(user.getId(), roles);
 
-        boolean requiresEmailVerification = !user.isEmailVerified();
         boolean requiresProfileCompletion = requiresProfileCompletion(roles, profile);
         boolean brandRejected = isBrandRejected(profile);
 
@@ -42,7 +41,6 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
                 permissions,
                 profile,
                 new MeFlags(
-                        requiresEmailVerification,
                         requiresProfileCompletion,
                         brandRejected,
                         brandRejected ? profile.scheduledDeletionAt() : null));

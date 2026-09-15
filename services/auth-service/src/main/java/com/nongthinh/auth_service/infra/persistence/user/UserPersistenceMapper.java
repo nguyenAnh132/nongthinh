@@ -16,7 +16,6 @@ public class UserPersistenceMapper {
                 Email.of(entity.getEmail()),
                 entity.getPasswordHash(),
                 entity.isEnabled(),
-                entity.isEmailVerified(),
                 AuthProvider.fromDbValue(entity.getAuthProvider()),
                 entity.getPasswordUpdatedAt(),
                 entity.getCreatedAt(),
@@ -33,7 +32,6 @@ public class UserPersistenceMapper {
         entity.setEmail(user.getEmail().getValue());
         entity.setPasswordHash(user.getPasswordHash());
         entity.setEnabled(user.isEnabled());
-        entity.setEmailVerified(user.isEmailVerified());
         entity.setAuthProvider(user.getAuthProvider().name());
         entity.setPasswordUpdatedAt(user.getPasswordUpdatedAt());
         entity.setDeletedAt(user.getDeletedAt());

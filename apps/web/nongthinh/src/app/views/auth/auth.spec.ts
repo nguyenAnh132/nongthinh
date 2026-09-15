@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { NEVER, of, throwError } from 'rxjs';
 
 import { AuthApiService, RegisterBrandPayload } from '../../core/api/auth-api.service';
@@ -14,7 +14,6 @@ describe('Auth', () => {
   let fixture: ComponentFixture<Auth>;
   let registerBrand: ReturnType<typeof vi.fn>;
   let registerFarmer: ReturnType<typeof vi.fn>;
-  let verifyEmailOtp: ReturnType<typeof vi.fn>;
   let authServiceLogin: ReturnType<typeof vi.fn>;
   let toastError: ReturnType<typeof vi.fn>;
   let toastSuccess: ReturnType<typeof vi.fn>;
@@ -22,7 +21,6 @@ describe('Auth', () => {
   beforeEach(async () => {
     registerBrand = vi.fn(() => of(void 0));
     registerFarmer = vi.fn(() => of(void 0));
-    verifyEmailOtp = vi.fn(() => of(void 0));
     authServiceLogin = vi.fn();
     toastError = vi.fn();
     toastSuccess = vi.fn();
@@ -31,18 +29,12 @@ describe('Auth', () => {
       imports: [Auth],
       providers: [
         provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { url: [{ path: 'register' }] } } },
         {
           provide: AuthApiService,
           useValue: {
             registerBrand,
             registerFarmer,
-            verifyEmailOtp,
-            getOtpConfig: vi.fn(() =>
-              of({ result: { otpLength: 6, resendCooldownSeconds: 60 } }),
-            ),
-            resendEmailOtp: vi.fn(() =>
-              of({ result: { resendCooldownSeconds: 60 } }),
-            ),
           },
         },
         {
@@ -116,6 +108,7 @@ describe('Auth', () => {
     component.profileFormGroup.patchValue({
       firstName: 'Nguyễn',
       lastName: 'Văn A',
+      gender: 'MALE',
       phone: '0912345678',
       provinceId: 'HN',
       communeId: '4dbdf87a-d09c-4f40-b884-dbb06455e13c',
@@ -190,6 +183,7 @@ describe('Auth', () => {
     component.profileFormGroup.patchValue({
       firstName: 'Nguyễn',
       lastName: 'Văn A',
+      gender: 'MALE',
       phone: '0912345678',
     });
 
@@ -199,28 +193,37 @@ describe('Auth', () => {
     expect(toastError).toHaveBeenCalledWith('Email đã được sử dụng.');
   });
 
-  it('keeps the brand success message after OTP verify navigates to pending', () => {
-    prepareBrandProfile();
-    component.otpFormGroup.setValue({
-      d0: '1',
-      d1: '2',
-      d2: '3',
-      d3: '4',
-      d4: '5',
-      d5: '6',
-    });
-    // Skip GSAP view transitions in unit tests
+  it.each(['FARMER', 'BRAND'] as const)('shows registration success and waits for login for %s', (role) => {
+    fixture.detectChanges();
+    if (role === 'BRAND') {
+      prepareBrandProfile();
+      component.profileFormGroup.patchValue({
+        brandName: 'Thương hiệu', phone: '0912345678',
+        representativeName: 'Nguyễn Văn A', representativePhone: '0987654321',
+        representativeEmail: 'representative@example.com',
+      });
+    } else {
+      prepareFarmerProfile();
+      component.profileFormGroup.patchValue({
+        firstName: 'Nguyễn', lastName: 'Văn A', gender: 'MALE', phone: '0912345678',
+      });
+    }
     vi.spyOn(component, 'goToView').mockImplementation((view) => {
       component.currentView = view;
     });
 
-    component.onOtpSubmit();
+    component.onProfileSubmit();
+    fixture.detectChanges();
 
-    expect(component.currentView).toBe('registration-pending');
-    expect(toastSuccess).toHaveBeenCalledWith(
-      expect.stringContaining('Đăng ký thương hiệu thành công'),
-    );
+    expect(component.currentView).toBe('registration-success');
     expect(component.isSubmitting).toBe(false);
+    expect(component.registerFormGroup.value.password).toBeNull();
+    expect(authServiceLogin).not.toHaveBeenCalled();
+    const success = fixture.nativeElement.querySelector('[role="status"]');
+    expect(success.textContent).toContain('Đăng ký thành công');
+    expect(success.textContent).toContain(role === 'BRAND' ? 'brand@example.com' : 'farmer@example.com');
+    success.querySelector('button').click();
+    expect(authServiceLogin).toHaveBeenCalledOnce();
   });
 
   function prepareBrandProfile(): void {

@@ -15,7 +15,6 @@ function shouldSkipAuth(url: string): boolean {
   return (
     url.startsWith(`${base}/farmers`) ||
     url.startsWith(`${base}/brands`) ||
-    url.startsWith(`${base}/otp/`) ||
     url.startsWith(`${base}/refresh`) ||
     url.startsWith(`${base}/logout`) ||
     url.includes('/oauth2/authorization') ||

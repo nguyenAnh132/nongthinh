@@ -16,7 +16,6 @@ import com.nongthinh.auth_service.application.port.out.IdGenerator;
 import com.nongthinh.auth_service.application.port.out.PasswordHash;
 import com.nongthinh.auth_service.application.port.out.keycloak.KeycloakIdp;
 import com.nongthinh.auth_service.application.port.out.repository.UserRepository;
-import com.nongthinh.auth_service.application.service.EmailOtpIssuer;
 import com.nongthinh.auth_service.common.constant.TokenConstant;
 import com.nongthinh.auth_service.common.exception.ErrorCode;
 import com.nongthinh.auth_service.domain.exception.BusinessException;
@@ -35,7 +34,6 @@ public class RegisterBrandUseCaseImpl implements RegisterBrandUseCase {
     private final KeycloakIdp keycloakIdp;
     private final PasswordHash passwordHash;
     private final EventPublisher eventPublisher;
-    private final EmailOtpIssuer emailOtpIssuer;
 
     @Override
     public void execute(RegisterBrandCommand command) {
@@ -64,7 +62,7 @@ public class RegisterBrandUseCaseImpl implements RegisterBrandUseCase {
         RoleRecord role = keycloakIdp.getRoleByName(RoleConstant.ROLE_BRAND, TokenConstant.JWT_TOKEN_PREFIX + clientToken);
         keycloakIdp.assignRealmRoles(keycloakUserId, List.of(role.name()), TokenConstant.JWT_TOKEN_PREFIX + clientToken);
 
-        User newUser = User.createPendingEmailVerification(
+        User newUser = User.create(
             userId,
             keycloakUserId,
             Email.of(command.email()),
@@ -73,15 +71,6 @@ public class RegisterBrandUseCaseImpl implements RegisterBrandUseCase {
             now
         );
         userRepository.save(newUser);
-
-        String userName = command.representativeName();
-        if (userName == null || userName.isBlank()) {
-            userName = command.brandName();
-        }
-        userName = userName != null ? userName.trim() : "";
-        if (userName.isBlank()) {
-            userName = extractLocalPart(command.email());
-        }
 
         eventPublisher.publish(new BrandProfileCreationRequestedEvent(
             idGenerator.generate(),
@@ -103,8 +92,6 @@ public class RegisterBrandUseCaseImpl implements RegisterBrandUseCase {
             command.websiteUrl()
         ));
 
-        emailOtpIssuer.issueInitial(userId, command.email(), userName);
-
         log.info(
                 "[Application - RegisterBrand] Brand account created successfully | userId={} role={} keycloakUserId={} durationMs={}",
                 newUser.getId(),
@@ -112,16 +99,5 @@ public class RegisterBrandUseCaseImpl implements RegisterBrandUseCase {
                 keycloakUserId,
                 System.currentTimeMillis() - start
         );
-    }
-
-    private static String extractLocalPart(String email) {
-        if (email == null) {
-            return "";
-        }
-        int atIndex = email.indexOf('@');
-        if (atIndex <= 0) {
-            return email.trim();
-        }
-        return email.substring(0, atIndex).trim();
     }
 }

@@ -87,14 +87,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   '2016': 'Tài khoản đang chờ quản trị viên duyệt.',
   '2017': 'Tài khoản đã bị từ chối. Vui lòng liên hệ quản trị viên.',
   '2018': 'Tài khoản đang bị vô hiệu hoá.',
-  '2019': 'Email chưa được xác thực. Vui lòng nhập mã OTP để xác thực email.',
   '2020': 'Tài khoản đang bị khoá tạm thời do nhập sai mật khẩu nhiều lần.',
   '2021': 'Phiên không hợp lệ. Vui lòng đăng nhập lại.',
-  '2031': 'Mã OTP đã hết hạn.',
-  '2032': 'Mã OTP không hợp lệ.',
-  '2033': 'Bạn đã nhập sai OTP quá số lần cho phép.',
   '2034': 'Hệ thống email tạm thời không khả dụng.',
-  '2035': 'Không tìm thấy yêu cầu xác thực. Vui lòng đăng ký lại.',
 
   PRO_PROFILE_STATUS_INVALID: 'Trạng thái hồ sơ không cho phép thao tác này.',
   PRO_BRAND_DOCUMENT_NOT_FOUND: 'Chưa có giấy phép kinh doanh. Vui lòng tải lên trước.',
@@ -182,15 +177,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   BUS_EMAIL_ALREADY_EXISTS: 'Email đã được sử dụng.',
   BUS_EMAIL_INVALID: 'Email không hợp lệ.',
   BUS_EMAIL_FORMAT_INVALID: 'Định dạng email không hợp lệ.',
-  BUS_EMAIL_NOT_VERIFIED: 'Email chưa được xác thực. Vui lòng nhập mã OTP để xác thực email.',
-  BUS_EMAIL_ALREADY_VERIFIED: 'Email đã được xác thực.',
   BUS_USER_DISABLED: 'Tài khoản đang bị vô hiệu hoá.',
   BUS_USER_LOCKED: 'Tài khoản đang bị khoá tạm thời do nhập sai mật khẩu nhiều lần.',
-  BUS_OTP_INVALID: 'Mã OTP không hợp lệ.',
-  BUS_OTP_EXPIRED: 'Mã OTP đã hết hạn.',
-  BUS_OTP_ATTEMPT_LIMIT_EXCEEDED: 'Bạn đã nhập sai OTP quá số lần cho phép.',
-  BUS_OTP_RESEND_TOO_FREQUENT: 'Vui lòng đợi trước khi gửi lại mã OTP.',
-  BUS_OTP_RESEND_LIMIT_EXCEEDED: 'Bạn đã gửi lại OTP quá số lần cho phép.',
   NOT_FOUND_USER_NOT_FOUND: 'Không tìm thấy người dùng.',
   AUTH_INVALID_CREDENTIALS: 'Email hoặc mật khẩu không đúng.',
   AUTH_UNAUTHORIZED: 'Bạn chưa đăng nhập.',
@@ -232,7 +220,6 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export type LoginErrorCode =
-  | 'EMAIL_NOT_VERIFIED'
   | 'USER_STATUS_PENDING'
   | 'USER_STATUS_REJECTED'
   | 'USER_STATUS_DISABLED'
@@ -245,10 +232,8 @@ const LOGIN_CODE_MAP: Record<string, LoginErrorCode> = {
   '2016': 'USER_STATUS_PENDING',
   '2017': 'USER_STATUS_REJECTED',
   '2018': 'USER_STATUS_DISABLED',
-  '2019': 'EMAIL_NOT_VERIFIED',
   '2020': 'USER_IS_LOCKED',
   AUTH_INVALID_CREDENTIALS: 'LOGIN_FAILED',
-  BUS_EMAIL_NOT_VERIFIED: 'EMAIL_NOT_VERIFIED',
   BUS_USER_DISABLED: 'USER_STATUS_DISABLED',
   BUS_USER_LOCKED: 'USER_IS_LOCKED',
 };

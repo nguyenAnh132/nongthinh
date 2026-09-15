@@ -18,15 +18,7 @@ spring:
     api-key:
       header-name: ${API_KEY_HEADER_NAME:X-API-KEY}
       current-service-key: ${AUTH_API_KEY:}
-      clients:
-        bo-portal-service:
-          url: ${BO_PORTAL_SERVICE_URL:}
-          api-key: ${BO_PORTAL_API_KEY:}
 
 keycloak:
   url: ${KEYCLOAK_URL:}
   realm: ${KEYCLOAK_REALM:}
-
-app:
-  system-param:
-    cache-ttl-seconds: ${SYSTEM_PARAM_CACHE_TTL_SECONDS:60}

@@ -15,7 +15,6 @@ public final class User {
     private final Email email;
     private String passwordHash;
     private boolean enabled;
-    private boolean emailVerified;
     private final AuthProvider authProvider;
     private Instant passwordUpdatedAt;
     private final Instant createdAt;
@@ -28,7 +27,6 @@ public final class User {
             Email email,
             String passwordHash,
             boolean enabled,
-            boolean emailVerified,
             AuthProvider authProvider,
             Instant passwordUpdatedAt,
             Instant createdAt,
@@ -39,7 +37,6 @@ public final class User {
         this.email = Objects.requireNonNull(email, "email is required");
         this.passwordHash = passwordHash;
         this.enabled = enabled;
-        this.emailVerified = emailVerified;
         this.authProvider = Objects.requireNonNull(authProvider, "authProvider is required");
         this.passwordUpdatedAt = passwordUpdatedAt;
         this.createdAt = Objects.requireNonNull(createdAt, "created at is required");
@@ -53,7 +50,6 @@ public final class User {
             Email email,
             String passwordHash,
             boolean enabled,
-            boolean emailVerified,
             AuthProvider authProvider,
             Instant passwordUpdatedAt,
             Instant createdAt,
@@ -65,7 +61,6 @@ public final class User {
                 email,
                 passwordHash,
                 enabled,
-                emailVerified,
                 authProvider,
                 passwordUpdatedAt,
                 createdAt,
@@ -73,14 +68,14 @@ public final class User {
                 deletedAt);
     }
 
-    public static User createPendingEmailVerification(
+    public static User create(
             UUID id,
             String keycloakId,
             Email email,
             String passwordHash,
             boolean enabled,
             Instant now) {
-        return createPendingEmailVerification(
+        return create(
                 id,
                 keycloakId,
                 email,
@@ -90,7 +85,7 @@ public final class User {
                 now);
     }
 
-    public static User createPendingEmailVerification(
+    public static User create(
             UUID id,
             String keycloakId,
             Email email,
@@ -109,17 +104,11 @@ public final class User {
                 email,
                 passwordHash,
                 enabled,
-                false,
                 authProvider,
                 passwordUpdatedAt,
                 now,
                 now,
                 null);
-    }
-
-    public void completeEmailVerification(Instant now) {
-        this.emailVerified = true;
-        touch(now);
     }
 
     public void setEnabled(boolean enabled, Instant now) {
@@ -149,10 +138,6 @@ public final class User {
         if (!enabled) {
             throw new BusinessException(ErrorCode.USER_DISABLED);
         }
-
-        if (!emailVerified) {
-            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED);
-        }
     }
 
     private void touch(Instant now) {
@@ -177,10 +162,6 @@ public final class User {
 
     public boolean isEnabled() {
         return enabled;
-    }
-
-    public boolean isEmailVerified() {
-        return emailVerified;
     }
 
     public AuthProvider getAuthProvider() {

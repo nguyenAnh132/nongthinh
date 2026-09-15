@@ -31,15 +31,12 @@ public class SecurityConfig {
     private static final String[] PUBLIC_POST_ENDPOINTS = {
         "/farmers",
         "/brands",
-        "/otp/verify",
-        "/otp/resend",
         "/refresh"
     };
 
     private static final String[] PUBLIC_GET_ENDPOINTS = {
         "/login",
         "/logout",
-        "/otp/config",
         "/test/trace"
     };
 
