@@ -1,32 +1,66 @@
 server:
-  port: ${SERVER_PORT:}
+  port: ${SERVER_PORT:9090}
+
   servlet:
-    context-path: ${AUTH_CONTEXT_PATH:}
+    context-path: ${AUTH_CONTEXT_PATH:/auth}
 
 spring:
   datasource:
-    url: ${DATABASE_URL:}
-    username: ${DATABASE_USERNAME:}
-    password: ${DATABASE_PASSWORD:}
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
   data:
     redis:
-      host: ${REDIS_HOST:}
+      host: ${REDIS_HOST}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD}
       timeout: ${REDIS_TIMEOUT:3000}
+
   security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+      client:
+        registration:
+          keycloak:
+            client-id: ${KEYCLOAK_CLIENT_ID}
+            client-secret: ${KEYCLOAK_CLIENT_SECRET}
+            redirect-uri: ${OAUTH2_REDIRECT_URI}
+
+        provider:
+          keycloak:
+            issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
     api-key:
-      header-name: ${API_KEY_HEADER_NAME:X-API-KEY}
-      current-service-key: ${AUTH_API_KEY:}
+      current-service-key: ${AUTH_API_KEY}
+
       clients:
+        profile-service:
+          url: ${AUTH_PROFILE_SERVICE_URL}
+          api-key: ${PROFILE_SERVICE_API_KEY}
+
         bo-portal-service:
-          url: ${BO_PORTAL_SERVICE_URL:}
-          api-key: ${BO_PORTAL_API_KEY:}
+          url: ${BO_PORTAL_SERVICE_URL}
+          api-key: ${BO_PORTAL_SERVICE_API_KEY}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+
+cookie:
+  secure: ${COOKIE_SECURE:true}
+  refresh-max-age-seconds: ${REFRESH_TOKEN_COOKIE_MAX_AGE_SECONDS:5184000}
 
 keycloak:
-  url: ${KEYCLOAK_URL:}
-  realm: ${KEYCLOAK_REALM:}
+  url: ${KEYCLOAK_URL}
+  realm: ${KEYCLOAK_REALM:nongthinh}
+  client-id: ${KEYCLOAK_CLIENT_ID}
+  client-secret: ${KEYCLOAK_CLIENT_SECRET}
 
-app:
-  system-param:
-    cache-ttl-seconds: ${SYSTEM_PARAM_CACHE_TTL_SECONDS:60}
+  client-token-ttl-seconds: ${KEYCLOAK_CLIENT_TOKEN_TTL_SECONDS:60}
+  role-ttl-seconds: ${KEYCLOAK_ROLE_TTL_SECONDS:3600}
+
+caching:
+  system-param-ttl-seconds: ${SYSTEM_PARAM_TTL_SECONDS:60}

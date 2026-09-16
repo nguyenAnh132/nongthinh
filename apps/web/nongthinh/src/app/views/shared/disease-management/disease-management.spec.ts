@@ -85,7 +85,7 @@ describe('DiseaseManagement', () => {
     );
   });
 
-  it('renders a compact disease item and an accessible icon-only action trigger', async () => {
+  it('opens disease details from an accessible compact disease item', async () => {
     listDiseases.mockReturnValue(of({ result: [disease()] }));
     const fixture = TestBed.createComponent(DiseaseManagement);
     fixture.detectChanges();
@@ -93,6 +93,9 @@ describe('DiseaseManagement', () => {
 
     const card = fixture.nativeElement.querySelector('.disease-card') as HTMLElement;
     const trigger = card.querySelector('.action-menu-trigger') as HTMLButtonElement;
+    expect(card.textContent).not.toContain('Tên bệnh:');
+    expect(card.textContent).toContain('Magnaporthe oryzae');
+    expect(card.textContent).toContain('Lúa (RICE)');
     expect(card.textContent).not.toContain('Bộ phận ảnh hưởng:');
     expect(card.textContent).not.toContain('Loại tác nhân:');
     expect(card.textContent).not.toContain('Mô tả:');
@@ -101,6 +104,55 @@ describe('DiseaseManagement', () => {
     expect(trigger.getAttribute('aria-label')).toContain('Rice Blast');
     expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
     expect(trigger.title).toBe('Mở danh sách hành động');
+    expect(card.getAttribute('role')).toBe('button');
+    expect(card.tabIndex).toBe(0);
+    expect(card.querySelector('.record-action-button--edit')).toBeNull();
+    expect(card.querySelector('.record-action-button--delete')).toBeNull();
+
+    card.click();
+    fixture.detectChanges();
+    const detail = fixture.nativeElement.querySelector('.disease-detail-view') as HTMLElement;
+    const editButton = detail.querySelector('.primary-button') as HTMLButtonElement;
+    const deleteButton = detail.querySelector('.detail-delete-button') as HTMLButtonElement;
+    expect(detail.textContent).toContain('Chi tiết bệnh cây trồng');
+    expect(detail.textContent).toContain('Rice Blast');
+    expect(editButton).not.toBeNull();
+    expect(deleteButton).not.toBeNull();
+    expect(editButton.disabled).toBe(false);
+    expect(deleteButton.disabled).toBe(false);
+    expect(editButton.title).toBe('Cập nhật bệnh');
+  });
+
+  it('offers update and delete actions inside editable disease details', async () => {
+    listDiseases.mockReturnValue(of({
+      result: [{ ...disease(), reviewStatus: 'DRAFT' as const }],
+    }));
+    const fixture = TestBed.createComponent(DiseaseManagement);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const card = fixture.nativeElement.querySelector('.disease-card') as HTMLElement;
+    card.click();
+    fixture.detectChanges();
+    const editButton = fixture.nativeElement.querySelector(
+      '.disease-detail-view .primary-button',
+    ) as HTMLButtonElement;
+    const deleteButton = fixture.nativeElement.querySelector(
+      '.detail-delete-button',
+    ) as HTMLButtonElement;
+    expect(editButton.disabled).toBe(false);
+    expect(deleteButton.disabled).toBe(false);
+
+    editButton.click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.disease-editor')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.disease-editor--page')).not.toBeNull();
+
+    fixture.componentInstance.cancelEdit();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.detail-delete-button') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Xoá “Rice Blast”?');
   });
 
   it('debounces keyword changes for 350 ms and resets the explorer to page zero', () => {

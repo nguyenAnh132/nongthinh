@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: post-service
+  datasource:
+    url: jdbc:h2:mem:post_service;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/test
+    api-key:
+      header-name: X-API-KEY
+      current-service-key: test-post-key
+      clients:
+        file-service:
+          url: http://localhost:9095/files
+          api-key: test-file-key
+          connect-timeout-ms: 2000
+          read-timeout-ms: 3000
+        agri-catalog-service:
+          url: http://localhost:9098/agri-catalog
+          connect-timeout-ms: 2000
+          read-timeout-ms: 3000
+  kafka:
+    bootstrap-servers: 127.0.0.1:1
+
+cookie:
+  access-token-name: access_token
+
+post:
+  limits:
+    content-length: 2000
+    media-per-post: 10
+    page-size: 100
+  features:
+    allowed-visibility: PUBLIC
+    allowed-media-type: IMAGE
+
+post-outbox:
+  enabled: false
+  topic: post.engagement.v1
+  poll-ms: 500
+  batch-size: 50

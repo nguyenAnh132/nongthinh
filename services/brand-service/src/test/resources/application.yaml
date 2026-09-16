@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: brand-service
+  datasource:
+    url: jdbc:h2:mem:brand_service;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/test
+    api-key:
+      header-name: X-API-KEY
+      current-service-key: test-brand-key
+      clients:
+        profile-service:
+          url: http://localhost:9092/profile
+          api-key: test-profile-key
+  kafka:
+    bootstrap-servers: 127.0.0.1:1
+    listener:
+      auto-startup: false
+
+cookie:
+  access-token-name: access_token
+
+camunda:
+  bpm:
+    admin-user:
+      id: admin
+      password: admin
+    database:
+      schema-update: true
+    auto-deployment-enabled: true
+    deployment-resource-pattern: classpath*:processes/**/*.bpmn

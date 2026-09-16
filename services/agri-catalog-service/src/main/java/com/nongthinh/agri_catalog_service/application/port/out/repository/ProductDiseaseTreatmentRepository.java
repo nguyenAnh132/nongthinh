@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 import com.nongthinh.agri_catalog_service.domain.product.ProductDiseaseTreatment;
 import com.nongthinh.agri_catalog_service.application.model.PublicDiseaseProductRecommendation;
+import com.nongthinh.agri_catalog_service.application.view.PageView;
 
 public interface ProductDiseaseTreatmentRepository {
 
@@ -24,4 +25,7 @@ public interface ProductDiseaseTreatmentRepository {
             UUID diseaseId, int limit);
 
     ProductDiseaseTreatment save(ProductDiseaseTreatment productDiseaseTreatment);
+
+    PageView<PublicDiseaseProductRecommendation> findRankedPublicRecommendationsByDiseaseId(
+            UUID diseaseId, int page, int size);
 }

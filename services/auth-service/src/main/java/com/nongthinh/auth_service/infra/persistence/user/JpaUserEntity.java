@@ -28,18 +28,6 @@ public class JpaUserEntity {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password_hash")
-    private String passwordHash;
-
-    @Column(name = "enabled", nullable = false)
-    private boolean enabled;
-
-    @Column(name = "email_verified", nullable = false)
-    private boolean emailVerified;
-
-    @Column(name = "auth_provider", nullable = false)
-    private String authProvider;
-
     @Column(name = "password_updated_at")
     private Instant passwordUpdatedAt;
 

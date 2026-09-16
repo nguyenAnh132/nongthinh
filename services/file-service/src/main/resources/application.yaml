@@ -1,17 +1,47 @@
 spring:
   application:
     name: file-service
+
   profiles:
-    active: dev
+    default: dev
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+    baseline-on-migrate: true
+
+  security:
+    api-key:
+      header-name: X-API-KEY
 
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 52MB
 
+cookie:
+  access-token-name: access_token
+
 app:
   upload:
     max-size-bytes:
+      AVATAR: 2097152
+      BRAND_LOGO: 2097152
+      BRAND_BANNER: 5242880
+      BUSINESS_LICENSE: 10485760
       PRODUCT_IMAGE: 5242880
       DISEASE_IMAGE: 5242880
       DIAGNOSIS_IMAGE: 5242880
@@ -31,3 +61,8 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+logging:
+  level:
+    root: INFO
+    com.nongthinh: DEBUG

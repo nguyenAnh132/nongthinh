@@ -15,11 +15,9 @@ import com.nongthinh.auth_service.application.port.in.user.RegisterFarmerUseCase
 import com.nongthinh.auth_service.application.port.out.ClockProvider;
 import com.nongthinh.auth_service.application.port.out.EventPublisher;
 import com.nongthinh.auth_service.application.port.out.IdGenerator;
-import com.nongthinh.auth_service.application.port.out.PasswordHash;
 import com.nongthinh.auth_service.application.port.out.keycloak.KeycloakIdp;
 import com.nongthinh.auth_service.application.port.out.keycloak.RoleRecord;
 import com.nongthinh.auth_service.application.port.out.repository.UserRepository;
-import com.nongthinh.auth_service.application.service.EmailOtpIssuer;
 import com.nongthinh.auth_service.common.constant.RoleConstant;
 import com.nongthinh.auth_service.common.constant.TokenConstant;
 import com.nongthinh.auth_service.common.exception.ErrorCode;
@@ -36,9 +34,7 @@ public class RegisterFarmerUseCaseImpl implements RegisterFarmerUseCase {
     private final IdGenerator idGenerator;
     private final ClockProvider clockProvider;
     private final KeycloakIdp keycloakIdp;
-    private final PasswordHash passwordHash;
     private final EventPublisher eventPublisher;
-    private final EmailOtpIssuer emailOtpIssuer;
 
     @Override
     public void execute(RegisterFarmerCommand command) {
@@ -66,20 +62,13 @@ public class RegisterFarmerUseCaseImpl implements RegisterFarmerUseCase {
         RoleRecord role = keycloakIdp.getRoleByName(RoleConstant.ROLE_FARMER, TokenConstant.JWT_TOKEN_PREFIX + clientToken);
         keycloakIdp.assignRealmRoles(keycloakUserId, List.of(role.name()), TokenConstant.JWT_TOKEN_PREFIX + clientToken);
 
-        User newUser = User.createPendingEmailVerification(
+        User newUser = User.create(
             userId,
             keycloakUserId,
             Email.of(command.email()),
-            passwordHash.hash(command.email(), command.password()),
-            command.enabled(),
             now
         );
         userRepository.save(newUser);
-
-        String userName = (command.firstName() + " " + command.lastName()).trim();
-        if (userName.isBlank()) {
-            userName = extractLocalPart(command.email());
-        }
 
         eventPublisher.publish(new FarmerProfileCreationRequestedEvent(
             idGenerator.generate(),
@@ -96,8 +85,6 @@ public class RegisterFarmerUseCaseImpl implements RegisterFarmerUseCase {
             command.avatarUrl()
         ));
 
-        emailOtpIssuer.issueInitial(userId, command.email(), userName);
-
         log.info(
                 "[Application - RegisterFarmer] Farmer account created successfully | userId={} role={} keycloakUserId={} durationMs={}",
                 newUser.getId(),
@@ -105,17 +92,6 @@ public class RegisterFarmerUseCaseImpl implements RegisterFarmerUseCase {
                 keycloakUserId,
                 System.currentTimeMillis() - start
         );
-    }
-
-    private static String extractLocalPart(String email) {
-        if (email == null) {
-            return "";
-        }
-        int atIndex = email.indexOf('@');
-        if (atIndex <= 0) {
-            return email.trim();
-        }
-        return email.substring(0, atIndex).trim();
     }
 }
 

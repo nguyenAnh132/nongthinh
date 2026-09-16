@@ -202,6 +202,12 @@ export interface ProductView extends ProductCreationPayload {
   moderationReason?: string | null;
 }
 
+export interface PublicProductDetail {
+  product: ProductView;
+  categoryName: string | null;
+  treatments: { diseaseName: string; treatment: ProductDiseaseTreatmentView }[];
+}
+
 export type ProductUpdatePayload = Omit<ProductCreationPayload, 'brandId'>;
 export type ProductPublicationStatus = 'PUBLISHED' | 'UNPUBLISHED';
 
@@ -331,11 +337,26 @@ export interface AiModelDeploymentView extends AiModelDeploymentPayload {
 export interface DiseaseRecommendation {
   product: {
     id: string;
+    brandId: string;
     name: string;
     slug: string;
     thumbnailUrl: string | null;
+    shortDescription?: string | null;
+    manufacturerName?: string | null;
+    purchaseUrl?: string | null;
   };
   treatment: ProductDiseaseTreatmentView;
+  averageRating?: number;
+  reviewCount?: number;
+}
+
+export interface DiseaseRecommendationPage {
+  items: DiseaseRecommendation[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -522,6 +543,16 @@ export class AgriCatalogApiService {
     return this.http.get<ApiResponse<ProductView[]>>(`${this.baseUrl}/products`);
   }
 
+  searchPublicProducts(keyword = '', page = 0): Observable<ApiResponse<PageView<ProductView>>> {
+    return this.http.get<ApiResponse<PageView<ProductView>>>(`${this.baseUrl}/public/products/page`, {
+      params: { keyword, page },
+    });
+  }
+
+  getPublicProduct(productId: string): Observable<ApiResponse<PublicProductDetail>> {
+    return this.http.get<ApiResponse<PublicProductDetail>>(`${this.baseUrl}/public/products/${productId}`);
+  }
+
   getProduct(productId: string): Observable<ApiResponse<ProductView>> {
     return this.http.get<ApiResponse<ProductView>>(`${this.baseUrl}/products/${productId}`);
   }
@@ -608,6 +639,16 @@ export class AgriCatalogApiService {
     return this.http.get<ApiResponse<DiseaseRecommendation[]>>(
       `${this.baseUrl}/public/diseases/${diseaseId}/recommendations`,
       { params: { limit } },
+    );
+  }
+
+  listDiseaseRecommendations(
+    diseaseId: string,
+    page = 0,
+  ): Observable<ApiResponse<DiseaseRecommendationPage>> {
+    return this.http.get<ApiResponse<DiseaseRecommendationPage>>(
+      `${this.baseUrl}/public/diseases/${diseaseId}/recommendations/page`,
+      { params: { page } },
     );
   }
 

@@ -1,7 +1,6 @@
 import {
   Component,
   OnInit,
-  OnDestroy,
   AfterViewInit,
   ViewChild,
   ElementRef,
@@ -23,31 +22,21 @@ import {
   RegisterFarmerPayload,
   RegisterBrandPayload,
   RegistrationType,
-  OtpConfigView,
-  OtpResendCooldownView,
 } from '../../core/api/auth-api.service';
 import { ProfileService, ProfileField } from '../../core/service/profile.service';
 import { AuthService } from '../../core/auth/auth.service';
-import { apiErrorMessage, unwrapApiResult } from '../../core/models/api-response';
+import { apiErrorMessage } from '../../core/models/api-response';
 import { LocationService } from '../../core/service/location.service';
 import { ToastService } from '../../shared/toast/toast.service';
 import { finalize, timeout, TimeoutError } from 'rxjs';
 
 export const REGISTRATION_REQUEST_TIMEOUT_MS = 30_000;
-/** Khớp DefaultParamValueConstant.DEFAULT_OTP_RESEND_COOLDOWN_SECONDS */
-export const DEFAULT_OTP_RESEND_COOLDOWN_SECONDS = 60;
-/** Khớp DefaultParamValueConstant.DEFAULT_OTP_LENGTH + VerifyEmailOtpRequest (4–8) */
-export const DEFAULT_OTP_LENGTH = 6;
-export const MIN_OTP_LENGTH = 4;
-export const MAX_OTP_LENGTH = 8;
-
 type AuthView =
   | 'login'
   | 'role'
   | 'register'
   | 'profile'
-  | 'otp'
-  | 'registration-pending';
+  | 'registration-success';
 
 @Component({
   selector: 'app-auth',
@@ -56,7 +45,7 @@ type AuthView =
   templateUrl: './auth.html',
   styleUrl: './auth.scss',
 })
-export class Auth implements OnInit, OnDestroy, AfterViewInit {
+export class Auth implements OnInit, AfterViewInit {
   currentView: AuthView = 'login';
   isSubmitting = false;
   isRedirecting = false;
@@ -66,21 +55,10 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
 
   registerFormGroup!: FormGroup;
   profileFormGroup!: FormGroup;
-  otpFormGroup!: FormGroup;
 
   registrationEmail = '';
   private pendingEmail = '';
   private pendingPassword = '';
-
-  /** Thời gian chờ gửi lại OTP (giây), lấy từ system param. */
-  resendCooldownSeconds = DEFAULT_OTP_RESEND_COOLDOWN_SECONDS;
-  /** Số giây còn lại trước khi được gửi lại OTP. */
-  resendRemainingSeconds = 0;
-  private resendTimerId: ReturnType<typeof setInterval> | null = null;
-
-  /** Độ dài OTP (số ô), lấy từ system param OTP_LENGTH. */
-  otpLength = DEFAULT_OTP_LENGTH;
-  otpDigitKeys: string[] = [];
 
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
@@ -101,8 +79,7 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('roleForm') roleFormRef!: ElementRef;
   @ViewChild('registerForm') registerFormRef!: ElementRef;
   @ViewChild('profileForm') profileFormRef!: ElementRef;
-  @ViewChild('otpForm') otpFormRef!: ElementRef;
-  @ViewChild('pendingForm') pendingFormRef!: ElementRef;
+  @ViewChild('successForm') successFormRef!: ElementRef;
 
   constructor() {
     this.registerFormGroup = this.fb.group({
@@ -111,7 +88,6 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
       confirmPassword: ['', Validators.required],
     });
     this.profileFormGroup = this.fb.group({});
-    this.rebuildOtpForm(DEFAULT_OTP_LENGTH);
   }
 
   ngOnInit() {
@@ -143,18 +119,13 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  ngOnDestroy() {
-    this.clearResendTimer();
-  }
-
   private initFormVisibility() {
     const allForms = [
       this.loginFormRef?.nativeElement,
       this.roleFormRef?.nativeElement,
       this.registerFormRef?.nativeElement,
       this.profileFormRef?.nativeElement,
-      this.otpFormRef?.nativeElement,
-      this.pendingFormRef?.nativeElement,
+      this.successFormRef?.nativeElement,
     ].filter(Boolean);
 
     allForms.forEach((form) => gsap.set(form, { display: 'none' }));
@@ -190,10 +161,8 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
         return this.registerFormRef?.nativeElement ?? null;
       case 'profile':
         return this.profileFormRef?.nativeElement ?? null;
-      case 'otp':
-        return this.otpFormRef?.nativeElement ?? null;
-      case 'registration-pending':
-        return this.pendingFormRef?.nativeElement ?? null;
+      case 'registration-success':
+        return this.successFormRef?.nativeElement ?? null;
       default:
         return null;
     }
@@ -323,7 +292,7 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Flow mới: Submit profile → POST /farmers hoặc /brands
    * (gộp email + password + profile fields trong 1 request)
-   * Backend tự gửi OTP email → chuyển sang OTP view
+   * Đăng ký thành công → hiển thị nút đăng nhập
    */
   onProfileSubmit() {
     if (this.profileFields.length === 0) {
@@ -365,8 +334,7 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
         finalize(() => this.finishSubmitting()),
       ).subscribe({
         next: () => {
-          this.otpFormGroup.reset();
-          this.enterOtpView();
+          this.showRegistrationSuccess();
         },
         error: (err) => {
           this.toast.error(
@@ -394,8 +362,7 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
         finalize(() => this.finishSubmitting()),
       ).subscribe({
         next: () => {
-          this.otpFormGroup.reset();
-          this.enterOtpView();
+          this.showRegistrationSuccess();
         },
         error: (err) => {
           this.toast.error(
@@ -426,7 +393,7 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
 
   private registrationErrorMessage(err: unknown, fallback: string): string {
     if (err instanceof TimeoutError) {
-      return 'Yêu cầu đăng ký quá thời gian. Vui lòng kiểm tra email OTP trước khi thử lại.';
+      return 'Yêu cầu đăng ký quá thời gian. Vui lòng thử đăng nhập để kiểm tra tài khoản trước khi đăng ký lại.';
     }
     return apiErrorMessage(err, fallback);
   }
@@ -449,173 +416,11 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
     return false;
   }
 
-  /**
-   * Flow mới: OTP verify → POST /otp/verify (chỉ email + otp)
-   * Farmer: thành công → redirect Keycloak login
-   * Brand: thành công → hiện "chờ duyệt"
-   */
-  onOtpSubmit() {
-    const otp = this.collectOtpFromForm();
-    if (otp.length !== this.otpLength) {
-      this.toast.error(`Vui lòng nhập đủ ${this.otpLength} chữ số OTP.`);
-      return;
-    }
-
-    this.isSubmitting = true;
-
-    this.authApi
-      .verifyEmailOtp({ email: this.pendingEmail, otp })
-      .pipe(finalize(() => this.finishSubmitting()))
-      .subscribe({
-        next: () => {
-          if (this.selectedRole === 'BRAND') {
-            this.goToView('registration-pending');
-            this.toast.success(
-              'Đăng ký thương hiệu thành công. Tài khoản đang chờ quản trị viên duyệt.',
-            );
-            this.changeDetectorRef.markForCheck();
-          } else {
-            this.toast.success('Xác thực email thành công. Đang chuyển đến đăng nhập...');
-            this.changeDetectorRef.markForCheck();
-            this.authService.login();
-          }
-        },
-        error: (err) => {
-          this.toast.error(apiErrorMessage(err, 'Mã OTP không hợp lệ hoặc đã hết hạn.'));
-        },
-      });
-  }
-
-  get canResendOtp(): boolean {
-    return this.resendRemainingSeconds <= 0 && !this.isSubmitting;
-  }
-
-  get isResendCooldownActive(): boolean {
-    return this.resendRemainingSeconds > 0;
-  }
-
-  get resendCountdownLabel(): string {
-    const total = Math.max(0, this.resendRemainingSeconds);
-    const minutes = Math.floor(total / 60);
-    const seconds = total % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }
-
-  /**
-   * Flow mới: Resend OTP → POST /otp/resend (chỉ email)
-   */
-  resendOtp(event: Event) {
-    event.preventDefault();
-    if (!this.pendingEmail || !this.canResendOtp) {
-      return;
-    }
-
-    this.isSubmitting = true;
-
-    this.authApi.resendEmailOtp({ email: this.pendingEmail }).pipe(
-      finalize(() => this.finishSubmitting()),
-    ).subscribe({
-      next: (res) => {
-        const cooldown = this.resolveCooldownSeconds(unwrapApiResult<OtpResendCooldownView>(res));
-        this.resendCooldownSeconds = cooldown;
-        this.startResendCountdown(cooldown);
-        this.toast.success('Mã OTP đã được gửi lại.');
-      },
-      error: (err) => {
-        this.toast.error(apiErrorMessage(err, 'Không thể gửi lại mã OTP.'));
-      },
-    });
-  }
-
-  private enterOtpView() {
-    this.goToView('otp');
-    this.loadOtpConfigAndStart();
-  }
-
-  private loadOtpConfigAndStart() {
-    if (!isPlatformBrowser(this.platformId)) {
-      this.applyOtpConfig(this.otpLength, this.resendCooldownSeconds);
-      return;
-    }
-
-    this.authApi.getOtpConfig().subscribe({
-      next: (res) => {
-        const config = unwrapApiResult<OtpConfigView>(res);
-        this.applyOtpConfig(
-          this.resolveOtpLength(config),
-          this.resolveCooldownSeconds(config),
-        );
-      },
-      error: () => {
-        this.applyOtpConfig(DEFAULT_OTP_LENGTH, DEFAULT_OTP_RESEND_COOLDOWN_SECONDS);
-      },
-    });
-  }
-
-  private applyOtpConfig(otpLength: number, cooldownSeconds: number) {
-    this.rebuildOtpForm(otpLength);
-    this.resendCooldownSeconds = cooldownSeconds;
-    this.startResendCountdown(cooldownSeconds);
-  }
-
-  private rebuildOtpForm(length: number) {
-    const otpLength = this.clampOtpLength(length);
-    this.otpLength = otpLength;
-    this.otpDigitKeys = Array.from({ length: otpLength }, (_, i) => `d${i}`);
-
-    const controls: Record<string, ReturnType<FormBuilder['control']>> = {};
-    for (const key of this.otpDigitKeys) {
-      controls[key] = this.fb.control('');
-    }
-    this.otpFormGroup = this.fb.group(controls);
+  private showRegistrationSuccess(): void {
+    this.pendingPassword = '';
+    this.registerFormGroup.reset();
+    this.goToView('registration-success');
     this.changeDetectorRef.markForCheck();
-  }
-
-  private resolveOtpLength(view: OtpConfigView | null): number {
-    const length = view?.otpLength;
-    if (typeof length === 'number' && Number.isFinite(length)) {
-      return this.clampOtpLength(length);
-    }
-    return DEFAULT_OTP_LENGTH;
-  }
-
-  private clampOtpLength(length: number): number {
-    return Math.min(MAX_OTP_LENGTH, Math.max(MIN_OTP_LENGTH, Math.floor(length)));
-  }
-
-  private resolveCooldownSeconds(
-    view: Pick<OtpResendCooldownView, 'resendCooldownSeconds'> | null,
-  ): number {
-    const seconds = view?.resendCooldownSeconds;
-    if (typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0) {
-      return Math.floor(seconds);
-    }
-    return DEFAULT_OTP_RESEND_COOLDOWN_SECONDS;
-  }
-
-  private startResendCountdown(seconds: number) {
-    this.clearResendTimer();
-    this.resendRemainingSeconds = Math.max(0, Math.floor(seconds));
-    this.changeDetectorRef.markForCheck();
-
-    if (this.resendRemainingSeconds <= 0 || !isPlatformBrowser(this.platformId)) {
-      return;
-    }
-
-    this.resendTimerId = setInterval(() => {
-      this.resendRemainingSeconds = Math.max(0, this.resendRemainingSeconds - 1);
-      if (this.resendRemainingSeconds <= 0) {
-        this.clearResendTimer();
-      }
-      this.changeDetectorRef.markForCheck();
-    }, 1000);
-  }
-
-  private clearResendTimer() {
-    if (this.resendTimerId != null) {
-      clearInterval(this.resendTimerId);
-      this.resendTimerId = null;
-    }
   }
 
   backToRegister() {
@@ -626,40 +431,4 @@ export class Auth implements OnInit, OnDestroy, AfterViewInit {
     this.goToView('role', 'backward');
   }
 
-  backToProfile() {
-    this.goToView('profile', 'backward');
-  }
-
-  onOtpInput(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const digit = input.value.replace(/\D/g, '').slice(0, 1);
-    if (digit !== input.value) {
-      input.value = digit;
-      const controlName = input.getAttribute('formcontrolname');
-      if (controlName) {
-        this.otpFormGroup.get(controlName)?.setValue(digit, { emitEvent: false });
-      }
-    }
-    if (digit.length === 1) {
-      const nextInput = input.nextElementSibling as HTMLInputElement | null;
-      if (nextInput) {
-        nextInput.focus();
-      }
-    }
-  }
-
-  onOtpKeydown(event: KeyboardEvent) {
-    const input = event.target as HTMLInputElement;
-    if (event.key === 'Backspace' && input.value === '') {
-      const prevInput = input.previousElementSibling as HTMLInputElement | null;
-      if (prevInput) {
-        prevInput.focus();
-      }
-    }
-  }
-
-  private collectOtpFromForm(): string {
-    const v = this.otpFormGroup.value as Record<string, string>;
-    return this.otpDigitKeys.map((k) => (v[k] ?? '').trim()).join('');
-  }
 }

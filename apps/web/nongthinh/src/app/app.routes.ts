@@ -41,6 +41,14 @@ export const routes: Routes = [
           import('./views/user/diagnosis/diagnosis').then((m) => m.FarmerDiagnosis),
       },
       {
+        path: 'products',
+        loadComponent: () => import('./views/user/products/products').then((m) => m.PublicProducts),
+      },
+      {
+        path: 'products/:productId',
+        loadComponent: () => import('./views/user/products/product-detail').then((m) => m.PublicProductDetailPage),
+      },
+      {
         path: 'people/:userId',
         loadComponent: () =>
           import('./views/user/profile/community-profile').then((m) => m.CommunityProfile),

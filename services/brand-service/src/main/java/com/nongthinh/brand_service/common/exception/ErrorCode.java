@@ -26,6 +26,15 @@ public enum ErrorCode {
     OUTCOME_INVALID("BRAND_OUTCOME_INVALID", "Outcome is invalid", ErrorType.VALIDATION),
     APPROVAL_PROCESS_NOT_FOUND("BRAND_APPROVAL_PROCESS_NOT_FOUND", "Brand approval process not found", ErrorType.NOT_FOUND),
     PROCESS_MESSAGE_CORRELATION_FAILED("BRAND_PROCESS_MESSAGE_CORRELATION_FAILED", "Failed to correlate process message", ErrorType.BUSINESS_RULE),
+    FORBIDDEN("BRAND_FORBIDDEN", "Forbidden", ErrorType.AUTHORIZATION),
+    VALIDATION_FAILED("BRAND_VALIDATION_FAILED", "Validation failed", ErrorType.VALIDATION),
+    REVISION_REASON_TOO_LONG("BRAND_REVISION_REASON_TOO_LONG", "Revision reason must not exceed {max} characters", ErrorType.VALIDATION),
+    REJECTION_REASON_TOO_LONG("BRAND_REJECTION_REASON_TOO_LONG", "Rejection reason must not exceed {max} characters", ErrorType.VALIDATION),
+    PHONE_REQUIRED("BRAND_PHONE_REQUIRED", "Phone number is required", ErrorType.VALIDATION),
+    PHONE_INVALID("BRAND_PHONE_INVALID", "Phone number must contain exactly 10 digits", ErrorType.VALIDATION),
+    VERIFICATION_RESULT_INVALID("BRAND_VERIFICATION_RESULT_INVALID", "Verification result is invalid", ErrorType.VALIDATION),
+    NOTE_TOO_LONG("BRAND_NOTE_TOO_LONG", "Note must not exceed {max} characters", ErrorType.VALIDATION),
+    INTERNAL_ERROR("BRAND_INTERNAL_ERROR", "Internal server error", ErrorType.SYSTEM),
     ;
 
     private final String code;

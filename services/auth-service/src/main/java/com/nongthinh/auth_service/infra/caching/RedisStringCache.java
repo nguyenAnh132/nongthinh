@@ -20,9 +20,10 @@ public class RedisStringCache {
             return Optional.ofNullable(redisTemplate.opsForValue().get(key));
         } catch (Exception ex) {
             log.warn(
-                    "[Infrastructure - Redis]"
+                    "[Infrastructure - Redis] Failed to read from Redis | key={}, cause={}",
+                    key,
+                    ex.getMessage()
             );
-            log.warn("Failed to read from Redis, key={}. cause={}", key, ex.getMessage());
             return Optional.empty();
         }
     }
@@ -31,7 +32,7 @@ public class RedisStringCache {
         try {
             redisTemplate.opsForValue().set(key, value, ttl);
         } catch (Exception ex) {
-            log.warn("Failed to write to Redis, key={}. cause={}", key, ex.getMessage());
+            log.warn("[Infrastructure - Redis] Failed to write to Redis | key={}. cause={}", key, ex.getMessage());
         }
     }
 
@@ -39,7 +40,7 @@ public class RedisStringCache {
         try {
             redisTemplate.delete(key);
         } catch (Exception ex) {
-            log.warn("Failed to invalidate Redis key={}. cause={}", key, ex.getMessage());
+            log.warn("[Infrastructure - Redis] Failed to invalidate Redis | key={}. cause={}", key, ex.getMessage());
         }
     }
 
@@ -51,7 +52,7 @@ public class RedisStringCache {
             }
             return Optional.of(Duration.ofSeconds(seconds));
         } catch (Exception ex) {
-            log.warn("Failed to read TTL from Redis, key={}. cause={}", key, ex.getMessage());
+            log.warn("[Infrastructure - Redis] Failed to read TTL from Redis | key={}. cause={}", key, ex.getMessage());
             return Optional.empty();
         }
     }

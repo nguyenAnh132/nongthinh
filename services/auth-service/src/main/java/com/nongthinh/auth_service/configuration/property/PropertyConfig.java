@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableConfigurationProperties({
     KeycloakProperties.class,
-    SystemParamCacheProperties.class,
     KeycloakCacheProperties.class
 })
 public class PropertyConfig {

@@ -14,7 +14,6 @@ import { finalize, forkJoin, map, switchMap, throwError } from 'rxjs';
 import {
   AgriCatalogApiService,
   CropTypeView,
-  DiseaseRecommendation,
   DiseaseView,
 } from '../../../core/api/agri-catalog-api.service';
 import {
@@ -27,6 +26,7 @@ import {
 import { FileApiService, FileView } from '../../../core/api/file-api.service';
 import { apiErrorMessage, unwrapApiResult } from '../../../core/models/api-response';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { RecommendedProducts } from './recommended-products';
 
 interface LocalPreview {
   file: File;
@@ -36,7 +36,7 @@ interface LocalPreview {
 @Component({
   selector: 'app-farmer-diagnosis',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe],
+  imports: [CommonModule, ReactiveFormsModule, DatePipe, RecommendedProducts],
   templateUrl: './diagnosis.html',
   styleUrl: './diagnosis.scss',
 })
@@ -72,9 +72,9 @@ export class FarmerDiagnosis implements OnDestroy {
   previews: LocalPreview[] = [];
   history: HistorySummary[] = [];
   result: DiagnosisResult | null = null;
+  recommendationSnapshot: DiagnosisResult | null = null;
   historyDetail: DiagnosisHistoryDetail | null = null;
   selectedDisease: DiseaseView | null = null;
-  recommendations: DiseaseRecommendation[] = [];
   loadingCrops = true;
   loadingHistory = true;
   loadingHistoryDetail = false;
@@ -110,6 +110,10 @@ export class FarmerDiagnosis implements OnDestroy {
 
   @HostListener('document:keydown.escape')
   closeModalOnEscape(): void {
+    if (this.recommendationSnapshot) {
+      this.recommendationSnapshot = null;
+      return;
+    }
     if (this.zoomedHistoryImage) {
       this.closeHistoryImage();
       return;
@@ -249,12 +253,8 @@ export class FarmerDiagnosis implements OnDestroy {
     this.loadingDisease = true;
     this.diseaseDetailError = '';
     this.selectedDisease = null;
-    this.recommendations = [];
     this.focusDiseaseModal();
-    forkJoin({
-      disease: this.catalogApi.getPublishedDisease(diseaseId),
-      recommendations: this.catalogApi.getDiseaseRecommendations(diseaseId),
-    })
+    this.catalogApi.getPublishedDisease(diseaseId)
       .pipe(
         finalize(() => {
           if (requestVersion !== this.diseaseRequestVersion) return;
@@ -263,7 +263,7 @@ export class FarmerDiagnosis implements OnDestroy {
         }),
       )
       .subscribe({
-        next: ({ disease, recommendations }) => {
+        next: (disease) => {
           if (requestVersion !== this.diseaseRequestVersion) return;
           const diseaseDetail = unwrapApiResult<DiseaseView>(disease);
           if (!diseaseDetail) {
@@ -271,19 +271,18 @@ export class FarmerDiagnosis implements OnDestroy {
             return;
           }
           this.selectedDisease = diseaseDetail;
-          this.recommendations = unwrapApiResult<DiseaseRecommendation[]>(recommendations) ?? [];
         },
         error: (error) => {
           if (requestVersion !== this.diseaseRequestVersion) return;
           this.diseaseDetailError = apiErrorMessage(
             error,
-            'Không thể tải thông tin bệnh và khuyến nghị.',
+            'Không thể tải thông tin bệnh.',
           );
         },
       });
   }
 
-  selectHistory(item: HistorySummary): void {
+  selectHistory(item: HistorySummary, showRecommendations = false): void {
     if (this.loadingHistoryDetail) return;
     const requestVersion = ++this.historySelectionVersion;
     this.historyModalOpen = true;
@@ -314,6 +313,7 @@ export class FarmerDiagnosis implements OnDestroy {
             return;
           }
           this.historyDetail = detail;
+          if (showRecommendations) this.recommendationSnapshot = detail.snapshot;
           this.loadHistoryImages(detail.snapshot, requestVersion);
         },
         error: (error) => {
@@ -321,6 +321,15 @@ export class FarmerDiagnosis implements OnDestroy {
           this.historyDetailError = apiErrorMessage(error, 'Không thể tải lịch sử chẩn đoán.');
         },
       });
+  }
+
+  showSelectedDiseaseProducts(): void {
+    const snapshot = this.historyModalOpen ? this.historyDetail?.snapshot : this.result;
+    if (!snapshot || !this.selectedDisease) return;
+    this.recommendationSnapshot = {
+      ...snapshot,
+      groups: snapshot.groups.filter(group => group.disease?.id === this.selectedDisease?.id),
+    };
   }
 
   retryHistoryDetail(): void {
@@ -410,7 +419,6 @@ export class FarmerDiagnosis implements OnDestroy {
     this.diseaseModalOpen = false;
     this.loadingDisease = false;
     this.selectedDisease = null;
-    this.recommendations = [];
     this.diseaseDetailError = '';
   }
 

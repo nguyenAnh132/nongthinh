@@ -133,7 +133,14 @@
             <span class="product-status" [attr.data-status]="statusKey(product)">{{
               statusLabel(product)
             }}</span>
-            <h2>{{ product.name }}</h2>
+            <div class="detail-title-row">
+              <h2>{{ product.name }}</h2>
+              @if (safePurchaseUrl(product.purchaseUrl); as url) {
+                <a class="purchase-button" [href]="url" target="_blank" rel="noopener noreferrer">
+                  Mua sản phẩm
+                </a>
+              }
+            </div>
             <p class="detail-category">{{ categoryLabel(product.categoryId) }}</p>
             <div
               class="detail-rating"
@@ -217,16 +224,6 @@
             </article>
           } @empty {
             <p class="muted">Chưa có thông tin điều trị.</p>
-          }
-        </div>
-        <div class="detail-section">
-          <h3>Liên kết mua hàng</h3>
-          @if (safePurchaseUrl(product.purchaseUrl); as url) {
-            <a [href]="url" target="_blank" rel="noopener noreferrer"
-              >{{ product.purchaseUrl }} ↗</a
-            >
-          } @else {
-            <p class="muted">{{ product.purchaseUrl || 'Chưa cập nhật' }}</p>
           }
         </div>
       </section>

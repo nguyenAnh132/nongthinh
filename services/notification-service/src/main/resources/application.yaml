@@ -1,30 +1,81 @@
 spring:
   application:
     name: notification-service
+
   profiles:
     default: dev
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+    baseline-on-migrate: true
+
+  security:
+    api-key:
+      header-name: X-API-KEY
+
+  mail:
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   kafka:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
     consumer:
+      group-id: notification-service
       enable-auto-commit: false
-  jpa:
-    open-in-view: false
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
   mvc:
     async:
-      request-timeout: 30m
-  flyway:
-    enabled: true
+      request-timeout: ${NOTIFICATION_ASYNC_REQUEST_TIMEOUT:30m}
+
+cookie:
+  access-token-name: access_token
 
 in-app-notification:
   enabled: ${IN_APP_NOTIFICATION_ENABLED:true}
+
 post-realtime:
   enabled: ${POST_REALTIME_ENABLED:true}
   topic: ${POST_ENGAGEMENT_TOPIC:post.engagement.v1}
+
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+logging:
+  level:
+    root: INFO
+    com.nongthinh: DEBUG

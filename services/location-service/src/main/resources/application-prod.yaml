@@ -1,7 +1,19 @@
-keycloak:
-  url: ${KEYCLOAK_URL:}
-  realm: ${KEYCLOAK_REALM:}
+server:
+  port: ${LOCATION_SERVICE_PORT:9094}
+  servlet:
+    context-path: ${LOCATION_CONTEXT_PATH:/location}
 
 spring:
-  application:
-    name: location-service
+  datasource:
+    url: ${LOCATION_SERVICE_DB_URL}
+    username: ${LOCATION_SERVICE_DB_USERNAME}
+    password: ${LOCATION_SERVICE_DB_PASSWORD}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+    api-key:
+      current-service-key: ${LOCATION_SERVICE_API_KEY}

@@ -582,41 +582,13 @@ button:disabled {
 .disease-detail-copy {
   max-width: 840px;
 }
-.disease-detail-copy h3,
-.recommendation-list h3 {
+.disease-detail-copy h3 {
   font-size: 16px;
 }
 .disease-detail-copy p {
   color: #476050;
   font-size: 12px;
   line-height: 1.55;
-}
-.recommendation-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-top: 18px;
-}
-.recommendation-list h3 {
-  grid-column: 1 / -1;
-  margin-bottom: 0;
-}
-.recommendation-list article {
-  padding: 12px;
-  border: 1px solid #e0e6e2;
-  border-radius: 8px;
-  background: #fafbfa;
-}
-.recommendation-list article strong {
-  font-size: 11px;
-}
-.recommendation-list article span,
-.recommendation-list article p {
-  display: block;
-  margin: 7px 0 0;
-  color: #65756b;
-  font-size: 10px;
-  line-height: 1.5;
 }
 .empty-copy {
   color: #718078;

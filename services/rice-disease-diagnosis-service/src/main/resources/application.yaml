@@ -1,22 +1,33 @@
 spring:
   application:
     name: rice-disease-diagnosis-service
+
   profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
+    default: dev
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:/db/migration
+    baseline-on-migrate: true
+
   security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${JWT_ISSUER_URI:https://keycloak.nongthinh.nvtanh.id.vn/realms/nongthinh}
     api-key:
-      current-service-key: ${RICE_DISEASE_DIAGNOSIS_SERVICE_API_KEY:diagnosis}
-      clients:
-        agri-catalog-service:
-          url: ${AGRI_CATALOG_SERVICE_URL:http://localhost:9098/agri-catalog}
-          api-key: ${AGRI_CATALOG_SERVICE_API_KEY:agri-catalog}
-        file-service:
-          url: ${FILE_SERVICE_URL:http://localhost:9095/files}
-          api-key: ${FILE_SERVICE_API_KEY:file}
+      header-name: X-API-KEY
+
   cloud:
     openfeign:
       client:
@@ -41,7 +52,7 @@ diagnosis:
     fixed-delay-ms: ${DIAGNOSIS_CLEANUP_FIXED_DELAY_MS:60000}
 
 cookie:
-  access-token-name: ${ACCESS_TOKEN_COOKIE_NAME:access_token}
+  access-token-name: access_token
 
 management:
   endpoints:
@@ -58,3 +69,8 @@ management:
   metrics:
     tags:
       application: ${spring.application.name}
+
+logging:
+  level:
+    root: INFO
+    com.nongthinh: DEBUG

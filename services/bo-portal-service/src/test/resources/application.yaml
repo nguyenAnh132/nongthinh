@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: bo-portal-service
+  datasource:
+    url: jdbc:h2:mem:bo_portal_service;MODE=PostgreSQL;NON_KEYWORDS=VALUE;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8180/realms/test
+    api-key:
+      header-name: X-API-KEY
+      current-service-key: test-bo-portal-key
+
+cookie:
+  access-token-name: access_token

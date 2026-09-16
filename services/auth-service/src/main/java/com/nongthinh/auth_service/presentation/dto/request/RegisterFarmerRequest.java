@@ -8,7 +8,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record RegisterFarmerRequest(
+public record
+RegisterFarmerRequest(
     @Email(message = "EMAIL_REQUEST_FORMAT_INVALID")
     String email,
     @NotBlank(message = "PASSWORD_REQUIRED")

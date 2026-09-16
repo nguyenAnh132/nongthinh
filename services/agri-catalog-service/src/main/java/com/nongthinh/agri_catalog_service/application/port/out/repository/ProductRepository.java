@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import com.nongthinh.agri_catalog_service.domain.product.Product;
+import com.nongthinh.agri_catalog_service.application.query.PublicProductQuery;
+import com.nongthinh.agri_catalog_service.application.view.PageView;
 
 public interface ProductRepository {
 
@@ -22,4 +24,6 @@ public interface ProductRepository {
     List<Product> findAllPublishedOrderByPublishedAtDesc();
 
     Product save(Product product);
+
+    PageView<Product> searchPublic(PublicProductQuery query);
 }

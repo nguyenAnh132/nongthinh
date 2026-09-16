@@ -68,7 +68,7 @@ class PostReportControllersTest {
                 mapper
         );
         mockMvc = MockMvcBuilders.standaloneSetup(userController, adminController)
-                .setControllerAdvice(new GlobalExceptionHandler())
+                .setControllerAdvice(new GlobalExceptionHandler(java.util.Optional.empty()))
                 .build();
     }
 

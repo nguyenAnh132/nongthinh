@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.nongthinh.agri_catalog_service.application.port.in.disease.GetDiseaseRecommendationsUseCase;
+import com.nongthinh.agri_catalog_service.application.port.in.disease.ListDiseaseRecommendationsUseCase;
+import com.nongthinh.agri_catalog_service.application.view.PageView;
 import com.nongthinh.agri_catalog_service.application.view.DiseaseRecommendationView;
 import com.nongthinh.agri_catalog_service.common.response.ApiResponse;
 import jakarta.validation.constraints.Min;
@@ -22,6 +24,17 @@ import lombok.RequiredArgsConstructor;
 public class PublicDiseaseRecommendationController {
 
     private final GetDiseaseRecommendationsUseCase recommendationsUseCase;
+    private final ListDiseaseRecommendationsUseCase listRecommendationsUseCase;
+
+    @GetMapping("/page")
+    public ResponseEntity<ApiResponse<PageView<DiseaseRecommendationView>>> listRecommendations(
+            @PathVariable UUID diseaseId,
+            @RequestParam(defaultValue = "0") int page) {
+        return ResponseEntity.ok(ApiResponse.<PageView<DiseaseRecommendationView>>builder()
+                .message("Disease recommendations retrieved successfully")
+                .result(listRecommendationsUseCase.execute(diseaseId, page))
+                .build());
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<DiseaseRecommendationView>>> getRecommendations(

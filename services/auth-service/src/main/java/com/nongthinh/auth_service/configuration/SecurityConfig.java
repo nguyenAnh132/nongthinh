@@ -8,12 +8,9 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.nongthinh.auth_service.configuration.apikeyconfig.ApiKeyAuthenticationFilter;
 import com.nongthinh.auth_service.configuration.apikeyconfig.ApiKeyProperties;
 import com.nongthinh.auth_service.configuration.jwt.CustomAuthoritiesConverter;
@@ -31,15 +28,12 @@ public class SecurityConfig {
     private static final String[] PUBLIC_POST_ENDPOINTS = {
         "/farmers",
         "/brands",
-        "/otp/verify",
-        "/otp/resend",
         "/refresh"
     };
 
     private static final String[] PUBLIC_GET_ENDPOINTS = {
         "/login",
         "/logout",
-        "/otp/config",
         "/test/trace"
     };
 
@@ -101,8 +95,4 @@ public class SecurityConfig {
         return converter;
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(10);
-    }
 }

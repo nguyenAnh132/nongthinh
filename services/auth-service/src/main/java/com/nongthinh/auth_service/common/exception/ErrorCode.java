@@ -27,14 +27,11 @@ public enum ErrorCode {
     PERMISSION_INVALID("BUS_PERMISSION_INVALID", "Permission is invalid", ErrorType.BUSINESS_RULE),
     EMAIL_ALREADY_EXISTS("BUS_EMAIL_ALREADY_EXISTS", "Email already exists", ErrorType.BUSINESS_RULE),
     ROLE_CANNOT_BE_DELETED("BUS_ROLE_CANNOT_BE_DELETED", "Role cannot be deleted", ErrorType.BUSINESS_RULE),
-    USER_DISABLED("BUS_USER_DISABLED", "User is disabled", ErrorType.BUSINESS_RULE),
-    EMAIL_NOT_VERIFIED("BUS_EMAIL_NOT_VERIFIED", "Email is not verified", ErrorType.BUSINESS_RULE),
     SESSION_REVOKED("BUS_SESSION_REVOKED", "Session is revoked", ErrorType.BUSINESS_RULE),
     SESSION_REVOKED_REASON_REQUIRED("BUS_SESSION_REVOKED_REASON_REQUIRED", "Session revoked reason is required", ErrorType.BUSINESS_RULE),
     SESSION_INVALID("BUS_SESSION_INVALID", "Session is invalid", ErrorType.BUSINESS_RULE),
     SESSION_EXPIRES_AT_INVALID("BUS_SESSION_EXPIRES_AT_INVALID", "Session expires at is invalid", ErrorType.BUSINESS_RULE),
     USER_LOCKED("BUS_USER_LOCKED", "User is locked", ErrorType.BUSINESS_RULE),
-    INVALID_AUTH_PROVIDER("BUS_INVALID_AUTH_PROVIDER", "Invalid auth provider for this operation", ErrorType.BUSINESS_RULE),
 
     
     //NOT FOUND ERROR
@@ -78,15 +75,7 @@ public enum ErrorCode {
     PROVINCE_ID_INVALID("VAL_PROVINCE_ID_INVALID", "Province ID is invalid", ErrorType.VALIDATION),
     ADDRESS_DETAIL_TOO_LONG("VAL_ADDRESS_DETAIL_TOO_LONG", "Address detail must not exceed 500 characters", ErrorType.VALIDATION),
     AVATAR_URL_INVALID("VAL_AVATAR_URL_INVALID", "Avatar URL is invalid", ErrorType.VALIDATION),
-    OTP_LENGTH_INVALID("VAL_OTP_LENGTH_INVALID", "OTP length is invalid", ErrorType.VALIDATION),
-    OTP_REQUIRED("VAL_OTP_REQUIRED", "OTP is required", ErrorType.VALIDATION),
 
-    OTP_INVALID("BUS_OTP_INVALID", "OTP is invalid", ErrorType.BUSINESS_RULE),
-    OTP_EXPIRED("BUS_OTP_EXPIRED", "OTP has expired", ErrorType.BUSINESS_RULE),
-    OTP_ATTEMPT_LIMIT_EXCEEDED("BUS_OTP_ATTEMPT_LIMIT_EXCEEDED", "OTP attempt limit exceeded", ErrorType.BUSINESS_RULE),
-    OTP_RESEND_TOO_FREQUENT("BUS_OTP_RESEND_TOO_FREQUENT", "OTP resend is too frequent", ErrorType.BUSINESS_RULE),
-    OTP_RESEND_LIMIT_EXCEEDED("BUS_OTP_RESEND_LIMIT_EXCEEDED", "OTP resend limit exceeded", ErrorType.BUSINESS_RULE),
-    EMAIL_ALREADY_VERIFIED("BUS_EMAIL_ALREADY_VERIFIED", "Email is already verified", ErrorType.BUSINESS_RULE),
     ADMIN_GROUP_REQUIRED("VAL_ADMIN_GROUP_REQUIRED", "Admin group is required", ErrorType.VALIDATION),
     ADMIN_GROUP_INVALID("VAL_ADMIN_GROUP_INVALID", "Admin group is invalid", ErrorType.VALIDATION),
     BRAND_NAME_REQUIRED("VAL_BRAND_NAME_REQUIRED", "Brand name is required", ErrorType.VALIDATION),

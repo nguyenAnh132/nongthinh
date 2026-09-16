@@ -1,0 +1,25 @@
+server:
+  port: ${FILE_SERVICE_PORT:9095}
+  servlet:
+    context-path: ${FILE_CONTEXT_PATH:/files}
+
+spring:
+  datasource:
+    url: ${FILE_SERVICE_DB_URL}
+    username: ${FILE_SERVICE_DB_USERNAME}
+    password: ${FILE_SERVICE_DB_PASSWORD}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI}
+
+    api-key:
+      current-service-key: ${FILE_SERVICE_API_KEY}
+
+app:
+  storage:
+    bucket: ${FILE_STORAGE_BUCKET:nongthinh-files}
+    public-base-url: ${FILE_PUBLIC_BASE_URL}
+    base-path: ${FILE_STORAGE_BASE_PATH:/data/storage}
