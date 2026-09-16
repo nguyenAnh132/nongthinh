@@ -1,3 +1,5 @@
+import { UploadPolicyService } from '../../../core/service/upload-policy.service';
+import { UploadPolicyHint } from '../../../shared/upload-policy-hint/upload-policy-hint';
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, afterNextRender, inject } from '@angular/core';
 import { FormArray, FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -19,11 +21,12 @@ import { ToastService } from '../../../shared/toast/toast.service';
 @Component({
   selector: 'app-admin-ai-models',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule, ReactiveFormsModule],
+  imports: [UploadPolicyHint, CommonModule, DatePipe, FormsModule, ReactiveFormsModule],
   templateUrl: './ai-models.html',
   styleUrl: './ai-models.scss',
 })
 export class AdminAiModels {
+  readonly uploadPolicies = inject(UploadPolicyService).watch(['MODEL_ARTIFACT']);
   private readonly formBuilder = inject(FormBuilder);
   private readonly catalogApi = inject(AgriCatalogApiService);
   private readonly fileApi = inject(FileApiService);
@@ -327,8 +330,9 @@ export class AdminAiModels {
     const file = input.files?.[0];
     input.value = '';
     if (!file || this.uploadingArtifact) return;
-    if (!file.name.toLowerCase().endsWith('.onnx') || file.size <= 0 || file.size > 50 * 1024 * 1024) {
-      this.toast.error('Artifact phải là file .onnx và không vượt quá 50 MB.');
+    const validationError = this.uploadPolicies.validate(file, 'MODEL_ARTIFACT');
+    if (validationError) {
+      this.toast.error(validationError);
       return;
     }
     this.uploadingArtifact = true;

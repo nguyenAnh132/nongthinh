@@ -1,3 +1,4 @@
+import { provideUploadPolicyFixtures } from '../../../core/service/upload-policy.testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -243,6 +244,7 @@ describe('Community interaction state', () => {
     await TestBed.configureTestingModule({
       imports: [Community],
       providers: [
+        provideUploadPolicyFixtures(),
         provideRouter([]),
         { provide: FollowApiService, useValue: {
           following: signal({}), pending: signal({}), statuses: vi.fn(() => of({ result: [] })),
@@ -702,7 +704,7 @@ describe('Community interaction state', () => {
     expect(component.announcement()).toBe('Đã xóa bài viết.');
   });
 
-  it('keeps an owned post visible and exposes the API error when deletion fails', () => {
+  it('keeps an owned post visible and shows a friendly error when deletion fails', () => {
     deletePost.mockReturnValue(throwError(() => new Error('Post service unavailable')));
     const fixture = TestBed.createComponent(Community);
     fixture.detectChanges();
@@ -714,7 +716,7 @@ describe('Community interaction state', () => {
 
     expect(component.posts()).toHaveLength(1);
     expect(component.posts()[0].deletePending).toBe(false);
-    expect(component.posts()[0].deleteError).toContain('Post service unavailable');
+    expect(component.posts()[0].deleteError).toBe('Không thể xóa bài viết. Vui lòng thử lại.');
   });
 
   function reactionSummary(): PostReactionSummaryView {

@@ -60,14 +60,15 @@
             #bannerInput
             class="image-file-input"
             type="file"
-            [accept]="brandImageAccept"
-            [disabled]="uploadingBanner"
+            [accept]="uploadPolicies.accept('BRAND_BANNER')"
+            [disabled]="uploadingBanner || uploadPolicies.unavailable('BRAND_BANNER')"
             (change)="onBannerSelected($event)"
           />
           <button
             class="cover-update-button"
             type="button"
-            [disabled]="uploadingBanner"
+            title="Đổi ảnh bìa"
+            [disabled]="uploadingBanner || uploadPolicies.unavailable('BRAND_BANNER')"
             (click)="bannerInput.click()"
           >
             <span class="edit-icon" aria-hidden="true"></span>
@@ -96,16 +97,16 @@
               #logoInput
               class="image-file-input"
               type="file"
-              [accept]="brandImageAccept"
-              [disabled]="uploadingLogo"
+              [accept]="uploadPolicies.accept('BRAND_LOGO')"
+              [disabled]="uploadingLogo || uploadPolicies.unavailable('BRAND_LOGO')"
               (change)="onLogoSelected($event)"
             />
             <button
               class="avatar-update-button"
               type="button"
               aria-label="Thay logo thương hiệu"
-              title="Thay logo (JPEG, PNG hoặc WebP, tối đa 2 MB)"
-              [disabled]="uploadingLogo"
+              title="Thay logo thương hiệu"
+              [disabled]="uploadingLogo || uploadPolicies.unavailable('BRAND_LOGO')"
               (click)="logoInput.click()"
             >
               <span class="avatar-update-icon" aria-hidden="true"></span>
@@ -221,6 +222,16 @@
       </div>
     </section>
 
+    @if (canEditProfile && (uploadPolicies.unavailable('BRAND_LOGO') || uploadPolicies.unavailable('BRAND_BANNER'))) {
+      <div class="brand-upload-limits">
+        @if (uploadPolicies.unavailable('BRAND_LOGO')) {
+          <div><strong>Logo</strong><app-upload-policy-hint purpose="BRAND_LOGO" /></div>
+        }
+        @if (uploadPolicies.unavailable('BRAND_BANNER')) {
+          <div><strong>Ảnh bìa</strong><app-upload-policy-hint purpose="BRAND_BANNER" /></div>
+        }
+      </div>
+    }
     <section class="verification-card">
       @if (status !== 'ACTIVE') {
         <div class="verification-guidance" [attr.data-tone]="statusTone">
@@ -283,11 +294,12 @@
 
         @if (canEditAndUpload) {
           <div class="license-upload">
+              <app-upload-policy-hint purpose="BUSINESS_LICENSE" />
             <label class="file-picker">
               <input
                 type="file"
-                [accept]="licenseAccept"
-                [disabled]="uploading"
+                [accept]="uploadPolicies.accept('BUSINESS_LICENSE')"
+                [disabled]="uploading || uploadPolicies.unavailable('BUSINESS_LICENSE')"
                 (change)="onFileSelected($event)"
               />
               <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>

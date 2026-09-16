@@ -1,3 +1,5 @@
+import { UploadPolicyService } from '../../../core/service/upload-policy.service';
+import { UploadPolicyHint } from '../../../shared/upload-policy-hint/upload-policy-hint';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectorRef,
@@ -50,11 +52,12 @@ interface HistoryExplorerFilters {
 @Component({
   selector: 'app-disease-management',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [UploadPolicyHint, CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './disease-management.html',
   styleUrl: './disease-management.scss',
 })
 export class DiseaseManagement {
+  readonly uploadPolicies = inject(UploadPolicyService).watch(['DISEASE_IMAGE']);
   @Input() adminMode = false;
   @ViewChild('historyDialog') historyDialog?: ElementRef<HTMLDialogElement>;
 
@@ -485,14 +488,9 @@ export class DiseaseManagement {
     this.imageError = '';
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      this.imageError = 'Chỉ chấp nhận ảnh JPEG, PNG hoặc WebP.';
-      input.value = '';
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      this.imageError = 'Ảnh không được vượt quá 5 MB.';
+    const validationError = this.uploadPolicies.validate(file, 'DISEASE_IMAGE');
+    if (validationError) {
+      this.toast.error(validationError);
       input.value = '';
       return;
     }

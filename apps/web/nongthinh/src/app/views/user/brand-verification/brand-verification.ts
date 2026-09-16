@@ -1,3 +1,5 @@
+import { UploadPolicyService } from '../../../core/service/upload-policy.service';
+import { UploadPolicyHint } from '../../../shared/upload-policy-hint/upload-policy-hint';
 import { ChangeDetectorRef, Component, NgZone, afterNextRender, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -23,22 +25,17 @@ import {
   docReviewStatusLabel,
 } from './brand-status.util';
 
-const LICENSE_ACCEPT = 'image/jpeg,image/png,image/webp,application/pdf';
-const LICENSE_MAX_BYTES = 10 * 1024 * 1024;
-const BRAND_IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp';
-const BRAND_IMAGE_TYPES = new Set(BRAND_IMAGE_ACCEPT.split(','));
-const BRAND_LOGO_MAX_BYTES = 2 * 1024 * 1024;
-const BRAND_BANNER_MAX_BYTES = 5 * 1024 * 1024;
 const BRAND_PROFILE_READ_ONLY_STATUSES = new Set(['LOCKED', 'DISABLED', 'DELETED']);
 
 @Component({
   selector: 'app-brand-verification',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NzAlertModule, FollowPanel],
+  imports: [UploadPolicyHint, CommonModule, ReactiveFormsModule, NzAlertModule, FollowPanel],
   templateUrl: './brand-verification.html',
   styleUrl: './brand-verification.scss',
 })
 export class BrandVerification {
+  readonly uploadPolicies = inject(UploadPolicyService).watch(['BRAND_BANNER', 'BRAND_LOGO', 'BUSINESS_LICENSE']);
   private readonly fb = inject(FormBuilder);
   private readonly brandApi = inject(MyBrandProfileApiService);
   private readonly fileApi = inject(FileApiService);
@@ -48,8 +45,6 @@ export class BrandVerification {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly zone = inject(NgZone);
 
-  readonly licenseAccept = LICENSE_ACCEPT;
-  readonly brandImageAccept = BRAND_IMAGE_ACCEPT;
 
   loading = true;
   savingProfile = false;
@@ -435,18 +430,10 @@ export class BrandVerification {
     const file = input.files?.[0] ?? null;
     if (!file) return;
 
-    if (!BRAND_IMAGE_TYPES.has(file.type.toLowerCase())) {
+    const validationError = this.uploadPolicies.validate(file, target === 'logo' ? 'BRAND_LOGO' : 'BRAND_BANNER');
+    if (validationError) {
       input.value = '';
-      this.toast.error('Chỉ chấp nhận ảnh JPEG, PNG hoặc WebP.');
-      return;
-    }
-
-    const maxBytes = target === 'logo' ? BRAND_LOGO_MAX_BYTES : BRAND_BANNER_MAX_BYTES;
-    if (file.size > maxBytes) {
-      input.value = '';
-      this.toast.error(
-        target === 'logo' ? 'Logo không được vượt quá 2 MB.' : 'Ảnh bìa không được vượt quá 5 MB.',
-      );
+      this.toast.error(validationError);
       return;
     }
 
@@ -499,7 +486,7 @@ export class BrandVerification {
         },
         error: (err) => {
           if (err instanceof Error && err.message === 'UPLOAD_URL_MISSING') {
-            this.toast.error('Upload ảnh thành công nhưng file-service không trả về publicUrl.');
+            this.toast.error('Chưa thể sử dụng ảnh vừa tải lên. Vui lòng thử lại.');
             return;
           }
           this.toast.error(
@@ -545,12 +532,9 @@ export class BrandVerification {
 
     if (!file) return;
 
-    if (!LICENSE_ACCEPT.split(',').includes(file.type)) {
-      this.toast.error('Chỉ chấp nhận ảnh JPEG/PNG/WebP hoặc PDF.');
-      return;
-    }
-    if (file.size > LICENSE_MAX_BYTES) {
-      this.toast.error('File vượt quá 10MB.');
+    const validationError = this.uploadPolicies.validate(file, 'BUSINESS_LICENSE');
+    if (validationError) {
+      this.toast.error(validationError);
       return;
     }
 
@@ -620,7 +604,7 @@ export class BrandVerification {
         },
         error: (err) => {
           if (err?.message === 'UPLOAD_URL_MISSING') {
-            this.toast.error('Upload file thành công nhưng thiếu publicUrl.');
+            this.toast.error('Chưa thể sử dụng tệp vừa tải lên. Vui lòng thử lại.');
             return;
           }
           this.toast.error(

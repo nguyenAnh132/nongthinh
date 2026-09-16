@@ -2,6 +2,10 @@ package com.nongthinh.bo_portal_service.common.exception;
 
 public enum ErrorCode {
 
+    FILE_PURPOSE_INVALID("FILE_PURPOSE_INVALID", "File purpose is invalid", ErrorType.VALIDATION),
+    FILE_PURPOSE_TYPE_NOT_FOUND("FILE_PURPOSE_TYPE_NOT_FOUND", "File type is not supported for this purpose", ErrorType.NOT_FOUND),
+    FILE_TYPE_ENABLED_REQUIRED("FILE_TYPE_ENABLED_REQUIRED", "File type enabled flag is required", ErrorType.VALIDATION),
+
     UNAUTHENTICATED("UNAUTHENTICATED", "Unauthenticated", ErrorType.AUTHENTICATION),
     INVALID_API_KEY("INVALID_API_KEY", "Invalid API key", ErrorType.AUTHENTICATION),
     FORBIDDEN("FORBIDDEN", "Forbidden", ErrorType.AUTHORIZATION),

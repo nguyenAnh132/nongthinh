@@ -16,6 +16,16 @@
   padding: 0 clamp(16px, 3vw, 28px) 22px;
 }
 
+.brand-upload-limits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  padding: 16px;
+  border: 1px solid #e4e8e2;
+  border-radius: 12px;
+  background: #fff;
+}
+
 .profile-hero,
 .about-card,
 .verification-card,

@@ -1,3 +1,4 @@
+import { provideUploadPolicyFixtures } from '../../../core/service/upload-policy.testing';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import {
@@ -38,6 +39,7 @@ describe('DiseaseManagement', () => {
     await TestBed.configureTestingModule({
       imports: [DiseaseManagement],
       providers: [
+        provideUploadPolicyFixtures(),
         {
           provide: AgriCatalogApiService,
           useValue: {

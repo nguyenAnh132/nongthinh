@@ -5,6 +5,7 @@ import com.nongthinh.bo_portal_service.domain.exception.BusinessException;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import com.nongthinh.bo_portal_service.domain.fileconfig.FilePurpose;
 
 public final class SystemParam {
 
@@ -63,7 +64,9 @@ public final class SystemParam {
         }
         dataType.validate(value);
 
-        return new SystemParam(null, normalizedName, value.trim(), description, dataType, false, typeId, now, now);
+        String normalizedValue = normalizeValue(normalizedName, value, dataType);
+
+        return new SystemParam(null, normalizedName, normalizedValue, description, dataType, false, typeId, now, now);
     }
 
     public static SystemParam reconstruct(
@@ -82,7 +85,7 @@ public final class SystemParam {
     public void update(String value, String description, Instant now) {
         Objects.requireNonNull(now, "now is required");
         dataType.validate(value);
-        this.value = value.trim();
+        this.value = normalizeValue(name, value, dataType);
         this.description = description;
         this.updatedAt = now;
     }
@@ -94,6 +97,17 @@ public final class SystemParam {
         }
         this.typeId = typeId;
         this.updatedAt = now;
+    }
+
+    private static String normalizeValue(String name, String value, SystemParamDataType dataType) {
+        if (FilePurpose.isMaxSizeParam(name)) {
+            if (dataType != SystemParamDataType.INTEGER || Integer.parseInt(value.trim()) <= 0) {
+                throw new BusinessException(ErrorCode.SYSTEM_PARAM_VALUE_INVALID,
+                        "File upload size must be a positive integer in bytes");
+            }
+            return Integer.toString(Integer.parseInt(value.trim()));
+        }
+        return value.trim();
     }
 
     public void ensureDeletable() {

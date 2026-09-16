@@ -1,3 +1,4 @@
+import { provideUploadPolicyFixtures } from '../../../core/service/upload-policy.testing';
 import { TestBed } from '@angular/core/testing';
 import { Subject, of, throwError } from 'rxjs';
 import {
@@ -36,6 +37,7 @@ describe('FarmerDiagnosis', () => {
     await TestBed.configureTestingModule({
       imports: [FarmerDiagnosis],
       providers: [
+        provideUploadPolicyFixtures(),
         {
           provide: AgriCatalogApiService,
           useValue: {
@@ -260,7 +262,7 @@ describe('FarmerDiagnosis', () => {
 
     expect(fixture.nativeElement.querySelectorAll('.history-list .history-card')).toHaveLength(1);
     expect(fixture.nativeElement.querySelector('.history-panel')?.textContent).toContain(
-      'History unavailable',
+      'Không thể tải lại lịch sử chẩn đoán.',
     );
   });
 

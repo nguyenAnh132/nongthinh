@@ -1,3 +1,4 @@
+import { provideUploadPolicyFixtures } from '../../../core/service/upload-policy.testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
@@ -48,6 +49,7 @@ describe('BrandVerification', () => {
     await TestBed.configureTestingModule({
       imports: [BrandVerification],
       providers: [
+        provideUploadPolicyFixtures(),
         {
           provide: FollowApiService,
           useValue: { revision: signal(0), profile: vi.fn(() => of({ result: null })) },

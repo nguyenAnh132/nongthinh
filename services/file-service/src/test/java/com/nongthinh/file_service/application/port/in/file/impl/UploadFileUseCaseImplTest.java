@@ -25,6 +25,10 @@ import com.nongthinh.file_service.common.currentuser.CurrentUser;
 import com.nongthinh.file_service.common.currentuser.CurrentUserProvider;
 import com.nongthinh.file_service.common.exception.ErrorCode;
 import com.nongthinh.file_service.configuration.FileUploadProperties;
+import com.nongthinh.file_service.application.port.out.FileUploadPolicyProvider;
+import com.nongthinh.file_service.domain.file.FileUploadPolicy;
+import com.nongthinh.file_service.domain.file.FileValidationPolicy;
+import com.nongthinh.file_service.domain.file.valueobject.FilePurpose;
 import com.nongthinh.file_service.configuration.StorageProperties;
 import com.nongthinh.file_service.domain.exception.BusinessException;
 import com.nongthinh.file_service.domain.file.StoredFile;
@@ -46,6 +50,7 @@ class UploadFileUseCaseImplTest {
     private final ClockProvider clockProvider = mock(ClockProvider.class);
     private final StorageProperties storageProperties = new StorageProperties();
     private final FileUploadProperties fileUploadProperties = new FileUploadProperties();
+    private final FileUploadPolicyProvider policyProvider = mock(FileUploadPolicyProvider.class);
     private final UploadFileUseCaseImpl useCase = new UploadFileUseCaseImpl(
             currentUserProvider,
             storedFileRepository,
@@ -53,12 +58,17 @@ class UploadFileUseCaseImplTest {
             idGenerator,
             clockProvider,
             storageProperties,
-            fileUploadProperties
+            policyProvider
     );
 
     @BeforeEach
     void setUp() {
         storageProperties.setBucket("nongthinh-files-test");
+        when(policyProvider.getPolicy(any())).thenAnswer(invocation -> {
+            FilePurpose purpose = invocation.getArgument(0);
+            return new FileUploadPolicy(fileUploadProperties.maxSizeFor(purpose),
+                    FileValidationPolicy.supportedContentTypes(purpose));
+        });
         when(objectStoragePort.provider()).thenReturn(StorageProvider.LOCAL);
         when(idGenerator.generate()).thenReturn(FILE_ID);
         when(clockProvider.now()).thenReturn(NOW);
@@ -276,5 +286,40 @@ class UploadFileUseCaseImplTest {
 
     private CurrentUser user(UUID userId, String role) {
         return new CurrentUser(userId, "keycloak-id", "user@nongthinh.vn", Set.of(role), Set.of());
+    }
+
+    @Test
+    void rejectsFileExceedingConfiguredLimit() {
+        when(currentUserProvider.getCurrentUser()).thenReturn(user(FARMER_ID, "ROLE_FARMER"));
+        when(policyProvider.getPolicy(FilePurpose.POST_IMAGE))
+                .thenReturn(new FileUploadPolicy(3, Set.of("image/png")));
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute(
+                new UploadFileCommand(FARMER_ID, "POST_IMAGE", "field.png", "image/png", 4,
+                        new ByteArrayInputStream(new byte[4]))));
+        assertEquals(ErrorCode.FILE_TOO_LARGE, ex.getErrorCode());
+        verify(objectStoragePort, never()).putObject(any(), any(), any(), any(Long.class), any());
+    }
+
+    @Test
+    void allTypesDisabledRejectsUploadIncludingOnnx() {
+        when(currentUserProvider.getCurrentUser()).thenReturn(user(ADMIN_ID, "ROLE_ADMIN"));
+        when(policyProvider.getPolicy(FilePurpose.MODEL_ARTIFACT))
+                .thenReturn(new FileUploadPolicy(1024, Set.of()));
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute(
+                new UploadFileCommand(ADMIN_ID, "MODEL_ARTIFACT", "model.onnx", "application/octet-stream", 4,
+                        new ByteArrayInputStream(new byte[4]))));
+        assertEquals(ErrorCode.CONTENT_TYPE_NOT_ALLOWED, ex.getErrorCode());
+        verify(objectStoragePort, never()).putObject(any(), any(), any(), any(Long.class), any());
+    }
+
+    @Test
+    void disabledPngIsRejectedWhileJpegRemainsEnabled() {
+        when(currentUserProvider.getCurrentUser()).thenReturn(user(FARMER_ID, "ROLE_FARMER"));
+        when(policyProvider.getPolicy(FilePurpose.POST_IMAGE))
+                .thenReturn(new FileUploadPolicy(1024, Set.of("image/jpeg")));
+        BusinessException ex = assertThrows(BusinessException.class, () -> useCase.execute(
+                new UploadFileCommand(FARMER_ID, "POST_IMAGE", "field.png", "image/png", 4,
+                        new ByteArrayInputStream(new byte[4]))));
+        assertEquals(ErrorCode.CONTENT_TYPE_NOT_ALLOWED, ex.getErrorCode());
     }
 }

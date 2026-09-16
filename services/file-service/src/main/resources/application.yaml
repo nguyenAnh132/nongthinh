@@ -26,6 +26,26 @@ spring:
   security:
     api-key:
       header-name: X-API-KEY
+      clients:
+        bo-portal-service:
+          url: ${BO_PORTAL_SERVICE_URL:http://localhost:9096/bo-portal}
+          api-key: ${BO_PORTAL_SERVICE_API_KEY:bo-portal}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:160.187.229.28}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:admin}
+      timeout: ${REDIS_TIMEOUT:1000ms}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:1000ms}
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          bo-portal-service:
+            connectTimeout: ${BO_PORTAL_CONNECT_TIMEOUT_MS:1000}
+            readTimeout: ${BO_PORTAL_READ_TIMEOUT_MS:2000}
 
   servlet:
     multipart:
@@ -37,17 +57,21 @@ cookie:
 
 app:
   upload:
-    max-size-bytes:
-      AVATAR: 2097152
-      BRAND_LOGO: 2097152
-      BRAND_BANNER: 5242880
-      BUSINESS_LICENSE: 10485760
-      PRODUCT_IMAGE: 5242880
-      DISEASE_IMAGE: 5242880
-      DIAGNOSIS_IMAGE: 5242880
-      POST_IMAGE: 5242880
-      POST_VIDEO: 52428800
-      MODEL_ARTIFACT: 52428800
+    default:
+      max-size-bytes:
+        AVATAR: ${FILE_UPLOAD_DEFAULT_MAX_BYTES_AVATAR:2097152}
+        BRAND_LOGO: ${FILE_UPLOAD_DEFAULT_MAX_BYTES_BRAND_LOGO:2097152}
+        BRAND_BANNER: ${FILE_UPLOAD_DEFAULT_MAX_BYTES_BRAND_BANNER:5242880}
+        BUSINESS_LICENSE: ${FILE_UPLOAD_DEFAULT_MAX_BYTES_BUSINESS_LICENSE:10485760}
+        PRODUCT_IMAGE: ${FILE_UPLOAD_DEFAULT_MAX_BYTES_PRODUCT_IMAGE:5242880}
+        DISEASE_IMAGE: ${FILE_UPLOAD_DEFAULT_MAX_BYTES_DISEASE_IMAGE:5242880}
+        DIAGNOSIS_IMAGE: ${FILE_UPLOAD_DEFAULT_MAX_BYTES_DIAGNOSIS_IMAGE:5242880}
+        POST_IMAGE: ${FILE_UPLOAD_DEFAULT_MAX_BYTES_POST_IMAGE:5242880}
+        POST_VIDEO: ${FILE_UPLOAD_DEFAULT_MAX_BYTES_POST_VIDEO:52428800}
+        MODEL_ARTIFACT: ${FILE_UPLOAD_DEFAULT_MAX_BYTES_MODEL_ARTIFACT:52428800}
+
+caching:
+  file-upload-policy-ttl-seconds: ${FILE_UPLOAD_POLICY_TTL_SECONDS:60}
 
 management:
   endpoints:

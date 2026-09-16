@@ -80,9 +80,10 @@
               <label class="field"><span>Input width <b>*</b></span><input type="number" formControlName="inputWidth" min="1" /></label>
               <label class="field"><span>Input height <b>*</b></span><input type="number" formControlName="inputHeight" min="1" /></label>
               <div class="field artifact-field">
+                <app-upload-policy-hint purpose="MODEL_ARTIFACT" />
                 <span>Artifact ONNX <b>*</b></span>
                 <label class="upload-button" [class.is-disabled]="uploadingArtifact">
-                  <input type="file" accept=".onnx,application/octet-stream" [disabled]="uploadingArtifact" (change)="uploadArtifact($event)" />
+                  <input type="file" [accept]="uploadPolicies.accept('MODEL_ARTIFACT')" [disabled]="uploadingArtifact || uploadPolicies.unavailable('MODEL_ARTIFACT')" (change)="uploadArtifact($event)" />
                   {{ uploadingArtifact ? 'Đang tải artifact...' : artifactFileName || 'Chọn .onnx' }}
                 </label>
                 @if (versionForm.controls.artifactFileId.value) {

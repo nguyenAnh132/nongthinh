@@ -1048,7 +1048,7 @@ export class Community {
                 ? { summary: response.result, error: '' }
                 : {
                     summary: this.emptyReactionSummary(),
-                    error: 'Post service không trả về tổng hợp cảm xúc.',
+              error: 'Không thể tải tổng hợp cảm xúc. Vui lòng thử lại.',
                   };
               return [post.id, enrichment] as const;
             }),
@@ -1079,7 +1079,7 @@ export class Community {
                 ? { summary: response.result, error: '' }
                 : {
                     summary: this.emptyShareSummary(post.id),
-                    error: 'Post service không trả về tổng lượt chia sẻ.',
+              error: 'Không thể tải tổng lượt chia sẻ. Vui lòng thử lại.',
                   };
               return [post.id, enrichment] as const;
             }),
@@ -1144,7 +1144,7 @@ export class Community {
                 ? { status: response.result, error: '' }
                 : {
                     status: { postId: post.id, bookmarked: false },
-                    error: 'Post service không trả về trạng thái lưu bài viết.',
+              error: 'Không thể tải trạng thái lưu bài viết. Vui lòng thử lại.',
                   };
               return [post.id, enrichment] as const;
             }),

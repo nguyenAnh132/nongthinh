@@ -61,16 +61,16 @@
               #avatarInput
               class="avatar-file-input"
               type="file"
-              accept="image/jpeg,image/png,image/webp"
-              [disabled]="uploadingAvatar()"
+              [accept]="uploadPolicies.accept('AVATAR')"
+              [disabled]="uploadingAvatar() || uploadPolicies.unavailable('AVATAR')"
               (change)="onAvatarSelected($event)"
             />
             <button
               class="avatar-update-button"
               type="button"
               aria-label="Thay ảnh đại diện"
-              title="Thay ảnh đại diện (JPEG, PNG hoặc WebP, tối đa 2 MB)"
-              [disabled]="uploadingAvatar()"
+              title="Thay ảnh đại diện"
+              [disabled]="uploadingAvatar() || uploadPolicies.unavailable('AVATAR')"
               (click)="avatarInput.click()"
             >
               <span class="avatar-update-icon" aria-hidden="true"></span>
@@ -79,6 +79,7 @@
           <div class="identity-copy">
             <h1>{{ displayName }}</h1>
             <p>Nông dân · {{ locationLabel }}</p>
+            <app-upload-policy-hint purpose="AVATAR" />
           </div>
           <button class="btn-edit" type="button" (click)="startEditing()">
             <span class="edit-icon" aria-hidden="true"></span>

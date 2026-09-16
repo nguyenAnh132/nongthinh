@@ -1,11 +1,42 @@
+import { provideUploadPolicyFixtures } from '../../../../../core/service/upload-policy.testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CropTypeView } from '../../../../../core/api/agri-catalog-api.service';
 import { PostTopicView, PostTypeView } from '../../../../../core/api/post-api.service';
 import { CreatePostModal } from './create-post-modal';
+import { ToastService } from '../../../../../shared/toast/toast.service';
 
 describe('CreatePostModal post options', () => {
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [CreatePostModal] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [CreatePostModal], providers: [provideUploadPolicyFixtures()] }).compileComponents();
+  });
+
+  it('reports an oversized image through a popup without persistent limit text', () => {
+    const toast = vi.spyOn(TestBed.inject(ToastService), 'error').mockImplementation(() => {});
+    const fixture = createFixture();
+    const file = new File(['image'], 'large.png', { type: 'image/png' });
+    Object.defineProperty(file, 'size', { value: 6 * 1024 * 1024 });
+    const input = fixture.nativeElement.querySelector('#post-media') as HTMLInputElement;
+    Object.defineProperty(input, 'files', { value: [file] });
+    input.dispatchEvent(new Event('change'));
+    fixture.detectChanges();
+    expect(toast).toHaveBeenCalledExactlyOnceWith('Tệp không được vượt quá 5 MB.');
+    expect(fixture.componentInstance.selectedMedia).toEqual([]);
+    expect(fixture.nativeElement.textContent).not.toContain('tối đa 5 MB/tệp');
+    expect(fixture.nativeElement.textContent).not.toContain('tối đa 50 MB/tệp');
+    expect(fixture.nativeElement.querySelector('.media-error')).toBeNull();
+    toast.mockRestore();
+  });
+
+  it('reports a rejected format through a popup', () => {
+    const toast = vi.spyOn(TestBed.inject(ToastService), 'error').mockImplementation(() => {});
+    const fixture = createFixture();
+    const input = fixture.nativeElement.querySelector('#post-media') as HTMLInputElement;
+    Object.defineProperty(input, 'files', { value: [new File(['file'], 'file.pdf', { type: 'application/pdf' })] });
+    input.dispatchEvent(new Event('change'));
+    expect(toast).toHaveBeenCalledOnce();
+    expect(toast).toHaveBeenCalledWith(expect.stringContaining('Định dạng tệp không được chấp nhận'));
+    expect(fixture.componentInstance.selectedMedia).toEqual([]);
+    toast.mockRestore();
   });
 
   it('opens only the option selected by the user', () => {

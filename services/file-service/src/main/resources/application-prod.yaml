@@ -17,6 +17,10 @@ spring:
 
     api-key:
       current-service-key: ${FILE_SERVICE_API_KEY}
+      clients:
+        bo-portal-service:
+          url: ${BO_PORTAL_SERVICE_URL}
+          api-key: ${BO_PORTAL_SERVICE_API_KEY}
 
 app:
   storage:

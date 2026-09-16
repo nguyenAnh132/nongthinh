@@ -20,17 +20,22 @@ public final class FileValidationPolicy {
             FilePurpose.DIAGNOSIS_IMAGE, Set.of("image/jpeg", "image/png", "image/webp"),
             FilePurpose.POST_IMAGE, Set.of("image/jpeg", "image/png", "image/webp"),
             FilePurpose.POST_VIDEO, Set.of("video/mp4", "video/webm", "video/quicktime"),
-            FilePurpose.MODEL_ARTIFACT, Set.of());
+            FilePurpose.MODEL_ARTIFACT, Set.of("application/octet-stream"));
 
     private FileValidationPolicy() {
     }
 
     public static void assertValidContentType(FilePurpose purpose, String contentType) {
-        if (purpose == FilePurpose.MODEL_ARTIFACT) {
-            return;
-        }
-        Set<String> allowed = ALLOWED_CONTENT_TYPES.get(purpose);
-        if (contentType == null || !allowed.contains(contentType.toLowerCase())) {
+        assertValidContentType(purpose, contentType, supportedContentTypes(purpose));
+    }
+
+    public static Set<String> supportedContentTypes(FilePurpose purpose) {
+        return ALLOWED_CONTENT_TYPES.get(purpose);
+    }
+
+    public static void assertValidContentType(FilePurpose purpose, String contentType, Set<String> enabledTypes) {
+        if (contentType == null || !supportedContentTypes(purpose).contains(contentType.toLowerCase(Locale.ROOT))
+                || !enabledTypes.contains(contentType.toLowerCase(Locale.ROOT))) {
             throw new BusinessException(ErrorCode.CONTENT_TYPE_NOT_ALLOWED);
         }
     }

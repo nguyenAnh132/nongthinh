@@ -15,7 +15,7 @@
       class="save-button"
       type="button"
       [class.is-saving]="saving"
-      [disabled]="loading || saving"
+      [disabled]="loading || saving || !canWrite"
       (click)="saveAll()">
       {{ saving ? 'Đang lưu...' : 'Lưu thay đổi' }}
     </button>
@@ -36,7 +36,7 @@
           <section class="config-card" [id]="sectionId(group)">
             <div class="config-card__header">
               <h2>{{ group.name }}</h2>
-              @if (group.description) {
+              @if (group.description && group.name !== 'Cấu hình tệp' && group.name !== 'Khác') {
                 <p>{{ group.description }}</p>
               }
             </div>
@@ -46,20 +46,20 @@
                 @if (param.dataType === 'BOOLEAN') {
                   <div class="toggle-row">
                     <div class="toggle-label">
-                      {{ param.name }}
+                      {{ paramLabel(param) }}
                       @if (param.description) {
                         <span class="field-help" [title]="param.description">?</span>
                       }
                     </div>
                     <label class="switch">
-                      <input type="checkbox" [(ngModel)]="param.editBoolean" />
+                      <input type="checkbox" [(ngModel)]="param.editBoolean" [disabled]="saving || !canWrite" />
                       <span class="switch-track" [class.is-off]="!param.editBoolean"></span>
                     </label>
                   </div>
                 } @else {
                   <div class="field-group">
                     <label class="field-label" [for]="param.name">
-                      {{ param.name }}
+                      {{ paramLabel(param) }}
                       @if (param.description) {
                         <span class="field-help" [title]="param.description">?</span>
                       }
@@ -69,18 +69,28 @@
                       <textarea
                         [id]="param.name"
                         class="field-input field-textarea"
-                        [(ngModel)]="param.editValue"></textarea>
+                        [(ngModel)]="param.editValue" [disabled]="saving || !canWrite"></textarea>
                     } @else {
                       <input
                         [id]="param.name"
                         class="field-input"
                         [type]="param.dataType === 'INTEGER' ? 'number' : 'text'"
-                        [(ngModel)]="param.editValue" />
+                        [(ngModel)]="param.editValue"
+                        [attr.min]="filePurpose(param) ? 1 : null"
+                        [attr.max]="filePurpose(param) ? 2147483647 : null"
+                        [attr.step]="param.dataType === 'INTEGER' ? 1 : null"
+                        [disabled]="saving || !canWrite" />
+                    }
+                    @if (filePurpose(param)) {
+                      <small>{{ sizeHint(param) }}</small>
                     }
                   </div>
                 }
               }
             </div>
+            @if (isFileGroup(group)) {
+              <app-file-type-settings />
+            }
           </section>
         }
       </div>

@@ -318,11 +318,11 @@
                 </div>
                 <div class="thumbnail-upload-content">
                   <label class="secondary-button upload-button">
-                    <input type="file" accept="image/jpeg,image/png,image/webp" [disabled]="uploadingImage"
+                    <input type="file" [accept]="uploadPolicies.accept('DISEASE_IMAGE')" [disabled]="uploadingImage || uploadPolicies.unavailable('DISEASE_IMAGE')"
                       (change)="onThumbnailSelected($event)" />
                     {{ uploadingImage ? 'Đang tải ảnh...' : 'Chọn ảnh' }}
                   </label>
-                  <small>JPEG, PNG hoặc WebP · tối đa 5 MB</small>
+                  <app-upload-policy-hint purpose="DISEASE_IMAGE" />
                   @if (imageFileName) {
                   <strong>{{ imageFileName }}</strong>
                   }

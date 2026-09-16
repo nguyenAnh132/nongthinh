@@ -13,6 +13,11 @@ import {
   unwrapApiResult,
 } from '../../../core/models/api-response';
 import { ToastService } from '../../../shared/toast/toast.service';
+import { FileTypeSettings } from './file-type-settings';
+import { FILE_PURPOSE_LABELS } from '../../../core/api/file-configuration-api.service';
+import { FilePurpose } from '../../../core/api/file-api.service';
+import { AuthService } from '../../../core/auth/auth.service';
+import { UploadPolicyService, formatFileSize } from '../../../core/service/upload-policy.service';
 
 export interface EditableSystemParam extends SystemParamView {
   editValue: string;
@@ -27,7 +32,7 @@ export interface ParamGroupState extends SystemParamTypeGroupView {
 @Component({
   selector: 'app-params',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FileTypeSettings],
   templateUrl: './params.html',
   styleUrl: './params.scss',
 })
@@ -38,6 +43,30 @@ export class Params {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly zone = inject(NgZone);
   private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
+  private readonly uploadPolicies = inject(UploadPolicyService);
+
+  get canWrite(): boolean { return this.auth.hasPermission('system:config:write'); }
+
+  filePurpose(param: SystemParamView): FilePurpose | null {
+    if (!param.name.startsWith('FILE_UPLOAD_MAX_BYTES_')) return null;
+    const purpose = param.name.replace(/^FILE_UPLOAD_MAX_BYTES_/, '') as FilePurpose;
+    return purpose in FILE_PURPOSE_LABELS ? purpose : null;
+  }
+
+  paramLabel(param: SystemParamView): string {
+    const purpose = this.filePurpose(param);
+    return purpose ? FILE_PURPOSE_LABELS[purpose] + ' — kích thước tối đa (byte)' : param.name;
+  }
+
+  sizeHint(param: EditableSystemParam): string {
+    const bytes = Number(param.editValue);
+    return Number.isSafeInteger(bytes) && bytes > 0 ? formatFileSize(bytes) : 'Nhập số byte nguyên lớn hơn 0.';
+  }
+
+  isFileGroup(group: ParamGroupState): boolean {
+    return group.name === 'Cấu hình tệp' || group.params.some((param) => this.filePurpose(param) !== null);
+  }
 
   loading = true;
   saving = false;
@@ -90,11 +119,19 @@ export class Params {
   }
 
   saveAll() {
+    if (!this.canWrite || this.saving) return;
     const changedParams = this.paramGroups
       .flatMap((group) => group.params)
       .filter((param) => this.serializeValue(param) !== param.originalValue);
 
     if (changedParams.length === 0) {
+      return;
+    }
+
+    if (changedParams.some((param) => this.filePurpose(param) && (
+      !Number.isSafeInteger(Number(param.editValue)) || Number(param.editValue) <= 0 || Number(param.editValue) > 2147483647
+    ))) {
+      this.toast.error('Kích thước tệp phải là số byte nguyên từ 1 đến 2147483647.');
       return;
     }
 
@@ -117,6 +154,10 @@ export class Params {
       )
       .subscribe({
         next: () => {
+          changedParams.forEach((param) => {
+            const purpose = this.filePurpose(param);
+            if (purpose) this.uploadPolicies.invalidate(purpose);
+          });
           this.toast.success('Đã lưu cấu hình thành công.');
           this.loadParams();
         },
@@ -168,6 +209,6 @@ export class Params {
     if (param.dataType === 'BOOLEAN') {
       return param.editBoolean ? 'true' : 'false';
     }
-    return param.editValue ?? '';
+    return String(param.editValue ?? '');
   }
 }

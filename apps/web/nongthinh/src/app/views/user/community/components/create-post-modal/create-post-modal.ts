@@ -1,3 +1,5 @@
+import { UploadPolicyService } from '../../../../../core/service/upload-policy.service';
+import { UploadPolicyHint } from '../../../../../shared/upload-policy-hint/upload-policy-hint';
 import {
   Component,
   EventEmitter,
@@ -18,6 +20,7 @@ import {
   PostTypeView,
 } from '../../../../../core/api/post-api.service';
 import { UserAvatarComponent } from '../../../../../shared/user-avatar/user-avatar.component';
+import { ToastService } from '../../../../../shared/toast/toast.service';
 import { NewCommunityPost, PostCategory } from '../../models/community.models';
 
 type PostOption = 'TOPIC' | 'CROP';
@@ -31,17 +34,15 @@ interface SelectedPostMedia {
 @Component({
   selector: 'app-create-post-modal',
   standalone: true,
-  imports: [ReactiveFormsModule, UserAvatarComponent],
+  imports: [UploadPolicyHint, ReactiveFormsModule, UserAvatarComponent],
   templateUrl: './create-post-modal.html',
   styleUrl: './create-post-modal.scss',
 })
 export class CreatePostModal implements OnInit, OnChanges, OnDestroy {
-  private static readonly IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-  private static readonly VIDEO_TYPES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
-  private static readonly MAX_IMAGE_BYTES = 5 * 1024 * 1024;
-  private static readonly MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+  readonly uploadPolicies = inject(UploadPolicyService).watch(['POST_IMAGE', 'POST_VIDEO']);
   private static readonly MAX_MEDIA_COUNT = 10;
   private readonly fb = inject(FormBuilder);
+  private readonly toast = inject(ToastService);
 
   @Input() userName = '';
   @Input() avatarUrl: string | null = null;
@@ -103,16 +104,12 @@ export class CreatePostModal implements OnInit, OnChanges, OnDestroy {
     for (const file of files) {
       const mediaType = this.mediaTypeOf(file);
       if (!mediaType) {
-        this.mediaError = 'Một số tệp không đúng định dạng JPG, PNG, WEBP, MP4, WEBM hoặc MOV.';
+        this.mediaError = `Định dạng tệp không được chấp nhận. Ảnh: ${this.uploadPolicies.hint('POST_IMAGE')} Video: ${this.uploadPolicies.hint('POST_VIDEO')}`;
         continue;
       }
-      const maxBytes =
-        mediaType === 'VIDEO' ? CreatePostModal.MAX_VIDEO_BYTES : CreatePostModal.MAX_IMAGE_BYTES;
-      if (file.size > maxBytes) {
-        this.mediaError =
-          mediaType === 'VIDEO'
-            ? 'Video không được lớn hơn 50 MB.'
-            : 'Mỗi ảnh không được lớn hơn 5 MB.';
+      const validationError = this.uploadPolicies.validate(file, mediaType === 'VIDEO' ? 'POST_VIDEO' : 'POST_IMAGE');
+      if (validationError) {
+        this.mediaError = validationError;
         continue;
       }
       accepted.push({ file, mediaType });
@@ -124,6 +121,7 @@ export class CreatePostModal implements OnInit, OnChanges, OnDestroy {
       (this.selectedMedia.some((item) => item.mediaType === 'VIDEO') && accepted.length > 0)
     ) {
       this.mediaError = 'Video chỉ có thể được chọn riêng; một bài viết hỗ trợ một video.';
+      this.toast.error(this.mediaError);
       return;
     }
 
@@ -143,6 +141,7 @@ export class CreatePostModal implements OnInit, OnChanges, OnDestroy {
     if (uniqueAccepted.length > additions.length) {
       this.mediaError = `Mỗi bài viết được chọn tối đa ${CreatePostModal.MAX_MEDIA_COUNT} ảnh.`;
     }
+    if (this.mediaError) this.toast.error(this.mediaError);
   }
 
   removeMedia(index: number): void {
@@ -214,9 +213,8 @@ export class CreatePostModal implements OnInit, OnChanges, OnDestroy {
   }
 
   private mediaTypeOf(file: File): PostMediaType | null {
-    const contentType = file.type.toLowerCase();
-    if (CreatePostModal.IMAGE_TYPES.has(contentType)) return 'IMAGE';
-    if (CreatePostModal.VIDEO_TYPES.has(contentType)) return 'VIDEO';
+    if (this.uploadPolicies.acceptsType(file, 'POST_IMAGE')) return 'IMAGE';
+    if (this.uploadPolicies.acceptsType(file, 'POST_VIDEO')) return 'VIDEO';
     return null;
   }
 

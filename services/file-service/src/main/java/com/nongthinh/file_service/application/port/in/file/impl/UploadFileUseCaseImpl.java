@@ -15,7 +15,7 @@ import com.nongthinh.file_service.application.view.FileView;
 import com.nongthinh.file_service.common.currentuser.CurrentUser;
 import com.nongthinh.file_service.common.currentuser.CurrentUserProvider;
 import com.nongthinh.file_service.common.exception.ErrorCode;
-import com.nongthinh.file_service.configuration.FileUploadProperties;
+import com.nongthinh.file_service.application.port.out.FileUploadPolicyProvider;
 import com.nongthinh.file_service.configuration.StorageProperties;
 import com.nongthinh.file_service.domain.exception.BusinessException;
 import com.nongthinh.file_service.domain.file.FileAccessPolicy;
@@ -34,7 +34,7 @@ public class UploadFileUseCaseImpl implements UploadFileUseCase {
     private final IdGenerator idGenerator;
     private final ClockProvider clockProvider;
     private final StorageProperties storageProperties;
-    private final FileUploadProperties fileUploadProperties;
+    private final FileUploadPolicyProvider fileUploadPolicyProvider;
 
     @Override
     @Transactional
@@ -51,11 +51,9 @@ public class UploadFileUseCaseImpl implements UploadFileUseCase {
 
         FileAccessPolicy.assertCanUpload(currentUser, purpose);
         FileValidationPolicy.assertValidFileName(purpose, command.originalFileName());
-        FileValidationPolicy.assertValidContentType(purpose, contentType);
-
-        long maxSize = fileUploadProperties.getMaxSizeBytes()
-                .getOrDefault(purpose, 10L * 1024 * 1024);
-        FileValidationPolicy.assertValidSize(purpose, command.sizeBytes(), maxSize);
+        var uploadPolicy = fileUploadPolicyProvider.getPolicy(purpose);
+        FileValidationPolicy.assertValidContentType(purpose, contentType, uploadPolicy.allowedContentTypes());
+        FileValidationPolicy.assertValidSize(purpose, command.sizeBytes(), uploadPolicy.maxSizeBytes());
 
         var fileId = idGenerator.generate();
         String extension = FileValidationPolicy.resolveExtension(purpose, contentType, command.originalFileName());
