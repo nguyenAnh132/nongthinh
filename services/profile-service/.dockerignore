@@ -1,0 +1,9 @@
+# Only Maven build inputs are sent to Docker.
+**
+!pom.xml
+!src/
+!src/**
+src/test/
+**/.env
+**/.env.*
+**/*.log

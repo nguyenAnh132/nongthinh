@@ -1,5 +1,5 @@
 server:
-  port: ${SERVER_PORT:9090}
+  port: ${AUTH_SERVICE_PORT:9090}
 
   servlet:
     context-path: ${AUTH_CONTEXT_PATH:/auth}
@@ -35,16 +35,12 @@ spring:
             issuer-uri: ${KEYCLOAK_ISSUER_URI}
 
     api-key:
-      current-service-key: ${AUTH_API_KEY}
+      current-service-key: ${AUTH_SERVICE_API_KEY}
 
       clients:
         profile-service:
           url: ${AUTH_PROFILE_SERVICE_URL}
           api-key: ${PROFILE_SERVICE_API_KEY}
-
-        bo-portal-service:
-          url: ${BO_PORTAL_SERVICE_URL}
-          api-key: ${BO_PORTAL_SERVICE_API_KEY}
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}

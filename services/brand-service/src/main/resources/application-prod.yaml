@@ -20,7 +20,7 @@ spring:
       clients:
         profile-service:
           url: ${BRAND_PROFILE_SERVICE_URL}
-          api-key: ${BRAND_PROFILE_SERVICE_API_KEY}
+          api-key: ${PROFILE_SERVICE_API_KEY}
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}

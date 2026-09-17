@@ -9,6 +9,14 @@ spring:
     username: ${FILE_SERVICE_DB_USERNAME}
     password: ${FILE_SERVICE_DB_PASSWORD}
 
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      timeout: ${REDIS_TIMEOUT:1000ms}
+      connect-timeout: ${REDIS_CONNECT_TIMEOUT:1000ms}
+
   security:
     oauth2:
       resourceserver:
@@ -19,7 +27,7 @@ spring:
       current-service-key: ${FILE_SERVICE_API_KEY}
       clients:
         bo-portal-service:
-          url: ${BO_PORTAL_SERVICE_URL}
+          url: ${FILE_BO_PORTAL_SERVICE_URL}
           api-key: ${BO_PORTAL_SERVICE_API_KEY}
 
 app:
