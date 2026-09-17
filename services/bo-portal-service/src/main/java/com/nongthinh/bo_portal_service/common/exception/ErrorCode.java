@@ -1,6 +1,8 @@
 package com.nongthinh.bo_portal_service.common.exception;
 
 public enum ErrorCode {
+    BRAND_ACCESS_DENIED("BRAND_ACCESS_DENIED", "Brand verification is required for this operation", ErrorType.AUTHORIZATION),
+    BRAND_ACCESS_UNAVAILABLE("BRAND_ACCESS_UNAVAILABLE", "Cannot verify brand access", ErrorType.INFRASTRUCTURE),
 
     FILE_PURPOSE_INVALID("FILE_PURPOSE_INVALID", "File purpose is invalid", ErrorType.VALIDATION),
     FILE_PURPOSE_TYPE_NOT_FOUND("FILE_PURPOSE_TYPE_NOT_FOUND", "File type is not supported for this purpose", ErrorType.NOT_FOUND),

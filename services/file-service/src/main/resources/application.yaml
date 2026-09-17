@@ -28,16 +28,8 @@ spring:
       header-name: X-API-KEY
       clients:
         bo-portal-service:
-          url: ${BO_PORTAL_SERVICE_URL:http://localhost:9096/bo-portal}
+          url: ${FILE_BO_PORTAL_SERVICE_URL:http://localhost:9096/bo-portal}
           api-key: ${BO_PORTAL_SERVICE_API_KEY:bo-portal}
-
-  data:
-    redis:
-      host: ${REDIS_HOST:160.187.229.28}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:admin}
-      timeout: ${REDIS_TIMEOUT:1000ms}
-      connect-timeout: ${REDIS_CONNECT_TIMEOUT:1000ms}
 
   cloud:
     openfeign:
@@ -90,3 +82,9 @@ logging:
   level:
     root: INFO
     com.nongthinh: DEBUG
+
+brand-access:
+  profile-service:
+    url: ${BRAND_ACCESS_PROFILE_SERVICE_URL:http://localhost:9092/profile}
+    connect-timeout-ms: ${BRAND_ACCESS_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${BRAND_ACCESS_READ_TIMEOUT_MS:3000}

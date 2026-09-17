@@ -25,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("diagnoses")
-@PreAuthorize("hasAuthority('ROLE_FARMER')")
+@PreAuthorize("hasAnyAuthority('ROLE_FARMER', 'ROLE_BRAND')")
 @RequiredArgsConstructor
 public class DiagnosisController {
     private final CreateDiagnosisUseCase createDiagnosisUseCase;

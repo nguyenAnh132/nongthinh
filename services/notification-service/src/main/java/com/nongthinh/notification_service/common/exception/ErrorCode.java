@@ -1,6 +1,8 @@
 package com.nongthinh.notification_service.common.exception;
 
 public enum ErrorCode {
+    BRAND_ACCESS_DENIED("BRAND_ACCESS_DENIED", "Brand verification is required for this operation", ErrorType.AUTHORIZATION),
+    BRAND_ACCESS_UNAVAILABLE("BRAND_ACCESS_UNAVAILABLE", "Cannot verify brand access", ErrorType.INTERNAL_SERVICE),
     NOTIFICATION_NOT_FOUND("NF_NOTIFICATION_NOT_FOUND", "Notification not found", ErrorType.NOT_FOUND),
     NOTIFICATION_REQUEST_INVALID("VAL_NOTIFICATION_REQUEST_INVALID", "Invalid notification request", ErrorType.VALIDATION),
 

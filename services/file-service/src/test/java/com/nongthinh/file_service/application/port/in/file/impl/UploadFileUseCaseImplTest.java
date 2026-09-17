@@ -127,6 +127,32 @@ class UploadFileUseCaseImplTest {
     }
 
     @Test
+    void brandCanUploadDiagnosisImageOwnedByItsAccount() {
+        when(currentUserProvider.getCurrentUser()).thenReturn(user(BRAND_ID, "ROLE_BRAND"));
+        FileView view = useCase.execute(new UploadFileCommand(
+                BRAND_ID, "DIAGNOSIS_IMAGE", "field.webp", "image/webp", 4,
+                new ByteArrayInputStream(new byte[] {1, 2, 3, 4})));
+
+        assertEquals(BRAND_ID, view.ownerUserId());
+        assertEquals(FileVisibility.PRIVATE, view.visibility());
+        assertNull(view.publicUrl());
+        verify(objectStoragePort).putObject(eq("nongthinh-files-test"),
+                eq("diagnosis-images/" + BRAND_ID + "/" + FILE_ID + ".webp"),
+                eq("image/webp"), eq(4L), any());
+        verify(objectStoragePort, never()).buildPublicUrl(any());
+    }
+
+    @Test
+    void brandCannotUploadDiagnosisImageForAnotherAccount() {
+        when(currentUserProvider.getCurrentUser()).thenReturn(user(BRAND_ID, "ROLE_BRAND"));
+        BusinessException error = assertThrows(BusinessException.class, () -> useCase.execute(new UploadFileCommand(
+                FARMER_ID, "DIAGNOSIS_IMAGE", "field.webp", "image/webp", 4,
+                new ByteArrayInputStream(new byte[] {1, 2, 3, 4}))));
+        assertEquals(ErrorCode.FILE_ACCESS_DENIED, error.getErrorCode());
+        verify(objectStoragePort, never()).putObject(any(), any(), any(), any(Long.class), any());
+    }
+
+    @Test
     void farmerCanUploadPublicPostImage() {
         when(currentUserProvider.getCurrentUser()).thenReturn(user(FARMER_ID, "ROLE_FARMER"));
         when(objectStoragePort.buildPublicUrl(any())).thenReturn("http://localhost/public/" + FILE_ID);

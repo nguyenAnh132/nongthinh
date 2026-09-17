@@ -28,6 +28,24 @@ class SseConnectionRegistryTest {
     }
 
     @Test
+    void revocationClosesAllTabsForOnlyTheAffectedAccount() {
+        var meters = new SimpleMeterRegistry();
+        try (var executor = Executors.newSingleThreadExecutor()) {
+            var registry = new SseConnectionRegistry(mock(NotificationRepository.class), executor, meters, true, true);
+            UUID user = UUID.fromString("00000000-0000-0000-0000-000000000001");
+            UUID other = UUID.fromString("00000000-0000-0000-0000-000000000002");
+            registry.connect(user, Set.of("notifications"), null);
+            registry.connect(user, Set.of("notifications", "post-engagement"), null);
+            registry.connect(other, Set.of("notifications"), null);
+            registry.disconnect(user);
+            assertThat(meters.get("sse.connections.active").gauge().value()).isEqualTo(1);
+            registry.disconnect(user);
+            assertThat(meters.get("sse.connections.active").gauge().value()).isEqualTo(1);
+            registry.shutdown();
+        }
+    }
+
+    @Test
     void rejectsExpiredSessions() {
         var meters = new SimpleMeterRegistry();
         try (var executor = Executors.newSingleThreadExecutor()) {

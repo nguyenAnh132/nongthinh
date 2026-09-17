@@ -19,7 +19,7 @@ export function roleGuard(allowedRoles: string[]): CanActivateFn {
         if (auth.hasRole('ADMIN')) {
           return router.createUrlTree([auth.adminHomePath()]);
         }
-        if (auth.hasAnyRole(['FARMER', 'BRAND'])) {
+        if (auth.hasAnyRole(['FARMER', 'BRAND', 'BRAND_PENDING'])) {
           return router.createUrlTree(['/app/profile']);
         }
         return router.createUrlTree(['/']);

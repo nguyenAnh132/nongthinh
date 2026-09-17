@@ -271,6 +271,12 @@ public final class BrandProfile {
         touch(now);
     }
 
+    private void ensureProfileEditable() {
+        if (!BrandAccessPolicy.canEditProfile(status)) {
+            throw new BusinessException(ErrorCode.BRAND_ACCESS_DENIED);
+        }
+    }
+
     public void ensureActive() {
         if (status != BrandProfileStatus.ACTIVE) {
             throw new BusinessException(status.toAccessDeniedErrorCode());
@@ -278,56 +284,67 @@ public final class BrandProfile {
     }
 
     public void updateBrandName(BrandName brandName, Instant now) {
+        ensureProfileEditable();
         this.brandName = Objects.requireNonNull(brandName, "brandName is required");
         touch(now);
     }
 
     public void updateTaxCode(String taxCode, Instant now) {
+        ensureProfileEditable();
         this.taxCode = taxCode;
         touch(now);
     }
 
     public void updateDescription(String description, Instant now) {
+        ensureProfileEditable();
         this.description = description;
         touch(now);
     }
 
     public void updatePhone(String phone, Instant now) {
+        ensureProfileEditable();
         this.phone = Objects.requireNonNull(phone, "phone is required");
         touch(now);
     }
 
     public void updateOfficeAddress(Address officeAddress, Instant now) {
+        ensureProfileEditable();
         this.officeAddress = officeAddress != null ? officeAddress : Address.empty();
         touch(now);
     }
 
     public void updateRepresentativeName(String representativeName, Instant now) {
+        ensureProfileEditable();
         this.representativeName = Objects.requireNonNull(representativeName, "representativeName is required");
         touch(now);
     }
 
     public void updateRepresentativePhone(String representativePhone, Instant now) {
+        ensureProfileEditable();
         this.representativePhone = Objects.requireNonNull(representativePhone, "representativePhone is required");
         touch(now);
     }
 
     public void updateRepresentativeEmail(String representativeEmail, Instant now) {
+        ensureProfileEditable();
         this.representativeEmail = Objects.requireNonNull(representativeEmail, "representativeEmail is required");
         touch(now);
     }
 
     public void updateLogoUrl(String logoUrl, Instant now) {
+        ensureProfileEditable();
         this.logoUrl = logoUrl;
         touch(now);
     }
 
     public void updateBannerUrl(String bannerUrl, Instant now) {
+        ensureProfileEditable();
         this.bannerUrl = bannerUrl;
         touch(now);
     }
 
     public void updateWebsiteUrl(String websiteUrl, Instant now) {
+        ensureProfileEditable();
         this.websiteUrl = websiteUrl;
         touch(now);
     }

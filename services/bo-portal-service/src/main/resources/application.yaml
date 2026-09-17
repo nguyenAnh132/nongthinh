@@ -35,3 +35,9 @@ logging:
   level:
     root: INFO
     com.nongthinh: DEBUG
+
+brand-access:
+  profile-service:
+    url: ${BRAND_ACCESS_PROFILE_SERVICE_URL:http://localhost:9092/profile}
+    connect-timeout-ms: ${BRAND_ACCESS_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${BRAND_ACCESS_READ_TIMEOUT_MS:3000}

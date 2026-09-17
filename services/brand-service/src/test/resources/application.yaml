@@ -28,6 +28,16 @@ spring:
     listener:
       auto-startup: false
 
+messaging:
+  kafka:
+    topics:
+      brand-profile-created: brand-profile-created
+      brand-documents-requested: brand-documents-requested
+      brand-needs-revision: brand-needs-revision
+      brand-profile-approved: brand-profile-approved
+      brand-profile-rejected: brand-profile-rejected
+      brand-documents-submitted: brand-documents-submitted
+
 cookie:
   access-token-name: access_token
 

@@ -139,7 +139,9 @@
           </button>
         }
       </div>
-      <app-follow-panel class="profile-follow-counts" [userId]="brand.userId" />
+      @if (status === 'ACTIVE') {
+        <app-follow-panel class="profile-follow-counts" [userId]="brand.userId" />
+      }
     </section>
 
     <section class="about-card">

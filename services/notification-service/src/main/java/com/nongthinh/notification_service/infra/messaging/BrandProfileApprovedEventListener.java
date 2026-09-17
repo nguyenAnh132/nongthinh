@@ -5,7 +5,6 @@ import com.nongthinh.notification_service.application.event.BrandProfileApproved
 import com.nongthinh.notification_service.application.port.in.sendemail.SendTemplatedEmailUseCase;
 import com.nongthinh.notification_service.application.port.out.EventDeserializer;
 import com.nongthinh.notification_service.common.constant.EmailPurposeConstant;
-import com.nongthinh.notification_service.common.constant.KafkaTopics;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,7 @@ public class BrandProfileApprovedEventListener {
     private final EventDeserializer eventDeserializer;
     private final SendTemplatedEmailUseCase sendTemplatedEmailUseCase;
 
-    @KafkaListener(topics = KafkaTopics.BRAND_PROFILE_APPROVED)
+    @KafkaListener(topics = "#{@kafkaTopicProperties.brandProfileApproved}")
     public void consume(String message) {
         BrandProfileApprovedEvent event = eventDeserializer.deserialize(message, BrandProfileApprovedEvent.class);
 

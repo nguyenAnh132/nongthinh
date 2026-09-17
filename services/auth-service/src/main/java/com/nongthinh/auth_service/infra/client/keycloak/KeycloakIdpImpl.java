@@ -141,7 +141,7 @@ public class KeycloakIdpImpl implements KeycloakIdp {
     public RoleRecord getRoleByName(String name, String token) {
 
         try {
-            RoleResponse response = keycloakClient.getRoleByName(token, name);
+            RoleResponse response = findRole(name, token);
             return new RoleRecord(
                 response.getId(),
                 response.getName(),
@@ -169,6 +169,43 @@ public class KeycloakIdpImpl implements KeycloakIdp {
                     })
                     .toList();
             keycloakClient.roleMapping(token, keycloakUserId, mappings);
+        } catch (FeignException ex) {
+            throw new InfrastructureException(ErrorCode.KEYCLOAK_ROLE_MAPPING_FAILED, ex);
+        }
+    }
+    private RoleResponse findRole(String name, String token) {
+        try {
+            return keycloakClient.getRoleByName(token, name);
+        } catch (FeignException.NotFound ex) {
+            if (!com.nongthinh.auth_service.common.constant.RoleConstant.ROLE_BRAND_PENDING.equals(name)) throw ex;
+            // Provision a restricted role without inherited application permissions.
+            try {
+                keycloakClient.createRole(token, Map.of("name", name));
+            } catch (FeignException.Conflict alreadyCreated) {
+                // Another instance provisioned the role concurrently.
+            }
+            return keycloakClient.getRoleByName(token, name);
+        }
+    }
+
+    @Override
+    public java.util.Set<String> getRealmRoleNames(String keycloakUserId, String token) {
+        try {
+            return keycloakClient.getRealmRoles(token, keycloakUserId).stream()
+                    .map(RoleResponse::getName).collect(java.util.stream.Collectors.toSet());
+        } catch (FeignException ex) {
+            throw new InfrastructureException(ErrorCode.KEYCLOAK_ROLE_MAPPING_FAILED, ex);
+        }
+    }
+
+    @Override
+    public void removeRealmRoles(String keycloakUserId, java.util.Collection<String> roleNames, String token) {
+        try {
+            List<RoleMapping> roles = roleNames.stream().map(name -> {
+                RoleRecord role = getRoleByName(name, token);
+                return new RoleMapping(role.id(), role.name(), role.composite(), role.clientRole(), role.containerId());
+            }).toList();
+            keycloakClient.removeRealmRoles(token, keycloakUserId, roles);
         } catch (FeignException ex) {
             throw new InfrastructureException(ErrorCode.KEYCLOAK_ROLE_MAPPING_FAILED, ex);
         }

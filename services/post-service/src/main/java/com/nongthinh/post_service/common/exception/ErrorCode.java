@@ -1,6 +1,8 @@
 package com.nongthinh.post_service.common.exception;
 
 public enum ErrorCode {
+    BRAND_ACCESS_DENIED("BRAND_ACCESS_DENIED", "Brand verification is required for this operation", ErrorType.AUTHORIZATION),
+    BRAND_ACCESS_UNAVAILABLE("BRAND_ACCESS_UNAVAILABLE", "Cannot verify brand access", ErrorType.INFRASTRUCTURE),
     UNAUTHENTICATED("AUTH_UNAUTHENTICATED", "Unauthenticated", ErrorType.AUTHENTICATION),
     FORBIDDEN("AUTH_FORBIDDEN", "Forbidden", ErrorType.AUTHORIZATION),
     INTERNAL_ERROR("SYS_INTERNAL_ERROR", "Internal error", ErrorType.SYSTEM),
@@ -34,6 +36,7 @@ public enum ErrorCode {
     POST_REPORT_SELF_NOT_ALLOWED("BUS_POST_REPORT_SELF_NOT_ALLOWED", "A post author cannot report their own post", ErrorType.BUSINESS_RULE),
     POST_REPORT_STATUS_CONFLICT("BUS_POST_REPORT_STATUS_CONFLICT", "Post report cannot transition from its current status", ErrorType.BUSINESS_RULE),
     FILE_SERVICE_UNAVAILABLE("INF_FILE_SERVICE_UNAVAILABLE", "File service is unavailable", ErrorType.INFRASTRUCTURE),
+    PROFILE_SERVICE_UNAVAILABLE("INF_PROFILE_SERVICE_UNAVAILABLE", "Profile service is unavailable", ErrorType.INFRASTRUCTURE),
     AGRI_CATALOG_SERVICE_UNAVAILABLE("INF_AGRI_CATALOG_SERVICE_UNAVAILABLE", "Agri catalog service is unavailable", ErrorType.INFRASTRUCTURE),
 
     POST_TYPE_ID_REQUIRED("VAL_POST_TYPE_ID_REQUIRED", "Post type id is required", ErrorType.VALIDATION),

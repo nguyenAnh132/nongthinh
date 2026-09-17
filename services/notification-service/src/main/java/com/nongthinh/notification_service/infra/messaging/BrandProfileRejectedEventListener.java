@@ -5,7 +5,6 @@ import com.nongthinh.notification_service.application.event.BrandProfileRejected
 import com.nongthinh.notification_service.application.port.in.sendemail.SendTemplatedEmailUseCase;
 import com.nongthinh.notification_service.application.port.out.EventDeserializer;
 import com.nongthinh.notification_service.common.constant.EmailPurposeConstant;
-import com.nongthinh.notification_service.common.constant.KafkaTopics;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,7 @@ public class BrandProfileRejectedEventListener {
     private final EventDeserializer eventDeserializer;
     private final SendTemplatedEmailUseCase sendTemplatedEmailUseCase;
 
-    @KafkaListener(topics = KafkaTopics.BRAND_PROFILE_REJECTED)
+    @KafkaListener(topics = "#{@kafkaTopicProperties.brandProfileRejected}")
     public void consume(String message) {
         BrandProfileRejectedEvent event = eventDeserializer.deserialize(message, BrandProfileRejectedEvent.class);
 

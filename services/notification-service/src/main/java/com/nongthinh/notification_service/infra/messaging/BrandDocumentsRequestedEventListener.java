@@ -5,7 +5,6 @@ import com.nongthinh.notification_service.application.event.BrandDocumentsReques
 import com.nongthinh.notification_service.application.port.in.sendemail.SendTemplatedEmailUseCase;
 import com.nongthinh.notification_service.application.port.out.EventDeserializer;
 import com.nongthinh.notification_service.common.constant.EmailPurposeConstant;
-import com.nongthinh.notification_service.common.constant.KafkaTopics;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,7 @@ public class BrandDocumentsRequestedEventListener {
     private final EventDeserializer eventDeserializer;
     private final SendTemplatedEmailUseCase sendTemplatedEmailUseCase;
 
-    @KafkaListener(topics = KafkaTopics.BRAND_DOCUMENTS_REQUESTED)
+    @KafkaListener(topics = "#{@kafkaTopicProperties.brandDocumentsRequested}")
     public void consume(String message) {
         BrandDocumentsRequestedEvent event = eventDeserializer.deserialize(message, BrandDocumentsRequestedEvent.class);
 

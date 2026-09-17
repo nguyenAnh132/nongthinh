@@ -125,6 +125,11 @@ public class SseConnectionRegistry {
         connection.emitter.complete();
     }
 
+    public void disconnect(UUID userId) {
+        connections.values().stream().filter(connection -> connection.userId.equals(userId))
+                .forEach(this::close);
+    }
+
     @PreDestroy
     public void shutdown() { connections.values().forEach(this::close); }
 

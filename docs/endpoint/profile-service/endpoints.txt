@@ -25,8 +25,8 @@ Chỉ hồ sơ ACTIVE được follow và xuất hiện trong danh sách/bộ đ
 Không cho tự follow. Người thao tác lấy từ JWT, không lấy từ request body.
 Thông báo NEW_FOLLOWER và FOLLOWED_USER_POST đi qua transactional outbox.
 Post-service phát post.published khi tạo/xuất bản bài công khai.
-Profile-service nhận POST_ENGAGEMENT_TOPIC (mặc định post.engagement.v1),
-gửi PROFILE_NOTIFICATION_TOPIC (mặc định profile.notifications.v1) cho notification-service.
+Profile-service nhận KAFKA_TOPIC_POST_ENGAGEMENT (mặc định post.engagement.v1),
+gửi KAFKA_TOPIC_PROFILE_NOTIFICATIONS (mặc định profile.notifications.v1) cho notification-service.
 Sự kiện lỗi sau retry đi vào topic .DLT; cần cấu hình broker/ACL cho các topic này.
 Người follow sau thời điểm đăng bài không nhận thông báo về bài cũ.
 Không triển khai gợi ý kết nối.
@@ -333,6 +333,12 @@ Response: ApiResponse<BrandProfileView>
 ================================================================================
 GHI CHÚ
 ================================================================================
+- GET /brand-profiles/me/access: ROLE_BRAND hoặc ROLE_BRAND_PENDING.
+  Response: ApiResponse<{ active, canEditProfile, canSubmitDocuments }>.
+- ROLE_BRAND_PENDING chỉ được thao tác hồ sơ/giấy tờ của mình theo trạng thái xét duyệt.
+  REJECTED/LOCKED/DISABLED/DELETED chỉ được xem; API nghiệp vụ trả 403 BRAND_ACCESS_DENIED.
+  ROLE_BRAND cũng bị kiểm tra trạng thái hiện tại, kể cả khi token chưa hết hạn.
+- Quy tắc trạng thái và cấu hình triển khai: docs/brand-access.md.
 - Upload avatar/logo/banner: upload qua file-service trước, sau đó PATCH URL tương ứng.
 - Internal API dùng JWT ROLE_INTERNAL hoặc X-API-KEY (tùy cấu hình service caller).
 - API Gateway strip header X-API-KEY khi route từ client.

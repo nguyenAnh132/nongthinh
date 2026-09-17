@@ -1,7 +1,7 @@
 package com.nongthinh.profile_service.infra.messaging;
+import com.nongthinh.profile_service.configuration.KafkaTopicProperties;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,13 +15,13 @@ public class FollowNotificationOutboxPublisher {
     private final JdbcTemplate jdbc;
     private final KafkaTemplate<String, String> kafka;
     private final TransactionTemplate transactions;
-    private final String topic;
+    private final KafkaTopicProperties topics;
     public FollowNotificationOutboxPublisher(JdbcTemplate jdbc, KafkaTemplate<String, String> kafka,
-            TransactionTemplate transactions, @Value("${PROFILE_NOTIFICATION_TOPIC:profile.notifications.v1}") String topic) {
+            TransactionTemplate transactions, KafkaTopicProperties topics) {
         this.jdbc = jdbc;
         this.kafka = kafka;
         this.transactions = transactions;
-        this.topic = topic;
+        this.topics = topics;
     }
     @Scheduled(fixedDelayString="${profile-follow.poll-ms:500}")
     public void publish() {
@@ -39,7 +39,7 @@ public class FollowNotificationOutboxPublisher {
                 if (rows.isEmpty()) return false;
                 var row = rows.getFirst();
                 try {
-                    kafka.send(topic, row.get("recipient_user_id").toString(), row.get("payload").toString())
+                    kafka.send(topics.getProfileNotifications(), row.get("recipient_user_id").toString(), row.get("payload").toString())
                             .get(10, TimeUnit.SECONDS);
                     jdbc.update("UPDATE profile_notification_outbox SET published_at=NOW() WHERE id=?", row.get("id"));
                 } catch (InterruptedException ex) {

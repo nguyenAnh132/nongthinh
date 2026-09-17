@@ -35,9 +35,22 @@ spring:
       header-name: X-API-KEY
 
   kafka:
+    consumer:
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+messaging:
+  kafka:
+    topics:
+      brand-access-changed: ${KAFKA_TOPIC_BRAND_ACCESS_CHANGED:brand-access-changed}
+      farmer-profile-creation-requested: ${KAFKA_TOPIC_FARMER_PROFILE_CREATION_REQUESTED:farmer-profile-creation-requested}
+      admin-profile-creation-requested: ${KAFKA_TOPIC_ADMIN_PROFILE_CREATION_REQUESTED:admin-profile-creation-requested}
+      brand-profile-creation-requested: ${KAFKA_TOPIC_BRAND_PROFILE_CREATION_REQUESTED:brand-profile-creation-requested}
 
 server:
   forward-headers-strategy: framework

@@ -17,4 +17,8 @@ public interface KeycloakIdp {
 
     void assignRealmRoles(String keycloakUserId, java.util.Collection<String> roleNames, String token);
 
+    java.util.Set<String> getRealmRoleNames(String keycloakUserId, String token);
+
+    void removeRealmRoles(String keycloakUserId, java.util.Collection<String> roleNames, String token);
+
 }

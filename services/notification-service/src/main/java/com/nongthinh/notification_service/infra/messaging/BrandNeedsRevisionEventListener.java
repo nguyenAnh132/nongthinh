@@ -5,7 +5,6 @@ import com.nongthinh.notification_service.application.event.BrandNeedsRevisionEv
 import com.nongthinh.notification_service.application.port.in.sendemail.SendTemplatedEmailUseCase;
 import com.nongthinh.notification_service.application.port.out.EventDeserializer;
 import com.nongthinh.notification_service.common.constant.EmailPurposeConstant;
-import com.nongthinh.notification_service.common.constant.KafkaTopics;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,7 @@ public class BrandNeedsRevisionEventListener {
     private final EventDeserializer eventDeserializer;
     private final SendTemplatedEmailUseCase sendTemplatedEmailUseCase;
 
-    @KafkaListener(topics = KafkaTopics.BRAND_NEEDS_REVISION)
+    @KafkaListener(topics = "#{@kafkaTopicProperties.brandNeedsRevision}")
     public void consume(String message) {
         BrandNeedsRevisionEvent event = eventDeserializer.deserialize(message, BrandNeedsRevisionEvent.class);
 

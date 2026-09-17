@@ -25,7 +25,7 @@ import {
   docReviewStatusLabel,
 } from './brand-status.util';
 
-const BRAND_PROFILE_READ_ONLY_STATUSES = new Set(['LOCKED', 'DISABLED', 'DELETED']);
+const BRAND_PROFILE_EDITABLE_STATUSES = new Set(['PENDING_APPROVAL', 'UNDER_REVIEW', 'NEEDS_REVISION', 'READY_FOR_FINAL_REVIEW', 'ACTIVE']);
 
 @Component({
   selector: 'app-brand-verification',
@@ -125,7 +125,7 @@ export class BrandVerification {
   }
 
   get canEditProfile(): boolean {
-    return !!this.profile && !BRAND_PROFILE_READ_ONLY_STATUSES.has(this.status);
+    return !!this.profile && BRAND_PROFILE_EDITABLE_STATUSES.has(this.status);
   }
 
   get canSubmit(): boolean {
@@ -207,6 +207,7 @@ export class BrandVerification {
   }
 
   reload(): void {
+    this.authService.loadMe().subscribe();
     this.syncView(() => {
       this.loading = true;
       this.loadError = null;
@@ -253,7 +254,7 @@ export class BrandVerification {
             }
 
             this.patchProfileForm(p);
-            if (BRAND_PROFILE_READ_ONLY_STATUSES.has(p.status)) {
+            if (!BRAND_PROFILE_EDITABLE_STATUSES.has(p.status)) {
               this.profileForm.disable({ emitEvent: false });
             } else {
               this.profileForm.enable({ emitEvent: false });

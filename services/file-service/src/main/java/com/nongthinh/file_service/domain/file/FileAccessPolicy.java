@@ -12,12 +12,14 @@ public final class FileAccessPolicy {
     private static final Set<String> AVATAR_ROLES = Set.of(
             RoleConstant.ROLE_FARMER,
             RoleConstant.ROLE_ADMIN);
-    private static final Set<String> DIAGNOSIS_IMAGE_ROLES = Set.of(RoleConstant.ROLE_FARMER);
+    private static final Set<String> DIAGNOSIS_IMAGE_ROLES = Set.of(
+            RoleConstant.ROLE_FARMER,
+            RoleConstant.ROLE_BRAND);
     private static final Set<String> POST_MEDIA_ROLES = Set.of(
             RoleConstant.ROLE_FARMER,
             RoleConstant.ROLE_BRAND);
     private static final Set<String> MODEL_ARTIFACT_ROLES = Set.of(RoleConstant.ROLE_ADMIN);
-    private static final Set<String> BRAND_FILE_ROLES = Set.of(RoleConstant.ROLE_BRAND);
+    private static final Set<String> BRAND_FILE_ROLES = Set.of(RoleConstant.ROLE_BRAND, RoleConstant.ROLE_BRAND_PENDING);
     private static final Set<String> CATALOG_IMAGE_ROLES = Set.of(
             RoleConstant.ROLE_BRAND,
             RoleConstant.ROLE_ADMIN);

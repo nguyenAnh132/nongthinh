@@ -107,6 +107,23 @@ describe('BrandVerification', () => {
     }).compileComponents();
   });
 
+  for (const status of ['REJECTED', 'LOCKED', 'DISABLED', 'DELETED']) {
+    it('makes ' + status + ' profiles read only', async () => {
+      profile = { ...profile, status };
+      const fixture = TestBed.createComponent(BrandVerification);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(fixture.componentInstance.canEditProfile).toBe(false);
+      expect(fixture.componentInstance.canEditAndUpload).toBe(false);
+      expect(fixture.componentInstance.profileForm.disabled).toBe(true);
+      expect(fixture.nativeElement.querySelector('app-follow-panel')).toBeNull();
+      fixture.componentInstance.saveProfile();
+      expect(updateMe).not.toHaveBeenCalled();
+      expect(uploadFile).not.toHaveBeenCalled();
+    });
+  }
+
   it('renders a brand profile with the same hero and about-card structure as farmer', async () => {
     const fixture = TestBed.createComponent(BrandVerification);
     fixture.detectChanges();
@@ -187,7 +204,7 @@ describe('BrandVerification', () => {
     );
     expect(fixture.componentInstance.profile?.brandName).toBe('Nông Thịnh Việt');
     expect(fixture.componentInstance.editing).toBe(false);
-    expect(refreshMe).toHaveBeenCalledOnce();
+    expect(refreshMe).toHaveBeenCalledTimes(2);
   });
 
   it('uploads and persists a new logo for an active brand', async () => {
@@ -209,7 +226,7 @@ describe('BrandVerification', () => {
     expect(fixture.componentInstance.profile?.logoUrl).toBe(
       'https://files.example.test/brand-logo-updated.webp',
     );
-    expect(refreshMe).toHaveBeenCalledOnce();
+    expect(refreshMe).toHaveBeenCalledTimes(2);
   });
 
   it('renders the linked business license as a Gmail-style attachment with its file name', async () => {

@@ -1,6 +1,8 @@
 package com.nongthinh.rice_disease_diagnosis_service.common.exception;
 
 public enum ErrorCode {
+    BRAND_ACCESS_DENIED("BRAND_ACCESS_DENIED", "Brand verification is required for this operation", ErrorType.AUTHORIZATION),
+    BRAND_ACCESS_UNAVAILABLE("BRAND_ACCESS_UNAVAILABLE", "Cannot verify brand access", ErrorType.INFRASTRUCTURE),
     UNAUTHENTICATED("AUTH_UNAUTHENTICATED", "Unauthenticated", ErrorType.AUTHENTICATION),
     FORBIDDEN("AUTH_FORBIDDEN", "Forbidden", ErrorType.AUTHORIZATION),
     DIAGNOSIS_HISTORY_NOT_FOUND("NOT_FOUND_DIAGNOSIS_HISTORY_NOT_FOUND", "Diagnosis history not found", ErrorType.NOT_FOUND),

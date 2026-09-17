@@ -41,10 +41,19 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 20s
 
+messaging:
+  kafka:
+    topics:
+      post-engagement: ${KAFKA_TOPIC_POST_ENGAGEMENT:post.engagement.v1}
+
 server:
   shutdown: graceful
 
 post:
+  profile-service:
+    url: ${POST_PROFILE_SERVICE_URL:http://localhost:9092/profile}
+    connect-timeout-ms: ${POST_PROFILE_SERVICE_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${POST_PROFILE_SERVICE_READ_TIMEOUT_MS:3000}
   limits:
     content-length: ${POST_CONTENT_MAX_LENGTH:2000}
     media-per-post: ${POST_MEDIA_MAX_COUNT:10}
@@ -55,7 +64,6 @@ post:
 
 post-outbox:
   enabled: ${POST_OUTBOX_ENABLED:true}
-  topic: ${POST_ENGAGEMENT_TOPIC:post.engagement.v1}
   poll-ms: ${POST_OUTBOX_POLL_MS:500}
   batch-size: ${POST_OUTBOX_BATCH_SIZE:50}
 
@@ -81,3 +89,9 @@ logging:
     root: INFO
     com.nongthinh.post_service: DEBUG
     org.hibernate.SQL: INFO
+
+brand-access:
+  profile-service:
+    url: ${BRAND_ACCESS_PROFILE_SERVICE_URL:http://localhost:9092/profile}
+    connect-timeout-ms: ${BRAND_ACCESS_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${BRAND_ACCESS_READ_TIMEOUT_MS:3000}

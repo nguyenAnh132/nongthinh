@@ -57,7 +57,7 @@ public class RegisterBrandUseCaseImpl implements RegisterBrandUseCase {
             TokenConstant.JWT_TOKEN_PREFIX + clientToken
         );
 
-        RoleRecord role = keycloakIdp.getRoleByName(RoleConstant.ROLE_BRAND, TokenConstant.JWT_TOKEN_PREFIX + clientToken);
+        RoleRecord role = keycloakIdp.getRoleByName(RoleConstant.ROLE_BRAND_PENDING, TokenConstant.JWT_TOKEN_PREFIX + clientToken);
         keycloakIdp.assignRealmRoles(keycloakUserId, List.of(role.name()), TokenConstant.JWT_TOKEN_PREFIX + clientToken);
 
         User newUser = User.create(

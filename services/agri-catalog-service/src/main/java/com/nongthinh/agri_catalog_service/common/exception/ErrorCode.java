@@ -1,6 +1,8 @@
 package com.nongthinh.agri_catalog_service.common.exception;
 
 public enum ErrorCode {
+    BRAND_ACCESS_DENIED("BRAND_ACCESS_DENIED", "Brand verification is required for this operation", ErrorType.AUTHORIZATION),
+    BRAND_ACCESS_UNAVAILABLE("BRAND_ACCESS_UNAVAILABLE", "Cannot verify brand access", ErrorType.INFRASTRUCTURE),
 
     //AUTHENTICATION ERROR
     INVALID_TOKEN("AUTH_INVALID_TOKEN", "Invalid token", ErrorType.AUTHENTICATION),

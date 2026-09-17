@@ -1,3 +1,4 @@
+import { isBrandAccount } from '../../../core/auth/brand-access';
 import { UploadPolicyService } from '../../../core/service/upload-policy.service';
 import { UploadPolicyHint } from '../../../shared/upload-policy-hint/upload-policy-hint';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
@@ -31,7 +32,7 @@ import { FollowPanel } from '../../../shared/follow-panel/follow-panel';
   styleUrl: './profile.scss',
 })
 export class UserProfile implements OnInit {
-  readonly uploadPolicies = inject(UploadPolicyService).watch(['AVATAR']);
+  readonly uploadPolicies = inject(UploadPolicyService).watch(isBrandAccount(inject(AuthService).currentUser()) ? [] : ['AVATAR']);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly profileApi = inject(ProfileApiService);
@@ -114,7 +115,7 @@ export class UserProfile implements OnInit {
     const user = this.authService.currentUser();
     const role = (user?.role ?? '').replace(/^ROLE_/, '');
     if (role === 'ADMIN') return 'ADMIN';
-    if (role === 'BRAND') return 'BRAND';
+    if (role === 'BRAND' || role === 'BRAND_PENDING') return 'BRAND';
     return 'FARMER';
   }
 

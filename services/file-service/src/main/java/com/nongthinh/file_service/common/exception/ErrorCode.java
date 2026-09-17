@@ -1,6 +1,8 @@
 package com.nongthinh.file_service.common.exception;
 
 public enum ErrorCode {
+    BRAND_ACCESS_DENIED("BRAND_ACCESS_DENIED", "Brand verification is required for this operation", ErrorType.AUTHORIZATION),
+    BRAND_ACCESS_UNAVAILABLE("BRAND_ACCESS_UNAVAILABLE", "Cannot verify brand access", ErrorType.INTERNAL_SERVICE),
 
     FILE_NOT_FOUND("FIL_FILE_NOT_FOUND", "File not found", ErrorType.NOT_FOUND),
     FILE_ALREADY_DELETED("FIL_FILE_ALREADY_DELETED", "File has already been deleted", ErrorType.BUSINESS_RULE),

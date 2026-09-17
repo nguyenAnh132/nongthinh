@@ -51,6 +51,16 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
+messaging:
+  kafka:
+    topics:
+      brand-profile-created: ${KAFKA_TOPIC_BRAND_PROFILE_CREATED:brand-profile-created}
+      brand-documents-requested: ${KAFKA_TOPIC_BRAND_DOCUMENTS_REQUESTED:brand-documents-requested}
+      brand-needs-revision: ${KAFKA_TOPIC_BRAND_NEEDS_REVISION:brand-needs-revision}
+      brand-profile-approved: ${KAFKA_TOPIC_BRAND_PROFILE_APPROVED:brand-profile-approved}
+      brand-profile-rejected: ${KAFKA_TOPIC_BRAND_PROFILE_REJECTED:brand-profile-rejected}
+      brand-documents-submitted: ${KAFKA_TOPIC_BRAND_DOCUMENTS_SUBMITTED:brand-documents-submitted}
+
 cookie:
   access-token-name: access_token
 
@@ -65,3 +75,9 @@ logging:
   level:
     root: INFO
     com.nongthinh: DEBUG
+
+brand-access:
+  profile-service:
+    url: ${BRAND_ACCESS_PROFILE_SERVICE_URL:http://localhost:9092/profile}
+    connect-timeout-ms: ${BRAND_ACCESS_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${BRAND_ACCESS_READ_TIMEOUT_MS:3000}

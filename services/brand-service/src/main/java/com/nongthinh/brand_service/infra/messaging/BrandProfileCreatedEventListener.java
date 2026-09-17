@@ -7,7 +7,6 @@ import com.nongthinh.brand_service.application.command.StartBrandApprovalProcess
 import com.nongthinh.brand_service.application.event.BrandProfileCreatedEvent;
 import com.nongthinh.brand_service.application.port.in.workflow.StartBrandApprovalProcessUseCase;
 import com.nongthinh.brand_service.application.port.out.EventDeserializer;
-import com.nongthinh.brand_service.common.constant.KafkaTopicConstant;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +19,7 @@ public class BrandProfileCreatedEventListener {
     private final EventDeserializer eventDeserializer;
     private final StartBrandApprovalProcessUseCase startBrandApprovalProcessUseCase;
 
-    @KafkaListener(topics = KafkaTopicConstant.BRAND_PROFILE_CREATED)
+    @KafkaListener(topics = "#{@kafkaTopicProperties.brandProfileCreated}")
     public void onBrandProfileCreated(String payload) {
         BrandProfileCreatedEvent event = eventDeserializer.deserialize(payload, BrandProfileCreatedEvent.class);
 

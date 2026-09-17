@@ -65,7 +65,7 @@ public class BrandProfileController {
     private final BrandProfileMapper brandProfileMapper;
 
     @GetMapping("/me")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandProfileView>> getMyProfile() {
         BrandProfileView view = getMyBrandProfileUseCase.execute();
         return ResponseEntity.ok(ApiResponse.<BrandProfileView>builder()
@@ -75,7 +75,7 @@ public class BrandProfileController {
     }
 
     @PostMapping("/me")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<Void>> createMyProfile(
             @RequestBody @Valid MyBrandProfileCreationRequest request
     ) {
@@ -86,7 +86,7 @@ public class BrandProfileController {
     }
 
     @PatchMapping("/me")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandProfileView>> updateMyProfile(
             @RequestBody @Valid MyBrandProfileUpdateRequest request
     ) {
@@ -98,7 +98,7 @@ public class BrandProfileController {
     }
 
     @PatchMapping("/me/phone")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandProfileView>> updateMyPhone(
             @RequestBody @Valid PhoneUpdateRequest request
     ) {
@@ -110,7 +110,7 @@ public class BrandProfileController {
     }
 
     @PatchMapping("/me/logo")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandProfileView>> updateMyLogo(
             @RequestBody @Valid UrlUpdateRequest request
     ) {
@@ -122,7 +122,7 @@ public class BrandProfileController {
     }
 
     @PatchMapping("/me/banner")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandProfileView>> updateMyBanner(
             @RequestBody @Valid UrlUpdateRequest request
     ) {
@@ -134,7 +134,7 @@ public class BrandProfileController {
     }
 
     @PatchMapping("/me/website")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandProfileView>> updateMyWebsite(
             @RequestBody @Valid UrlUpdateRequest request
     ) {
@@ -146,7 +146,7 @@ public class BrandProfileController {
     }
 
     @PatchMapping("/me/office-address")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandProfileView>> updateMyOfficeAddress(
             @RequestBody @Valid AddressUpdateRequest request
     ) {
@@ -160,7 +160,7 @@ public class BrandProfileController {
     }
 
     @PatchMapping("/me/representative-phone")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandProfileView>> updateMyRepresentativePhone(
             @RequestBody @Valid PhoneUpdateRequest request
     ) {
@@ -172,7 +172,7 @@ public class BrandProfileController {
     }
 
     @PatchMapping("/me/representative-email")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandProfileView>> updateMyRepresentativeEmail(
             @RequestBody @Valid EmailUpdateRequest request
     ) {
@@ -184,7 +184,7 @@ public class BrandProfileController {
     }
 
     @GetMapping("/me/documents")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandDocumentView>> getMyDocument() {
         BrandDocumentView view = getMyBrandDocumentUseCase.execute().orElse(null);
         return ResponseEntity.ok(ApiResponse.<BrandDocumentView>builder()
@@ -194,7 +194,7 @@ public class BrandProfileController {
     }
 
     @PostMapping("/me/documents")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<BrandDocumentView>> uploadMyDocument(
             @RequestBody @Valid UploadBrandDocumentRequest request
     ) {
@@ -206,7 +206,7 @@ public class BrandProfileController {
     }
 
     @PostMapping("/me/documents-submitted")
-    @PreAuthorize("hasAuthority('ROLE_BRAND')")
+    @PreAuthorize("hasAnyAuthority('ROLE_BRAND', 'ROLE_BRAND_PENDING')")
     public ResponseEntity<ApiResponse<Void>> submitMyDocuments() {
         submitMyBrandDocumentsUseCase.execute();
         return ResponseEntity.ok(ApiResponse.<Void>builder()

@@ -1,6 +1,7 @@
 package com.nongthinh.post_service.application.port.out.repository;
 
 import com.nongthinh.post_service.application.model.PostPage;
+import com.nongthinh.post_service.application.model.PostFeedCursor;
 import com.nongthinh.post_service.domain.post.Post;
 import com.nongthinh.post_service.domain.post.valueobject.PostStatus;
 import com.nongthinh.post_service.domain.post.valueobject.PostId;
@@ -8,9 +9,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public interface PostRepository {
+    List<Post> findFeed(UUID postTypeId, UUID topicId, UUID cropTypeId, UUID authorUserId,
+                        String keyword, Set<UUID> followingUserIds, Instant snapshotAt,
+                        PostFeedCursor cursor, int limit);
     Optional<Post> findById(PostId id);
     Optional<Post> findByIdForUpdate(PostId id);
     Optional<Post> findByIdIncludingDeleted(PostId id);
