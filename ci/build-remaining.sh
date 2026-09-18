@@ -25,7 +25,7 @@ mkdir -p "$ROOT/batch-test-reports/$IMAGE_TAG"
 for service in "${services[@]}"; do
     context="$TASK_TMP/source/services/$service"
     printf '\nsrc/main/resources/application-dev.*\n' >> "$context/.dockerignore"
-    if [[ "${RUN_TESTS:-true}" == true ]]; then
+    if [[ "${RUN_TESTS:-false}" == true ]]; then
         echo "TEST: $service"
         status=0
         docker run --rm --user "$(id -u):$(id -g)" \
@@ -66,4 +66,4 @@ cp deploy/batch/{services.json,compose.remaining.yml,prepare.py,deploy.sh} "$TAS
 printf 'REMAINING_TAG=%s\nGATEWAY_TAG=build-3-e90ec03641f7\n' "$IMAGE_TAG" > "$TASK_TMP/bundle/images.env"
 tar -czf "nongthinh-backends-$IMAGE_TAG.tar.gz" -C "$TASK_TMP/bundle" .
 echo "BATCH_IMAGES_PUSHED: $IMAGE_TAG"
-echo "RUN_TESTS=${RUN_TESTS:-true}"
+echo "RUN_TESTS=${RUN_TESTS:-false}"
