@@ -9,19 +9,20 @@ test -d env/batch || { echo 'Run python3 prepare.py first'; exit 1; }
 dc=(docker compose --env-file /opt/nongthinh/.env --env-file "$HERE/images.env"
     -f /opt/nongthinh/compose.prod.yml -f "$HERE/compose.remaining.yml")
 "${dc[@]}" config --quiet
-services=(location-service bo-portal-service notification-service brand-service file-service agri-catalog-service post-service rice-disease-diagnosis-service api-gateway)
+services=(location-service bo-portal-service notification-service brand-service file-service agri-catalog-service post-service rice-disease-diagnosis-service profile-service auth-service api-gateway)
 "${dc[@]}" pull "${services[@]}"
 "${dc[@]}" exec -T postgres pg_isready -U postgres -d postgres
 
 start_and_check() {
-    local service="$1" cid state restarts ready=0
-    "${dc[@]}" up -d --no-deps "$service"
+    local service="$1" cid state restarts started ready=0
+    "${dc[@]}" up -d --no-deps --force-recreate "$service"
     cid="$("${dc[@]}" ps -aq "$service")"
     for ((attempt=0; attempt<90; attempt++)); do
         state="$(docker inspect -f '{{.State.Status}}' "$cid")"
         restarts="$(docker inspect -f '{{.RestartCount}}' "$cid")"
         if [[ "$state" == exited || "$state" == dead || "$state" == restarting || "$restarts" -gt 0 ]]; then break; fi
-        if [[ "$state" == running ]] && docker logs --tail=500 "$cid" 2>&1 | grep -E 'Started [A-Za-z0-9_.$]*Application in' >/dev/null; then
+        started="$(docker inspect -f '{{.State.StartedAt}}' "$cid")"
+        if [[ "$state" == running ]] && docker logs --since="$started" "$cid" 2>&1 | grep -E 'Started [A-Za-z0-9_.$]*Application in' >/dev/null; then
             ready=1; break
         fi
         sleep 3
@@ -36,9 +37,31 @@ start_and_check() {
 
 # Start sequentially to limit peak memory/CPU; fixes to internal URLs recreate auth/profile.
 for service in "${services[@]}"; do start_and_check "$service"; done
-start_and_check auth-service
-start_and_check profile-service
+
+# Check actual HTTP responses, not just startup log messages.
+check_http() {
+    local url="$1" expected="$2" code
+    for ((attempt=0; attempt<12; attempt++)); do
+        code=$(curl --silent --output /dev/null --connect-timeout 3 --max-time 10 \
+            --write-out '%{http_code}' "$url") || code=000
+        if [[ "$code" == "$expected" ]]; then echo "HTTP_OK: $url ($code)"; return; fi
+        sleep 3
+    done
+    echo "HTTP_FAILED: $url expected=$expected actual=$code"
+    return 1
+}
+check_http http://127.0.0.1:9090/auth/oauth2/authorization/keycloak 302
+check_http http://127.0.0.1:9092/profile/farmer-profiles/me 401
+check_http http://127.0.0.1:8888/api/v1/profile/farmer-profiles/me 401
+for service in "${services[@]}"; do
+    cid="$("${dc[@]}" ps -aq "$service")"
+    status="$(docker inspect -f '{{.State.Status}}:{{.RestartCount}}:{{.State.OOMKilled}}' "$cid")"
+    if [[ "$status" != running:0:false ]]; then
+        echo "UNSTABLE_CONTAINER: $service $status"; exit 1
+    fi
+done
 "${dc[@]}" ps
-echo 'BATCH_STARTUP_OK: application startup only; model, SMTP, Kafka flows and HTTPS still need functional verification.'
+echo 'BATCH_STARTUP_OK: all 11 backends running; Auth/Profile/Gateway HTTP checks passed.'
+echo 'Model, SMTP, Kafka flows and public HTTPS still need functional verification.'
 echo 'Review: curl -i http://127.0.0.1:8888/api/v1/profile/farmer-profiles/me'
 echo "Compose overlay: $HERE/compose.remaining.yml"
