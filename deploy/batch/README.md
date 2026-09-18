@@ -6,7 +6,7 @@ bằng file `deploy/compose.prod.yml` đang trống trong repository.
 
 ## 1. Đưa bộ triển khai lên GitHub
 
-Commit/push các file `ci/Jenkinsfile.remaining`, `ci/build-remaining.sh` và
+Commit/push các file `ci/Jenkinsfile.remaining`, `ci/build-remaining.sh`, `ci/release.py`, `ci/plan-release.sh` và
 `deploy/batch/` lên `main`. Không commit file env thực tế.
 
 Tạo một lượt tám repository **Public**, namespace `nguyenanh132` trên Docker Hub:
@@ -46,8 +46,9 @@ Agent Ubuntu cần `python3` cho kiểm tra script chuẩn bị và `tar`, `bash
 như các bước trước. VPS deploy cần `python3`, `flock` (thường có sẵn trên Ubuntu).
 
 Khi thành công, tải artifact `nongthinh-backends-batch-N-COMMIT.tar.gz` từ build.
-Bundle mới ghi cùng tag cho cả 11 image, bao gồm Auth/Profile/Gateway; overlay ghi đè
-tag cũ trong Compose gốc. Các repository Auth/Profile/Gateway đã có từ bước trước.
+Bundle ghi tag riêng cho từng image, bao gồm Auth/Profile/Gateway; service không đổi
+giữ tag đã deploy thành công. Overlay ghi đè tag cũ trong Compose gốc.
+Các repository Auth/Profile/Gateway đã có từ bước trước.
 Giữ nguyên tên job và Script Path để không phải tạo lại Jenkins job.
 
 ## 3. Chuyển bundle lên VPS, chuẩn bị secret một lần
@@ -90,16 +91,17 @@ quyền cho thư mục mới; không đổi chủ sở hữu đệ quy trên d�
 bash /opt/nongthinh/releases/batch-N-COMMIT/deploy.sh
 ```
 
-Script ghép Compose gốc và overlay, pull các image, khởi động từng service để hạn chế
-đỉnh RAM/CPU. Sau đó cập nhật URL nội bộ Auth → Profile và Profile → Location, gây
-restart ngắn cho hai service này. PostgreSQL không bị tạo lại, volume không bị xóa.
+Script ghép Compose gốc và overlay, chỉ pull và tạo lại các service được chọn để hạn chế
+đỉnh RAM/CPU. Service không đổi giữ nguyên image và container. PostgreSQL không bị tạo lại,
+volume không bị xóa.
 File này dùng đúng project `nongthinh` từ Compose gốc.
 
 Khi lỗi, script dừng tại service lỗi, in log và giữ các service đã chạy. Sau khi sửa
-cấu hình, chạy lại cùng lệnh. Không có tự động rollback database migration. Mỗi lần
+cấu hình, chạy lại job Jenkins để lập kế hoạch mới (không chạy lại bundle cũ đã dở dang).
+Không có tự động rollback database migration. Mỗi lần
 thay đổi schema sau khi có dữ liệu thật cần backup trước khi deploy.
 
-Script tạo lại từng backend và kiểm tra log từ lần khởi động hiện tại, rồi kiểm tra
+Script tạo lại các backend được chọn và kiểm tra log từ lần khởi động hiện tại, rồi kiểm tra
 Auth 302, Profile 401, Gateway 401 và không có restart/OOM. Thành công in
 `BATCH_STARTUP_OK`. Kiểm tra Gateway thủ công:
 
@@ -117,13 +119,30 @@ Jenkins dùng credential `nongthinh-deploy-ssh`, copy bundle mới vào thư m�
 mới và chạy deploy.sh. Secret đã có trên VPS được tái sử dụng. Host key SSH phải
 được tin cậy trên agent chạy job như lần kiểm tra trước.
 
-Pipeline build toàn bộ 11 backend, chưa lọc service theo diff. Trigger `githubPush()`
+Pipeline chỉ build/deploy service thay đổi. Trigger `githubPush()`
 dùng webhook GitHub hiện có (`<JENKINS_URL>/github-webhook/`) để kiểm tra thay đổi main.
 Sau khi cập nhật Jenkinsfile, chạy thủ công một lần với `DEPLOY=true`, `RUN_TESTS=false`
 để đăng ký trigger và giá trị mặc định mới. Các push main tiếp theo tự build/deploy,
 không chạy test mặc định. Cần xác nhận bằng một push main thực tế và log Jenkins.
 Đặt node Jenkins đang build chỉ có 1 executor để backend và frontend không build
 đồng thời trên VPS 4 GB; `disableConcurrentBuilds()` chỉ giới hạn trong từng job.
+
+### Chọn service theo thay đổi
+
+- State `/opt/nongthinh/state/backend.json` lưu commit và tag riêng cho từng service,
+  chỉ cập nhật commit sau khi toàn bộ kiểm tra deploy thành công. `DEPLOY=false` không cập nhật state.
+- Diff từ commit deploy thành công đến HEAD; sửa `services/<service>/` chỉ chọn service đó.
+  Frontend không chọn backend; `docs/` và file README.md/DESIGN.md được bỏ qua.
+- Thay đổi bộ CI/deploy backend chọn toàn bộ backend. File dùng chung hoặc đường dẫn
+  chưa biết chọn toàn bộ để tránh bỏ sót dependency. Đây không phải phân tích dependency/API tự động.
+- Thiếu state (lần đầu), thiếu lịch sử Git, force-push không còn ancestor hoặc deploy dở dang
+  sẽ chọn toàn bộ. Giữ đầy đủ Git history trên Jenkins để diff hiệu quả.
+- `FORCE_REBUILD=true` ép build/deploy toàn bộ job, dùng khi sửa env trên VPS hoặc cần cập nhật base image.
+- Bundle chứa `release-plan.json`, `selected-services.txt`, `images.env` đủ tag cả service không đổi.
+  Không lấy tag mới gán cho mọi service. Bundle cũ/stale bị từ chối để tránh ghi đè state mới.
+- Cơ chế này không theo dõi thay đổi container/env thủ công. Sau can thiệp thủ công hoặc rollback
+  bằng script cũ, chạy Jenkins `FORCE_REBUILD=true` để đồng bộ; không xóa/sửa state bằng tay.
+- Hai job vẫn có thể được webhook gọi, nhưng job không có thay đổi in `NO_CHANGES` và bỏ qua build/deploy.
 
 ## Những kiểm tra chức năng còn lại
 

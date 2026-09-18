@@ -10,6 +10,8 @@ pipeline {
         githubPush()
     }
     parameters {
+        booleanParam(name: 'FORCE_REBUILD', defaultValue: false,
+            description: 'Rebuild/deploy all components in this job even without source changes.')
         booleanParam(name: 'DEPLOY', defaultValue: true,
             description: 'Deploy frontend on VPS loopback port 8081 after build. Does not change host Nginx/TLS.')
     }
@@ -24,7 +26,24 @@ pipeline {
                 }
             }
         }
+        stage('Detect changes since last deployment') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'nongthinh-deploy-ssh',
+                    keyFileVariable: 'DEPLOY_KEY', usernameVariable: 'DEPLOY_USER')]) {
+                    script {
+                        env.FORCE_REBUILD = (params.FORCE_REBUILD == true).toString()
+                        sh 'bash ci/plan-release.sh frontend'
+                        env.HAS_CHANGES = (!readFile('selected-services.txt').trim().isEmpty()).toString()
+                        if (env.HAS_CHANGES != 'true') {
+                            echo 'NO_CHANGES: skipping image build and deployment.'
+                        }
+                    }
+                }
+                archiveArtifacts artifacts: 'release-plan.json,selected-services.txt', fingerprint: true
+            }
+        }
         stage('Build and push frontend') {
+            when { expression { env.HAS_CHANGES == 'true' } }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-nongthinh',
                     usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_TOKEN')]) {
@@ -34,7 +53,7 @@ pipeline {
             }
         }
         stage('Deploy frontend') {
-            when { expression { params.DEPLOY == null || params.DEPLOY } }
+            when { expression { env.HAS_CHANGES == 'true' && (params.DEPLOY == null || params.DEPLOY) } }
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'nongthinh-deploy-ssh',
                     keyFileVariable: 'DEPLOY_KEY', usernameVariable: 'DEPLOY_USER')]) {
@@ -54,6 +73,6 @@ pipeline {
         }
     }
     post {
-        success { echo "FRONTEND_RELEASE: ${env.IMAGE_TAG}" }
+        success { echo "FRONTEND_RESULT: ${env.IMAGE_TAG}; changes=${env.HAS_CHANGES}; deploy=${params.DEPLOY}" }
     }
 }

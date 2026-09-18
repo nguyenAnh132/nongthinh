@@ -53,10 +53,18 @@ is a separate configuration step.
 The pipeline registers `githubPush()` and defaults `DEPLOY=true`. Reuse the existing
 GitHub push webhook at `<JENKINS_URL>/github-webhook/`. Run the updated pipeline once
 manually with `DEPLOY=true` to register its trigger, then verify a subsequent main
-push starts a build. Both frontend and backend jobs build on main changes; there
-is no path filtering. Set the build node to 1 executor on the shared 4 GB VPS to
+push starts a build. Both jobs can be triggered, but each plans against its last
+successful deployment and skips build/deploy when no relevant paths changed.
+Frontend paths select frontend; backend service paths do not. Shared/unknown paths
+select both jobs conservatively. State is stored at `/opt/nongthinh/state/frontend.json`.
+Initial deployment or interrupted deployment rebuilds the job. `FORCE_REBUILD=true`
+forces a rebuild; `DEPLOY=false` never advances the successful-deployment baseline.
+Jenkins and the deploy host need Python 3 for `ci/release.py`.
+Set the build node to 1 executor on the shared 4 GB VPS to
 prevent the two jobs building simultaneously. `disableConcurrentBuilds()` only
 serializes builds within one job. Deploy does not overwrite host Nginx/TLS.
 
 Failed deployment stops the job; there is no automatic frontend rollback yet.
-Use a previous archived bundle's deploy.sh to redeploy that frontend image if needed.
+Stale bundles are refused by the state guard. To revert source, commit a revert to
+main and run this job. After any manual image rollback, use `FORCE_REBUILD=true`
+to reconcile the pipeline; do not modify deployment state manually.
