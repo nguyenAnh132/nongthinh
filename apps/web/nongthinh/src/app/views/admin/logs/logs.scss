@@ -1,0 +1,90 @@
+/* ═══════════════════════════════════════════════════════════════
+   LOGS — Nông Thịnh Admin
+   ═══════════════════════════════════════════════════════════════ */
+
+:host ::ng-deep .logs-card {
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-neutral-200);
+}
+
+.logs-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  gap: 16px;
+}
+
+.search-input {
+  width: 320px;
+}
+
+:host ::ng-deep .search-input .ant-input {
+  border-radius: var(--radius-full) !important;
+  border-color: var(--color-neutral-200);
+  padding: 8px 16px;
+}
+
+:host ::ng-deep .search-input .ant-input:focus {
+  border-color: var(--color-primary-500) !important;
+  box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.12) !important;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Log entry */
+.log-entry {
+  padding: 16px 20px;
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-neutral-200);
+  transition: all var(--transition-base);
+}
+
+.log-entry:hover {
+  border-color: var(--color-primary-200);
+  box-shadow: var(--shadow-md);
+  transform: translateX(4px);
+}
+
+.log-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.log-id {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text-light);
+  background: var(--color-neutral-100);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.log-module {
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.log-action {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.log-meta {
+  display: flex;
+  gap: 20px;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-light);
+}

@@ -1,0 +1,63 @@
+<h1 class="admin-title admin-content-header">Phiên hệ thống</h1>
+
+<nz-spin [nzSpinning]="loading">
+  <nz-card [nzBordered]="false" class="logs-card">
+    <div class="logs-toolbar">
+      <nz-input-group class="search-input">
+        <input nz-input placeholder="Tìm userId hoặc user agent..." [(ngModel)]="searchText" />
+      </nz-input-group>
+      <div class="toolbar-actions">
+        <nz-select [(ngModel)]="statusFilter" nzPlaceHolder="Trạng thái" nzAllowClear style="width: 160px;">
+          <nz-option nzValue="active" nzLabel="Đang hoạt động"></nz-option>
+          <nz-option nzValue="revoked" nzLabel="Đã thu hồi"></nz-option>
+          <nz-option nzValue="inactive" nzLabel="Hết hạn"></nz-option>
+        </nz-select>
+        <button nz-button (click)="loadSessions()">Tải lại</button>
+      </div>
+    </div>
+
+    <nz-table [nzData]="filteredSessions" [nzShowPagination]="true" [nzPageSize]="10" nzSize="middle">
+      <thead>
+        <tr>
+          <th>User ID</th>
+          <th>Client</th>
+          <th>User Agent</th>
+          <th>Trạng thái</th>
+          <th>Last seen</th>
+          <th nzWidth="120px">Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of filteredSessions">
+          <td><span class="log-id">{{ s.userId | slice:0:8 }}…</span></td>
+          <td><nz-tag>{{ s.clientType }}</nz-tag></td>
+          <td class="ua-cell">{{ s.userAgent || '—' }}</td>
+          <td>
+            @if (s.revoked) {
+              <nz-tag nzColor="red">Revoked</nz-tag>
+            } @else if (s.active) {
+              <nz-tag nzColor="green">Active</nz-tag>
+            } @else {
+              <nz-tag>Inactive</nz-tag>
+            }
+          </td>
+          <td>{{ formatTime(s.lastSeenAt) }}</td>
+          <td>
+            @if (!s.revoked) {
+              <button
+                nz-button
+                nzType="text"
+                nzDanger
+                nzSize="small"
+                nz-popconfirm
+                nzPopconfirmTitle="Thu hồi phiên này?"
+                (nzOnConfirm)="revoke(s)"
+                [nzLoading]="revokingId === s.id"
+              >Thu hồi</button>
+            }
+          </td>
+        </tr>
+      </tbody>
+    </nz-table>
+  </nz-card>
+</nz-spin>

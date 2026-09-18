@@ -31,6 +31,11 @@ hs_err_pid*
 # Logs
 *.log
 logs/
+# Angular Logs page is source code, not runtime logs.
+!/apps/web/nongthinh/src/app/views/admin/logs/
+!/apps/web/nongthinh/src/app/views/admin/logs/logs.ts
+!/apps/web/nongthinh/src/app/views/admin/logs/logs.html
+!/apps/web/nongthinh/src/app/views/admin/logs/logs.scss
 
 # Environment / secrets
 .env
