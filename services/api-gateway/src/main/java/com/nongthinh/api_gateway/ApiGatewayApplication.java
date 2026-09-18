@@ -9,6 +9,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 public class ApiGatewayApplication {
 
 	public static void main(String[] args) {
+		//test cicd detect
 		SpringApplication.run(ApiGatewayApplication.class, args);
 	}
 
