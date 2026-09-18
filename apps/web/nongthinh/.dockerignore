@@ -1,0 +1,15 @@
+**
+!package.json
+!package-lock.json
+!angular.json
+!tsconfig*.json
+!postcss.config.js
+!nginx.conf
+!src/
+!src/**
+!public/
+!public/**
+**/.env
+**/.env.*
+**/*.spec.ts
+**/*.test.ts
