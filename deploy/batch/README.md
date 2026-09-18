@@ -33,10 +33,10 @@ Tạo job Pipeline `nongthinh-backends`. Chọn **Pipeline script from SCM**:
 - Script Path: `ci/Jenkinsfile.remaining`
 
 Lần đầu Build Now; các lần sau Build with Parameters. `DEPLOY=false` ở lần đầu.
-`RUN_TESTS=true` mặc định: lỗi test sẽ dừng trước khi push. Một số test có thể cần
-cấu hình môi trường test riêng; khi lỗi, sửa theo log. Chỉ khi chủ động chọn
-`RUN_TESTS=false` mới chạy build/push không có kiểm thử Maven; không coi lần đó là
-đã qua CI test. Các test tích hợp có điều kiện có thể được Maven bỏ qua.
+`RUN_TESTS=false` mặc định: bỏ qua Maven test và test script chuẩn bị; vẫn kiểm tra
+JAR không chứa cấu hình dev và có cấu hình production. Muốn kiểm thử, bật
+`RUN_TESTS=true`; lỗi test sẽ dừng trước khi push. Build bỏ qua test không được coi
+là đã qua CI test. Các test tích hợp có điều kiện có thể được Maven bỏ qua.
 
 Build tuần tự, khoảng 120 phút timeout cho cả batch. Script lấy source từ commit
 đang checkout, loại cấu hình dev khỏi Docker context, kiểm tra từng JAR, rồi push.

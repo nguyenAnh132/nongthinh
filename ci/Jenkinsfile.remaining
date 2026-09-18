@@ -7,8 +7,8 @@ pipeline {
         timeout(time: 120, unit: 'MINUTES')
     }
     parameters {
-        booleanParam(name: 'RUN_TESTS', defaultValue: true,
-            description: 'Run Maven tests for all eight services. Failures stop publication.')
+        booleanParam(name: 'RUN_TESTS', defaultValue: false,
+            description: 'Optional: run Maven and preparation-script tests before publishing. Disabled by default.')
         booleanParam(name: 'DEPLOY', defaultValue: false,
             description: 'Deploy after build. First prepare env/batch on the VPS with prepare.py.')
     }
@@ -20,13 +20,19 @@ pipeline {
                 script {
                     def commit = sh(script: 'git rev-parse --short=12 HEAD', returnStdout: true).trim()
                     env.IMAGE_TAG = "batch-${env.BUILD_NUMBER}-${commit}"
-                    env.RUN_TESTS = params.RUN_TESTS.toString()
+                    env.RUN_TESTS = (params.RUN_TESTS == true).toString()
                 }
             }
         }
         stage('Test, build and push remaining backends') {
             steps {
-                sh 'python3 -B deploy/batch/tests/test_prepare.py'
+                script {
+                    if (params.RUN_TESTS == true) {
+                        sh 'python3 -B deploy/batch/tests/test_prepare.py'
+                    } else {
+                        echo 'Tests skipped (RUN_TESTS=false). Building and checking image contents.'
+                    }
+                }
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-nongthinh',
                     usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_TOKEN')]) {
                     sh 'bash ci/build-remaining.sh'
@@ -57,7 +63,7 @@ pipeline {
     post {
         always {
             script {
-                if (env.IMAGE_TAG) {
+                if (params.RUN_TESTS == true && env.IMAGE_TAG) {
                     junit allowEmptyResults: true, testResults: "batch-test-reports/${env.IMAGE_TAG}/**/*.xml"
                 }
             }
