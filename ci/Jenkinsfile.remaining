@@ -6,10 +6,13 @@ pipeline {
         timestamps()
         timeout(time: 180, unit: 'MINUTES')
     }
+    triggers {
+        githubPush()
+    }
     parameters {
         booleanParam(name: 'RUN_TESTS', defaultValue: false,
             description: 'Optional: run Maven and preparation-script tests before publishing. Disabled by default.')
-        booleanParam(name: 'DEPLOY', defaultValue: false,
+        booleanParam(name: 'DEPLOY', defaultValue: true,
             description: 'Deploy after build. First prepare env/batch on the VPS with prepare.py.')
     }
     stages {
@@ -41,7 +44,7 @@ pipeline {
             }
         }
         stage('Deploy to Ubuntu') {
-            when { expression { params.DEPLOY } }
+            when { expression { params.DEPLOY == null || params.DEPLOY } }
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'nongthinh-deploy-ssh',
                     keyFileVariable: 'DEPLOY_KEY', usernameVariable: 'DEPLOY_USER')]) {
