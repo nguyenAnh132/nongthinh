@@ -6,6 +6,9 @@ pipeline {
         timestamps()
         timeout(time: 45, unit: 'MINUTES')
     }
+    triggers {
+        githubPush()
+    }
     parameters {
         booleanParam(name: 'DEPLOY', defaultValue: true,
             description: 'Deploy frontend on VPS loopback port 8081 after build. Does not change host Nginx/TLS.')

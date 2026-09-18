@@ -46,7 +46,17 @@ curl -I http://127.0.0.1:8081/
 
 After TLS, validate homepage/deep-link reload, static assets, login callback,
 authenticated API requests, uploads, and SSE in the browser. Certificate renewal
-and webhook-triggered builds are separate configuration steps.
+is a separate configuration step.
+
+## Automatic main deployments
+
+The pipeline registers `githubPush()` and defaults `DEPLOY=true`. Reuse the existing
+GitHub push webhook at `<JENKINS_URL>/github-webhook/`. Run the updated pipeline once
+manually with `DEPLOY=true` to register its trigger, then verify a subsequent main
+push starts a build. Both frontend and backend jobs build on main changes; there
+is no path filtering. Set the build node to 1 executor on the shared 4 GB VPS to
+prevent the two jobs building simultaneously. `disableConcurrentBuilds()` only
+serializes builds within one job. Deploy does not overwrite host Nginx/TLS.
 
 Failed deployment stops the job; there is no automatic frontend rollback yet.
 Use a previous archived bundle's deploy.sh to redeploy that frontend image if needed.

@@ -117,8 +117,13 @@ Jenkins dùng credential `nongthinh-deploy-ssh`, copy bundle mới vào thư m�
 mới và chạy deploy.sh. Secret đã có trên VPS được tái sử dụng. Host key SSH phải
 được tin cậy trên agent chạy job như lần kiểm tra trước.
 
-Pipeline hiện build toàn bộ 11 backend, chưa lọc service theo diff. Muốn cấu hình webhook tự deploy main cần bước
-tích hợp tiếp theo; chưa tự bật deployment trên push ở job mới này.
+Pipeline build toàn bộ 11 backend, chưa lọc service theo diff. Trigger `githubPush()`
+dùng webhook GitHub hiện có (`<JENKINS_URL>/github-webhook/`) để kiểm tra thay đổi main.
+Sau khi cập nhật Jenkinsfile, chạy thủ công một lần với `DEPLOY=true`, `RUN_TESTS=false`
+để đăng ký trigger và giá trị mặc định mới. Các push main tiếp theo tự build/deploy,
+không chạy test mặc định. Cần xác nhận bằng một push main thực tế và log Jenkins.
+Đặt node Jenkins đang build chỉ có 1 executor để backend và frontend không build
+đồng thời trên VPS 4 GB; `disableConcurrentBuilds()` chỉ giới hạn trong từng job.
 
 ## Những kiểm tra chức năng còn lại
 
