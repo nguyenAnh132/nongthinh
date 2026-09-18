@@ -20,7 +20,8 @@ printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USER" --pas
 
 # Clean tracked inputs only: no stale workspace files or ignored local secrets.
 git archive HEAD services | tar -x -C "$TASK_TMP/source"
-services=(location-service bo-portal-service notification-service brand-service file-service agri-catalog-service post-service rice-disease-diagnosis-service auth-service profile-service api-gateway)
+mapfile -t services < selected-services.txt
+[[ ${#services[@]} -gt 0 ]] || { echo 'NO_BACKEND_CHANGES'; exit 0; }
 mkdir -p "$ROOT/batch-test-reports/$IMAGE_TAG"
 for service in "${services[@]}"; do
     context="$TASK_TMP/source/services/$service"
@@ -63,8 +64,8 @@ for service in "${services[@]}"; do
     docker push "nguyenanh132/nongthinh-$service:$IMAGE_TAG"
 done
 cp deploy/batch/{services.json,compose.remaining.yml,prepare.py,deploy.sh} "$TASK_TMP/bundle/"
-printf 'REMAINING_TAG=%s\nAUTH_TAG=%s\nPROFILE_TAG=%s\nGATEWAY_TAG=%s\n' \
-    "$IMAGE_TAG" "$IMAGE_TAG" "$IMAGE_TAG" "$IMAGE_TAG" > "$TASK_TMP/bundle/images.env"
+cp release-images.env "$TASK_TMP/bundle/images.env"
+cp release-plan.json selected-services.txt ci/release.py "$TASK_TMP/bundle/"
 tar -czf "nongthinh-backends-$IMAGE_TAG.tar.gz" -C "$TASK_TMP/bundle" .
 echo "BATCH_IMAGES_PUSHED: $IMAGE_TAG"
 echo "RUN_TESTS=${RUN_TESTS:-false}"

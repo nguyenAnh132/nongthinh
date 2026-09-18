@@ -10,8 +10,12 @@ dc=(docker compose --env-file /opt/nongthinh/.env --env-file "$HERE/images.env"
     -f /opt/nongthinh/compose.prod.yml -f "$HERE/compose.remaining.yml")
 "${dc[@]}" config --quiet
 services=(location-service bo-portal-service notification-service brand-service file-service agri-catalog-service post-service rice-disease-diagnosis-service profile-service auth-service api-gateway)
+all_services=("${services[@]}")
+mapfile -t services < "$HERE/selected-services.txt"
+[[ ${#services[@]} -gt 0 ]] || { echo 'NO_BACKEND_CHANGES'; exit 0; }
 "${dc[@]}" pull "${services[@]}"
 "${dc[@]}" exec -T postgres pg_isready -U postgres -d postgres
+python3 "$HERE/release.py" begin --kind backend --state /opt/nongthinh/state/backend.json --plan "$HERE/release-plan.json"
 
 start_and_check() {
     local service="$1" cid state restarts started ready=0
@@ -35,7 +39,7 @@ start_and_check() {
     echo "STARTUP_OK: $service"
 }
 
-# Start sequentially to limit peak memory/CPU; fixes to internal URLs recreate auth/profile.
+# Only selected services are recreated; other image tags and containers are preserved.
 for service in "${services[@]}"; do start_and_check "$service"; done
 
 # Check actual HTTP responses, not just startup log messages.
@@ -53,7 +57,7 @@ check_http() {
 check_http http://127.0.0.1:9090/auth/oauth2/authorization/keycloak 302
 check_http http://127.0.0.1:9092/profile/farmer-profiles/me 401
 check_http http://127.0.0.1:8888/api/v1/profile/farmer-profiles/me 401
-for service in "${services[@]}"; do
+for service in "${all_services[@]}"; do
     cid="$("${dc[@]}" ps -aq "$service")"
     status="$(docker inspect -f '{{.State.Status}}:{{.RestartCount}}:{{.State.OOMKilled}}' "$cid")"
     if [[ "$status" != running:0:false ]]; then
@@ -61,6 +65,7 @@ for service in "${services[@]}"; do
     fi
 done
 "${dc[@]}" ps
+python3 "$HERE/release.py" finish --kind backend --state /opt/nongthinh/state/backend.json --plan "$HERE/release-plan.json"
 echo 'BATCH_STARTUP_OK: all 11 backends running; Auth/Profile/Gateway HTTP checks passed.'
 echo 'Model, SMTP, Kafka flows and public HTTPS still need functional verification.'
 echo 'Review: curl -i http://127.0.0.1:8888/api/v1/profile/farmer-profiles/me'

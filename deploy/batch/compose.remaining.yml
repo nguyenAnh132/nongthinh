@@ -15,17 +15,17 @@ x-app: &app
 
 services:
   auth-service:
-    image: nguyenanh132/nongthinh-auth-service:${AUTH_TAG:?Missing AUTH_TAG}
+    image: nguyenanh132/nongthinh-auth-service:${AUTH_SERVICE_TAG:?Missing AUTH_SERVICE_TAG}
     environment:
       AUTH_PROFILE_SERVICE_URL: http://profile-service:9092/profile
   profile-service:
-    image: nguyenanh132/nongthinh-profile-service:${PROFILE_TAG:?Missing PROFILE_TAG}
+    image: nguyenanh132/nongthinh-profile-service:${PROFILE_SERVICE_TAG:?Missing PROFILE_SERVICE_TAG}
     environment:
       PROFILE_LOCATION_SERVICE_URL: http://location-service:9094/location
 
   location-service:
     <<: *app
-    image: nguyenanh132/nongthinh-location-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    image: nguyenanh132/nongthinh-location-service:${LOCATION_SERVICE_TAG:?Missing LOCATION_SERVICE_TAG}
     env_file:
       - path: ./env/batch/location-service.env
         format: raw
@@ -35,7 +35,7 @@ services:
 
   bo-portal-service:
     <<: *app
-    image: nguyenanh132/nongthinh-bo-portal-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    image: nguyenanh132/nongthinh-bo-portal-service:${BO_PORTAL_SERVICE_TAG:?Missing BO_PORTAL_SERVICE_TAG}
     env_file:
       - path: ./env/batch/bo-portal-service.env
         format: raw
@@ -45,7 +45,7 @@ services:
 
   notification-service:
     <<: *app
-    image: nguyenanh132/nongthinh-notification-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    image: nguyenanh132/nongthinh-notification-service:${NOTIFICATION_SERVICE_TAG:?Missing NOTIFICATION_SERVICE_TAG}
     env_file:
       - path: ./env/batch/notification-service.env
         format: raw
@@ -55,7 +55,7 @@ services:
 
   brand-service:
     <<: *app
-    image: nguyenanh132/nongthinh-brand-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    image: nguyenanh132/nongthinh-brand-service:${BRAND_SERVICE_TAG:?Missing BRAND_SERVICE_TAG}
     env_file:
       - path: ./env/batch/brand-service.env
         format: raw
@@ -65,7 +65,7 @@ services:
 
   file-service:
     <<: *app
-    image: nguyenanh132/nongthinh-file-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    image: nguyenanh132/nongthinh-file-service:${FILE_SERVICE_TAG:?Missing FILE_SERVICE_TAG}
     env_file:
       - path: ./env/batch/file-service.env
         format: raw
@@ -81,7 +81,7 @@ services:
 
   agri-catalog-service:
     <<: *app
-    image: nguyenanh132/nongthinh-agri-catalog-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    image: nguyenanh132/nongthinh-agri-catalog-service:${AGRI_CATALOG_SERVICE_TAG:?Missing AGRI_CATALOG_SERVICE_TAG}
     env_file:
       - path: ./env/batch/agri-catalog-service.env
         format: raw
@@ -91,7 +91,7 @@ services:
 
   post-service:
     <<: *app
-    image: nguyenanh132/nongthinh-post-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    image: nguyenanh132/nongthinh-post-service:${POST_SERVICE_TAG:?Missing POST_SERVICE_TAG}
     env_file:
       - path: ./env/batch/post-service.env
         format: raw
@@ -101,7 +101,7 @@ services:
 
   rice-disease-diagnosis-service:
     <<: *app
-    image: nguyenanh132/nongthinh-rice-disease-diagnosis-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    image: nguyenanh132/nongthinh-rice-disease-diagnosis-service:${RICE_DISEASE_DIAGNOSIS_SERVICE_TAG:?Missing RICE_DISEASE_DIAGNOSIS_SERVICE_TAG}
     env_file:
       - path: ./env/batch/rice-disease-diagnosis-service.env
         format: raw
@@ -111,7 +111,7 @@ services:
 
   api-gateway:
     <<: *app
-    image: nguyenanh132/nongthinh-api-gateway:${GATEWAY_TAG:?Missing GATEWAY_TAG}
+    image: nguyenanh132/nongthinh-api-gateway:${API_GATEWAY_TAG:?Missing API_GATEWAY_TAG}
     env_file:
       - path: ./env/batch/api-gateway.env
         format: raw

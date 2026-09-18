@@ -18,5 +18,6 @@ docker run --rm --network none "$image" nginx -t
 docker push "$image"
 cp "$TASK_TMP/source/deploy/frontend/"{compose.yml,deploy.sh,nginx-http.conf} "$TASK_TMP/bundle/"
 printf 'FRONTEND_TAG=%s\n' "$IMAGE_TAG" > "$TASK_TMP/bundle/images.env"
+cp release-plan.json ci/release.py "$TASK_TMP/bundle/"
 tar -czf "nongthinh-frontend-$IMAGE_TAG.tar.gz" -C "$TASK_TMP/bundle" .
 echo "FRONTEND_IMAGE_PUSHED: $image"

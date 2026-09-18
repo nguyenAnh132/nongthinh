@@ -10,6 +10,8 @@ pipeline {
         githubPush()
     }
     parameters {
+        booleanParam(name: 'FORCE_REBUILD', defaultValue: false,
+            description: 'Rebuild/deploy all components in this job even without source changes.')
         booleanParam(name: 'RUN_TESTS', defaultValue: false,
             description: 'Optional: run Maven and preparation-script tests before publishing. Disabled by default.')
         booleanParam(name: 'DEPLOY', defaultValue: true,
@@ -27,7 +29,24 @@ pipeline {
                 }
             }
         }
-        stage('Build and push all 11 backends') {
+        stage('Detect changes since last deployment') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'nongthinh-deploy-ssh',
+                    keyFileVariable: 'DEPLOY_KEY', usernameVariable: 'DEPLOY_USER')]) {
+                    script {
+                        env.FORCE_REBUILD = (params.FORCE_REBUILD == true).toString()
+                        sh 'bash ci/plan-release.sh backend'
+                        env.HAS_CHANGES = (!readFile('selected-services.txt').trim().isEmpty()).toString()
+                        if (env.HAS_CHANGES != 'true') {
+                            echo 'NO_CHANGES: skipping image build and deployment.'
+                        }
+                    }
+                }
+                archiveArtifacts artifacts: 'release-plan.json,selected-services.txt', fingerprint: true
+            }
+        }
+        stage('Build and push selected backends') {
+            when { expression { env.HAS_CHANGES == 'true' } }
             steps {
                 script {
                     if (params.RUN_TESTS == true) {
@@ -44,7 +63,7 @@ pipeline {
             }
         }
         stage('Deploy to Ubuntu') {
-            when { expression { params.DEPLOY == null || params.DEPLOY } }
+            when { expression { env.HAS_CHANGES == 'true' && (params.DEPLOY == null || params.DEPLOY) } }
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'nongthinh-deploy-ssh',
                     keyFileVariable: 'DEPLOY_KEY', usernameVariable: 'DEPLOY_USER')]) {
@@ -72,7 +91,7 @@ pipeline {
             }
         }
         success {
-            echo "BATCH_IMAGES_PUSHED: ${env.IMAGE_TAG}; tests=${params.RUN_TESTS}; deploy=${params.DEPLOY}"
+            echo "BACKEND_RESULT: ${env.IMAGE_TAG}; changes=${env.HAS_CHANGES}; tests=${params.RUN_TESTS}; deploy=${params.DEPLOY}"
         }
     }
 }
