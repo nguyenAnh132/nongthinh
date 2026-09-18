@@ -1,4 +1,4 @@
-# Triển khai đồng loạt backend còn lại
+# Triển khai đồng loạt toàn bộ 11 backend
 
 Áp dụng cho VPS `160.250.186.236` đã có `/opt/nongthinh/compose.prod.yml`,
 PostgreSQL, Auth và Profile như các bước trước. Không thay file Compose gốc
@@ -22,7 +22,7 @@ nongthinh-post-service
 nongthinh-rice-disease-diagnosis-service
 ```
 
-## 2. Jenkins: một build cho tám image
+## 2. Jenkins: một build cho 11 image
 
 Tạo job Pipeline `nongthinh-backends`. Chọn **Pipeline script from SCM**:
 
@@ -38,7 +38,7 @@ JAR không chứa cấu hình dev và có cấu hình production. Muốn kiểm 
 `RUN_TESTS=true`; lỗi test sẽ dừng trước khi push. Build bỏ qua test không được coi
 là đã qua CI test. Các test tích hợp có điều kiện có thể được Maven bỏ qua.
 
-Build tuần tự, khoảng 120 phút timeout cho cả batch. Script lấy source từ commit
+Build tuần tự, 180 phút timeout cho cả batch. Script lấy source từ commit
 đang checkout, loại cấu hình dev khỏi Docker context, kiểm tra từng JAR, rồi push.
 Kiểm tra JAR không phải công cụ quét mọi loại secret; không hardcode secret trong source.
 Jenkins không nhận mật khẩu database/SMTP/Redis production.
@@ -46,7 +46,9 @@ Agent Ubuntu cần `python3` cho kiểm tra script chuẩn bị và `tar`, `bash
 như các bước trước. VPS deploy cần `python3`, `flock` (thường có sẵn trên Ubuntu).
 
 Khi thành công, tải artifact `nongthinh-backends-batch-N-COMMIT.tar.gz` từ build.
-Gateway dùng image đã có `build-3-e90ec03641f7`; Auth/Profile giữ image của Compose gốc.
+Bundle mới ghi cùng tag cho cả 11 image, bao gồm Auth/Profile/Gateway; overlay ghi đè
+tag cũ trong Compose gốc. Các repository Auth/Profile/Gateway đã có từ bước trước.
+Giữ nguyên tên job và Script Path để không phải tạo lại Jenkins job.
 
 ## 3. Chuyển bundle lên VPS, chuẩn bị secret một lần
 
@@ -97,7 +99,9 @@ Khi lỗi, script dừng tại service lỗi, in log và giữ các service đã
 cấu hình, chạy lại cùng lệnh. Không có tự động rollback database migration. Mỗi lần
 thay đổi schema sau khi có dữ liệu thật cần backup trước khi deploy.
 
-Thành công startup in `BATCH_STARTUP_OK`. Kiểm tra Gateway:
+Script tạo lại từng backend và kiểm tra log từ lần khởi động hiện tại, rồi kiểm tra
+Auth 302, Profile 401, Gateway 401 và không có restart/OOM. Thành công in
+`BATCH_STARTUP_OK`. Kiểm tra Gateway thủ công:
 
 ```bash
 curl -i http://127.0.0.1:8888/api/v1/profile/farmer-profiles/me
@@ -113,8 +117,7 @@ Jenkins dùng credential `nongthinh-deploy-ssh`, copy bundle mới vào thư m�
 mới và chạy deploy.sh. Secret đã có trên VPS được tái sử dụng. Host key SSH phải
 được tin cậy trên agent chạy job như lần kiểm tra trước.
 
-Pipeline hiện build toàn bộ tám backend, chưa lọc service theo diff và chưa tự triển
-khai Auth/Profile/Gateway image mới. Muốn cấu hình webhook tự deploy main cần bước
+Pipeline hiện build toàn bộ 11 backend, chưa lọc service theo diff. Muốn cấu hình webhook tự deploy main cần bước
 tích hợp tiếp theo; chưa tự bật deployment trên push ở job mới này.
 
 ## Những kiểm tra chức năng còn lại

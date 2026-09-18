@@ -4,7 +4,7 @@ pipeline {
         skipDefaultCheckout(true)
         disableConcurrentBuilds()
         timestamps()
-        timeout(time: 120, unit: 'MINUTES')
+        timeout(time: 180, unit: 'MINUTES')
     }
     parameters {
         booleanParam(name: 'RUN_TESTS', defaultValue: false,
@@ -24,7 +24,7 @@ pipeline {
                 }
             }
         }
-        stage('Test, build and push remaining backends') {
+        stage('Build and push all 11 backends') {
             steps {
                 script {
                     if (params.RUN_TESTS == true) {

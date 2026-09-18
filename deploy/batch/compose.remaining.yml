@@ -15,9 +15,11 @@ x-app: &app
 
 services:
   auth-service:
+    image: nguyenanh132/nongthinh-auth-service:${AUTH_TAG:?Missing AUTH_TAG}
     environment:
       AUTH_PROFILE_SERVICE_URL: http://profile-service:9092/profile
   profile-service:
+    image: nguyenanh132/nongthinh-profile-service:${PROFILE_TAG:?Missing PROFILE_TAG}
     environment:
       PROFILE_LOCATION_SERVICE_URL: http://location-service:9094/location
 
@@ -109,7 +111,7 @@ services:
 
   api-gateway:
     <<: *app
-    image: nguyenanh132/nongthinh-api-gateway:${GATEWAY_TAG:-build-3-e90ec03641f7}
+    image: nguyenanh132/nongthinh-api-gateway:${GATEWAY_TAG:?Missing GATEWAY_TAG}
     env_file:
       - path: ./env/batch/api-gateway.env
         format: raw
