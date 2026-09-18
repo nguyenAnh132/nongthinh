@@ -12,7 +12,7 @@ public class KeycloakProperties {
     private String url;
     private String realm;
 
-    public String getIssuerUri() {
+    public String buildIssuerUri() {
         if (url == null || url.isBlank()) {
             throw new IllegalStateException("keycloak.url must be configured");
         }
