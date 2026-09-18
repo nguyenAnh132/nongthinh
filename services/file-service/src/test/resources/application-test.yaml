@@ -45,7 +45,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://keycloak.nongthinh.nvtanh.id.vn/realms/nongthinh
+          issuer-uri: https://auth.nongthinh.nvtanh.id.vn/realms/nongthinh
     api-key:
       header-name: X-API-KEY
       current-service-key: file
