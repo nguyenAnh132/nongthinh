@@ -1,0 +1,74 @@
+[
+  {
+    "name": "location-service",
+    "prefix": "LOCATION_SERVICE",
+    "db": "location_service",
+    "user": "location_app",
+    "port": 9094,
+    "context": "/location",
+    "memory": 256
+  },
+  {
+    "name": "bo-portal-service",
+    "prefix": "BO_PORTAL_SERVICE",
+    "db": "bo_portal_service",
+    "user": "bo_portal_app",
+    "port": 9096,
+    "context": "/bo-portal",
+    "memory": 320
+  },
+  {
+    "name": "notification-service",
+    "prefix": "NOTIFICATION_SERVICE",
+    "db": "notification_service",
+    "user": "notification_app",
+    "port": 9093,
+    "context": "/notification",
+    "memory": 384
+  },
+  {
+    "name": "brand-service",
+    "prefix": "BRAND_SERVICE",
+    "db": "brand_service",
+    "user": "brand_app",
+    "port": 9097,
+    "context": "/brand",
+    "memory": 448
+  },
+  {
+    "name": "file-service",
+    "prefix": "FILE_SERVICE",
+    "db": "file_service",
+    "user": "file_app",
+    "port": 9095,
+    "context": "/files",
+    "memory": 384
+  },
+  {
+    "name": "agri-catalog-service",
+    "prefix": "AGRI_CATALOG_SERVICE",
+    "db": "agri_catalog_service",
+    "user": "agri_catalog_app",
+    "port": 9098,
+    "context": "/agri-catalog",
+    "memory": 448
+  },
+  {
+    "name": "post-service",
+    "prefix": "POST_SERVICE",
+    "db": "post_service",
+    "user": "post_app",
+    "port": 9100,
+    "context": "/posts",
+    "memory": 448
+  },
+  {
+    "name": "rice-disease-diagnosis-service",
+    "prefix": "RICE_DISEASE_DIAGNOSIS_SERVICE",
+    "db": "diagnosis_service",
+    "user": "diagnosis_app",
+    "port": 9099,
+    "context": "/diagnosis",
+    "memory": 1024
+  }
+]
