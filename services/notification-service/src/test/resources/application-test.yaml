@@ -1,0 +1,27 @@
+# In-memory application wiring test: no external DB, Kafka, Keycloak or SMTP.
+spring:
+  datasource:
+    url: jdbc:h2:mem:notification_service_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+  security:
+    api-key:
+      header-name: X-API-KEY
+      current-service-key: test-notification-key
+  kafka:
+    bootstrap-servers: 127.0.0.1:1
+    listener:
+      auto-startup: false
+    admin:
+      auto-create: false
+  mail:
+    host: localhost
+    port: 2525
+    username: test
+    password: test

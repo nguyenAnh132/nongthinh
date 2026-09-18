@@ -1,0 +1,16 @@
+# Application wiring smoke test only; PostgreSQL migrations are verified separately.
+spring:
+  datasource:
+    url: jdbc:h2:mem:location_service_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+  security:
+    api-key:
+      header-name: X-API-KEY
+      current-service-key: test-location-key
