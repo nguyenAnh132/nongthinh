@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   Observable,
+  Subscription,
   catchError,
   combineLatest,
   concatMap,
@@ -35,6 +36,7 @@ import {
   PostTopicView,
   PostTypeView,
   PostView,
+  PostFeedView,
 } from '../../../core/api/post-api.service';
 import {
   BrandProfilePublicResponse,
@@ -114,7 +116,11 @@ export class Community {
   private readonly injector = inject(Injector);
   private readonly destroyRef = inject(DestroyRef);
 
-  private readonly pageSize = 20;
+  private readonly pageSize = 10;
+  private feedSubscription?: Subscription;
+  private nextCursor: string | null = null;
+  private pullStart: { x: number; y: number } | null = null;
+  private readonly pullThreshold = 80;
   private readonly commentPageSize = 10;
   private readonly maxConcurrentEnrichmentRequests = 4;
   private readonly authorCache = new Map<string, CommunityAuthor>();
@@ -158,6 +164,9 @@ export class Community {
   readonly feedLoading = signal(true);
   readonly loadingMore = signal(false);
   readonly feedError = signal('');
+  readonly loadMoreError = signal('');
+  readonly followingOnly = signal(false);
+  readonly pullDistance = signal(0);
   readonly creatingPost = signal(false);
   readonly createPostError = signal('');
   readonly modalCategory = signal<PostCategory | null>(null);
@@ -208,6 +217,9 @@ export class Community {
   });
 
   readonly emptyDescription = computed(() => {
+    if (this.activeFilter() === 'HOME' && this.followingOnly()) {
+      return 'Chưa có bài viết công khai từ những người bạn đang theo dõi.';
+    }
     if (this.activeFilter() === 'SAVED') {
       return 'Bạn chưa lưu bài viết nào. Hãy lưu những nội dung hữu ích để xem lại sau.';
     }
@@ -267,11 +279,61 @@ export class Community {
       void this.router.navigate(['/app/community'], { queryParams: { filter } });
       return;
     }
-    if (this.activeFilter() === filter && !this.focusedPostId) return;
+    if (this.activeFilter() === filter && !this.focusedPostId) {
+      if (filter === 'HOME') this.refreshFeed();
+      return;
+    }
     this.focusedPostId = null;
     this.activeFilter.set(filter);
-    if (this.catalogReady) this.loadPosts();
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.refreshFeed();
+  }
+
+  refreshFeed(): void {
+    if (!this.catalogReady) return;
+    this.cancelPull();
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
+    this.loadPosts();
+  }
+
+  selectFeedSource(followingOnly: boolean): void {
+    if (this.followingOnly() === followingOnly) return;
+    this.followingOnly.set(followingOnly);
+    this.refreshFeed();
+  }
+
+  startPull(event: TouchEvent): void {
+    if (this.detailMode() || this.embedded() || this.feedLoading() || this.modalOpen()
+        || window.scrollY > 0 || event.touches.length !== 1) return;
+    if (event.target instanceof Element && event.target.closest('button, a, input, textarea, select')) return;
+    const touch = event.touches[0];
+    this.pullStart = { x: touch.clientX, y: touch.clientY };
+  }
+
+  movePull(event: TouchEvent): void {
+    if (!this.pullStart) return;
+    if (event.touches.length !== 1 || window.scrollY > 0) {
+      this.cancelPull();
+      return;
+    }
+    const touch = event.touches[0];
+    const distance = touch.clientY - this.pullStart.y;
+    if (distance < 0 || Math.abs(touch.clientX - this.pullStart.x) > 40) {
+      this.cancelPull();
+      return;
+    }
+    this.pullDistance.set(Math.min(distance, this.pullThreshold + 20));
+    if (distance > 10 && event.cancelable) event.preventDefault();
+  }
+
+  endPull(): void {
+    const shouldRefresh = this.pullDistance() >= this.pullThreshold;
+    this.cancelPull();
+    if (shouldRefresh) this.refreshFeed();
+  }
+
+  cancelPull(): void {
+    this.pullStart = null;
+    this.pullDistance.set(0);
   }
 
   retryFeed(): void {
@@ -317,8 +379,9 @@ export class Community {
   }
 
   @HostListener('window:scroll')
-  loadMoreOnEmbeddedScroll(): void {
-    if (!this.embedded() || !this.hasNextPage() || this.loadingMore()) return;
+  loadMoreOnScroll(): void {
+    if (this.detailMode() || this.feedLoading() || this.loadMoreError() || this.modalOpen()
+        || !this.hasNextPage() || this.loadingMore()) return;
     const progress = (window.scrollY + window.innerHeight)
       / Math.max(document.documentElement.scrollHeight, 1);
     if (progress >= 0.7) this.loadMore();
@@ -364,7 +427,7 @@ export class Community {
   }
 
   loadMore(): void {
-    if (!this.hasNextPage() || this.loadingMore()) return;
+    if (this.detailMode() || this.feedLoading() || !this.hasNextPage() || this.loadingMore()) return;
     this.loadPosts(true);
   }
 
@@ -449,13 +512,7 @@ export class Community {
         next: () => {
           this.modalOpen.set(false);
           this.modalCategory.set(null);
-          this.activeFilter.set('HOME');
-          this.notify('Bài viết đã được đăng lên cộng đồng.');
-          if (this.detailMode()) {
-            void this.router.navigate(['/app/community']);
-            return;
-          }
-          this.loadPosts();
+          this.notify('Đã đăng bài viết. Làm mới bảng tin để xem bài mới.');
         },
         error: (error) => {
           const message = apiErrorMessage(error, 'Không thể đăng bài lúc này. Vui lòng thử lại.');
@@ -930,6 +987,14 @@ export class Community {
   }
 
   private loadPosts(append = false): void {
+    const requestId = ++this.feedRequestId;
+    this.feedSubscription?.unsubscribe();
+    this.loadingMore.set(false);
+    this.loadMoreError.set('');
+    if (!append) {
+      this.nextCursor = null;
+      this.hasNextPage.set(false);
+    }
     const filter = this.embedded() ? 'HOME' : this.activeFilter();
     const profileAuthorId = this.embedded() ? this.authorUserId() : null;
     if (filter === 'GROUPS' && !this.detailMode()) {
@@ -942,11 +1007,10 @@ export class Community {
     }
 
     const page = append ? this.currentPage() + 1 : 0;
-    const requestId = ++this.feedRequestId;
     this.feedError.set('');
     append ? this.loadingMore.set(true) : this.feedLoading.set(true);
 
-    const request$ = this.focusedPostId
+    const request$: Observable<ApiResponse<PostFeedView | PageView<PostView>>> = this.focusedPostId
       ? this.postApi.getPost(this.focusedPostId).pipe(map(response => {
           if (!response.result) throw new Error('Bài viết không tồn tại hoặc bạn không có quyền xem.');
           return { ...response, result: { ...this.emptyPage(0), items: [response.result], totalElements: 1 } };
@@ -955,18 +1019,19 @@ export class Community {
         ? this.postApi.listMyPosts({ status: 'PUBLISHED', page, size: this.pageSize })
         : filter === 'SAVED'
           ? this.postApi.listMyBookmarkedPosts({ page, size: this.pageSize })
-          : this.postApi.listPublicPosts({
+          : this.postApi.getFeed({
               authorUserId: profileAuthorId,
               postTypeId: this.postTypeIdForFilter(filter),
               keyword: this.searchTerm(),
-              page,
-              size: this.pageSize,
+              cursor: append ? this.nextCursor : null,
+              followingOnly: !this.embedded() && filter === 'HOME' && this.followingOnly(),
             });
 
-    request$
+    this.feedSubscription = request$
       .pipe(
         switchMap((response) => {
-          const result = response.result ?? this.emptyPage(page);
+          if (!response.result) throw new Error('Không thể tải bảng tin. Vui lòng thử lại.');
+          const result = response.result;
           const views = profileAuthorId
             ? result.items.filter((post) => post.authorUserId === profileAuthorId)
             : result.items;
@@ -985,7 +1050,15 @@ export class Community {
       .subscribe({
         next: ({ result, items }) => {
           if (requestId !== this.feedRequestId) return;
-          this.posts.update((current) => (append ? [...current, ...items] : items));
+          this.posts.update((current) => {
+            const existing = new Set(append ? current.map(post => post.id) : []);
+            const unique = items.filter(post => {
+              if (existing.has(post.id)) return false;
+              existing.add(post.id);
+              return true;
+            });
+            return append ? [...current, ...unique] : unique;
+          });
           this.syncVisibleMetrics();
           if (this.detailMode() && items.length) {
             this.loadComments({ postId: items[0].id, append: false });
@@ -998,12 +1071,13 @@ export class Community {
               }
             }, { injector: this.injector });
           }
-          this.currentPage.set(result.page);
+          this.currentPage.set('page' in result ? result.page : page);
+          this.nextCursor = 'nextCursor' in result ? result.nextCursor : null;
           this.hasNextPage.set(result.hasNext);
         },
         error: (error) => {
           if (requestId !== this.feedRequestId) return;
-          this.feedError.set(
+          (append ? this.loadMoreError : this.feedError).set(
             apiErrorMessage(error, this.detailMode()
               ? 'Bài viết không tồn tại hoặc bạn không có quyền xem.'
               : 'Không thể tải bảng tin. Vui lòng thử lại.'),
@@ -1048,7 +1122,7 @@ export class Community {
                 ? { summary: response.result, error: '' }
                 : {
                     summary: this.emptyReactionSummary(),
-                    error: 'Post service không trả về tổng hợp cảm xúc.',
+              error: 'Không thể tải tổng hợp cảm xúc. Vui lòng thử lại.',
                   };
               return [post.id, enrichment] as const;
             }),
@@ -1079,7 +1153,7 @@ export class Community {
                 ? { summary: response.result, error: '' }
                 : {
                     summary: this.emptyShareSummary(post.id),
-                    error: 'Post service không trả về tổng lượt chia sẻ.',
+              error: 'Không thể tải tổng lượt chia sẻ. Vui lòng thử lại.',
                   };
               return [post.id, enrichment] as const;
             }),
@@ -1144,7 +1218,7 @@ export class Community {
                 ? { status: response.result, error: '' }
                 : {
                     status: { postId: post.id, bookmarked: false },
-                    error: 'Post service không trả về trạng thái lưu bài viết.',
+              error: 'Không thể tải trạng thái lưu bài viết. Vui lòng thử lại.',
                   };
               return [post.id, enrichment] as const;
             }),

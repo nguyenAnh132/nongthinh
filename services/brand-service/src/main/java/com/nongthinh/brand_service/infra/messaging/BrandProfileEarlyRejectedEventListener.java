@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import com.nongthinh.brand_service.application.event.BrandProfileRejectedEvent;
 import com.nongthinh.brand_service.application.port.in.workflow.CancelBrandApprovalProcessUseCase;
 import com.nongthinh.brand_service.application.port.out.EventDeserializer;
-import com.nongthinh.brand_service.common.constant.KafkaTopicConstant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +16,7 @@ public class BrandProfileEarlyRejectedEventListener {
     private final EventDeserializer eventDeserializer;
     private final CancelBrandApprovalProcessUseCase cancelBrandApprovalProcessUseCase;
 
-    @KafkaListener(topics = KafkaTopicConstant.BRAND_PROFILE_REJECTED)
+    @KafkaListener(topics = "#{@kafkaTopicProperties.brandProfileRejected}")
     public void onBrandProfileRejected(String payload) {
         BrandProfileRejectedEvent event = eventDeserializer.deserialize(payload, BrandProfileRejectedEvent.class);
 

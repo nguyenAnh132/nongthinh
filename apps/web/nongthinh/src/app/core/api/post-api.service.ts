@@ -96,6 +96,22 @@ export interface PostView {
   deletedAt?: string | null;
 }
 
+export interface PostFeedView {
+  items: PostView[];
+  nextCursor: string | null;
+  hasNext: boolean;
+}
+
+export interface GetPostFeedParams {
+  cursor?: string | null;
+  postTypeId?: string | null;
+  topicId?: string | null;
+  cropTypeId?: string | null;
+  authorUserId?: string | null;
+  keyword?: string | null;
+  followingOnly?: boolean;
+}
+
 export interface PostCommentView extends Partial<CommentMetrics> {
   id: string;
   postId: string;
@@ -394,6 +410,21 @@ export class PostApiService {
     return this.http.get<ApiResponse<PageView<PostView>>>(`${this.baseUrl}/`, {
       params: httpParams,
     });
+  }
+
+  getFeed(params: GetPostFeedParams = {}): Observable<ApiResponse<PostFeedView>> {
+    let httpParams = new HttpParams().set('followingOnly', String(params.followingOnly ?? false));
+    for (const [key, value] of Object.entries({
+      cursor: params.cursor,
+      postTypeId: params.postTypeId,
+      topicId: params.topicId,
+      cropTypeId: params.cropTypeId,
+      authorUserId: params.authorUserId,
+      keyword: params.keyword?.trim(),
+    })) {
+      if (value) httpParams = httpParams.set(key, value);
+    }
+    return this.http.get<ApiResponse<PostFeedView>>(`${this.baseUrl}/feed`, { params: httpParams });
   }
 
   listMyPosts(params: ListMyPostsParams = {}): Observable<ApiResponse<PageView<PostView>>> {

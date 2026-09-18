@@ -1,3 +1,5 @@
+import { UserFacingError } from './user-facing-error';
+
 export interface ApiResponse<T> {
   code?: string | number;
   message?: string;
@@ -65,13 +67,10 @@ export function unwrapApiResult<T>(response: unknown): T | null {
 }
 
 export function apiResponseErrorMessage(
-  response: { message?: string } | null | undefined,
+  response: { code?: string | number; message?: string } | null | undefined,
   fallback: string,
 ): string {
-  if (response?.message) {
-    return response.message;
-  }
-  return fallback;
+  return mappedErrorMessage(response?.code) ?? safeFallback(fallback);
 }
 
 /** Legacy numeric codes + auth-service string codes (BUS_*, VAL_*, …). */
@@ -244,7 +243,6 @@ interface BackendErrorBody {
 interface HttpErrorLike {
   status?: number;
   error?: BackendErrorBody | string;
-  message?: string;
 }
 
 function extractBackendBody(err: unknown): BackendErrorBody | null {
@@ -257,8 +255,19 @@ function extractBackendBody(err: unknown): BackendErrorBody | null {
 }
 
 function normalizeErrorCode(code: number | string | null | undefined): string | null {
-  if (code == null) return null;
+  if (typeof code !== 'string' && typeof code !== 'number') return null;
   return String(code);
+}
+
+const GENERIC_ERROR_MESSAGE = 'Đã có lỗi xảy ra. Vui lòng thử lại sau.';
+
+function mappedErrorMessage(code: number | string | null | undefined): string | null {
+  const key = normalizeErrorCode(code);
+  return key !== null && Object.hasOwn(ERROR_MESSAGES, key) ? ERROR_MESSAGES[key] : null;
+}
+
+function safeFallback(fallback: string): string {
+  return fallback.trim() || GENERIC_ERROR_MESSAGE;
 }
 
 export function apiErrorCode(err: unknown): string | null {
@@ -267,16 +276,25 @@ export function apiErrorCode(err: unknown): string | null {
 }
 
 export function apiErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof UserFacingError) return err.message.trim() || safeFallback(fallback);
   const body = extractBackendBody(err);
-  const code = normalizeErrorCode(body?.code);
-  if (code && ERROR_MESSAGES[code]) {
-    return ERROR_MESSAGES[code];
-  }
-  if (body?.message) {
-    return body.message;
-  }
+  const mapped = mappedErrorMessage(body?.code);
+  if (mapped) return mapped;
+
+  // Raw HTTP/backend messages may contain internal URLs, SQL or stack traces.
+  // Only known error codes and frontend-authored messages are shown to users.
   const e = err as HttpErrorLike;
-  return e?.message ?? fallback;
+  switch (e?.status) {
+    case 0: return 'Không thể kết nối đến hệ thống. Vui lòng kiểm tra kết nối mạng và thử lại.';
+    case 401: return 'Phiên đăng nhập đã hết hạn hoặc bạn chưa đăng nhập. Vui lòng đăng nhập lại.';
+    case 403: return 'Bạn không có quyền thực hiện thao tác này.';
+    case 408:
+    case 504: return 'Yêu cầu xử lý quá lâu. Vui lòng thử lại sau.';
+    case 413: return 'Tệp hoặc dữ liệu gửi lên vượt quá dung lượng cho phép.';
+    case 429: return 'Bạn thao tác quá nhanh. Vui lòng chờ một lúc rồi thử lại.';
+  }
+  if (typeof e?.status === 'number' && e.status >= 500) return GENERIC_ERROR_MESSAGE;
+  return safeFallback(fallback);
 }
 
 export function loginErrorCode(err: unknown): LoginErrorCode {

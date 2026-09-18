@@ -11,9 +11,9 @@
       <input
         #fileInput
         id="post-media"
-        type="file"
+        type="file" [disabled]="(uploadPolicies.unavailable('POST_IMAGE') && uploadPolicies.unavailable('POST_VIDEO'))"
         multiple
-        accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
+        [accept]="uploadPolicies.accept('POST_IMAGE') + ',' + uploadPolicies.accept('POST_VIDEO')"
         (change)="onMediaSelected($event)"
       />
 
@@ -84,9 +84,8 @@
         </div>
       }
 
-      @if (mediaError) {
-        <p class="field-error media-error">{{ mediaError }}</p>
-      }
+      <app-upload-policy-hint purpose="POST_IMAGE" />
+      <app-upload-policy-hint purpose="POST_VIDEO" />
 
       <section class="post-options" aria-labelledby="post-options-title">
         <div class="post-options__header">
@@ -96,6 +95,7 @@
               type="button"
               class="option-entry"
               aria-label="Chọn ảnh hoặc video"
+              [disabled]="uploadPolicies.unavailable('POST_IMAGE') && uploadPolicies.unavailable('POST_VIDEO')"
               (click)="openMediaPicker(fileInput)"
             >
               <span class="option-icon option-icon--media" aria-hidden="true">

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class PostNotificationEventListener {
     private final PostEngagementEventDecoder decoder;
     private final HandlePostEngagementUseCase useCase;
-    @KafkaListener(topics = "${post-realtime.topic:post.engagement.v1}",
+    @KafkaListener(topics = "#{@kafkaTopicProperties.postEngagement}",
             groupId = "notification-post-engagement-v1", containerFactory = "postEngagementKafkaListenerContainerFactory",
             properties = {"auto.offset.reset=earliest"})
     public void receive(String value) { useCase.execute(decoder.decode(value)); }

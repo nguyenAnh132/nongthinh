@@ -15,10 +15,11 @@ public class EventPublisherImpl implements EventPublisher {
 
     private final EventSerializer eventSerializer;
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTopicResolver kafkaTopicResolver;
 
     @Override
     public void publish(DomainEvent event) {
-        String topic = KafkaTopicResolver.resolve(event);
+        String topic = kafkaTopicResolver.resolve(event);
         String json = eventSerializer.serialize(event);
         String key = event.eventId().toString();
         try {

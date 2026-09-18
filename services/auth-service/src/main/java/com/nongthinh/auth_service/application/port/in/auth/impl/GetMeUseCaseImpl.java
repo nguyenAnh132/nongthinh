@@ -21,6 +21,7 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
 
     private final UserRepository userRepository;
     private final ProfileQuery profileQuery;
+    private final com.nongthinh.auth_service.application.port.in.user.SynchronizeBrandRoleUseCase synchronizeBrandRoleUseCase;
 
     @Override
     public MeView execute(UUID userId, Set<String> roles, String adminGroup, Set<String> permissions) {
@@ -28,6 +29,12 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         ProfileView profile = resolveProfile(user.getId(), roles);
+
+        boolean brandAccount = roles.contains(RoleConstant.ROLE_BRAND) || roles.contains(RoleConstant.ROLE_BRAND_PENDING);
+        boolean activeBrand = profile != null && "ACTIVE".equals(profile.status());
+        if (brandAccount && activeBrand != roles.contains(RoleConstant.ROLE_BRAND)) {
+            synchronizeBrandRoleUseCase.execute(userId);
+        }
 
         boolean requiresProfileCompletion = requiresProfileCompletion(roles, profile);
         boolean brandRejected = isBrandRejected(profile);
@@ -49,7 +56,7 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
         if (roles.contains(RoleConstant.ROLE_FARMER)) {
             return profileQuery.getFarmerProfile(userId).orElse(null);
         }
-        if (roles.contains(RoleConstant.ROLE_BRAND)) {
+        if ((roles.contains(RoleConstant.ROLE_BRAND) || roles.contains(RoleConstant.ROLE_BRAND_PENDING))) {
             return profileQuery.getBrandProfile(userId).orElse(null);
         }
         if (roles.contains(RoleConstant.ROLE_ADMIN)) {
@@ -59,7 +66,7 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
     }
 
     private boolean requiresProfileCompletion(Set<String> roles, ProfileView profile) {
-        boolean profileRequiredRole = roles.contains(RoleConstant.ROLE_FARMER) || roles.contains(RoleConstant.ROLE_BRAND);
+        boolean profileRequiredRole = roles.contains(RoleConstant.ROLE_FARMER) || (roles.contains(RoleConstant.ROLE_BRAND) || roles.contains(RoleConstant.ROLE_BRAND_PENDING));
         return profileRequiredRole && profile == null;
     }
 

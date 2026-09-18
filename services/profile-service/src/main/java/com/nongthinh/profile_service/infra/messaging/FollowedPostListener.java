@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class FollowedPostListener {
     private final EventDeserializer decoder;
     private final HandleFollowedPostUseCase handler;
-    @KafkaListener(topics="${POST_ENGAGEMENT_TOPIC:post.engagement.v1}",
+    @KafkaListener(topics="#{@kafkaTopicProperties.postEngagement}",
             groupId="profile-follow-notifications", containerFactory="followKafkaListenerContainerFactory",
             properties={"auto.offset.reset=earliest", "enable.auto.commit=false"})
     public void consume(String message) { handler.execute(decoder.deserialize(message, PostPublishedEvent.class)); }

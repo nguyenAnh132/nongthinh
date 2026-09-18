@@ -1,6 +1,8 @@
 package com.nongthinh.profile_service.common.exception;
 
 public enum ErrorCode {
+    BRAND_ACCESS_DENIED("BRAND_ACCESS_DENIED", "Brand verification is required for this operation", ErrorType.AUTHORIZATION),
+    BRAND_ACCESS_UNAVAILABLE("BRAND_ACCESS_UNAVAILABLE", "Cannot verify brand access", ErrorType.INTERNAL_SERVICE),
     SELF_FOLLOW_NOT_ALLOWED("PRO_SELF_FOLLOW_NOT_ALLOWED", "Cannot follow yourself", ErrorType.BUSINESS_RULE),
 
     PROFILE_UNDER_REVIEW("PRO_PROFILE_UNDER_REVIEW", "Profile is under review", ErrorType.BUSINESS_RULE),

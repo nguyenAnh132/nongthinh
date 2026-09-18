@@ -1,3 +1,5 @@
+import { UploadPolicyService } from '../../../core/service/upload-policy.service';
+import { UploadPolicyHint } from '../../../shared/upload-policy-hint/upload-policy-hint';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, DestroyRef, OnDestroy, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -33,6 +35,7 @@ type OperationTab = 'products' | 'product' | 'category' | 'disease' | 'history' 
   selector: 'app-brand-operations',
   standalone: true,
   imports: [
+    UploadPolicyHint,
     CommonModule,
     ReactiveFormsModule,
     DiseaseManagement,
@@ -43,6 +46,7 @@ type OperationTab = 'products' | 'product' | 'category' | 'disease' | 'history' 
   styleUrl: './brand-operations.scss',
 })
 export class BrandOperations implements OnInit, OnDestroy {
+  readonly uploadPolicies = inject(UploadPolicyService).watch(['PRODUCT_IMAGE']);
   private readonly fb = inject(FormBuilder);
   private readonly catalogApi = inject(AgriCatalogApiService);
   private readonly auth = inject(AuthService);
@@ -559,14 +563,9 @@ export class BrandOperations implements OnInit, OnDestroy {
     this.revokeImagePreview();
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      this.imageError = 'Chỉ chấp nhận ảnh JPEG, PNG hoặc WebP.';
-      input.value = '';
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      this.imageError = 'Ảnh không được vượt quá 5 MB.';
+    const validationError = this.uploadPolicies.validate(file, 'PRODUCT_IMAGE');
+    if (validationError) {
+      this.toast.error(validationError);
       input.value = '';
       return;
     }

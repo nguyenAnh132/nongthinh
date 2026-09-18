@@ -70,7 +70,7 @@ describe('Public product catalog', () => {
     queryParams.next(convertToParamMap({ q: 'new' }));
     oldResponse.next({ result: page });
     fixture.detectChanges();
-    expect(fixture.componentInstance.error()).toBe('Unavailable');
+    expect(fixture.componentInstance.error()).toBe('Không thể tải danh sách sản phẩm.');
     expect(fixture.componentInstance.result()).toBeNull();
     fixture.componentInstance.load();
     expect(search).toHaveBeenLastCalledWith('new', 0);
@@ -128,6 +128,6 @@ describe('Public product catalog', () => {
     params.next(convertToParamMap({ productId: 'product-2' }));
     fixture.detectChanges();
     expect(fixture.componentInstance.detail()).toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('Product unavailable');
+    expect(fixture.nativeElement.textContent).toContain('Sản phẩm không còn hiển thị hoặc không thể tải.');
   });
 });

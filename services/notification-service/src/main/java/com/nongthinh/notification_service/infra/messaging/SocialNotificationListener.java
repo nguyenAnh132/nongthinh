@@ -10,7 +10,7 @@ import tools.jackson.databind.ObjectMapper;
 public class SocialNotificationListener {
     private final ObjectMapper json;
     private final HandleSocialNotificationUseCase handler;
-    @KafkaListener(topics="${PROFILE_NOTIFICATION_TOPIC:profile.notifications.v1}",
+    @KafkaListener(topics="#{@kafkaTopicProperties.profileNotifications}",
             groupId="social-notifications", containerFactory="postEngagementKafkaListenerContainerFactory",
             properties={"auto.offset.reset=earliest"})
     public void consume(String value) { handler.execute(json.readValue(value, SocialNotificationEvent.class)); }

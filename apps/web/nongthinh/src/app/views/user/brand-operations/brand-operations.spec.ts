@@ -1,3 +1,4 @@
+import { provideUploadPolicyFixtures } from '../../../core/service/upload-policy.testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, Router } from '@angular/router';
@@ -41,6 +42,7 @@ describe('Brand product workspace', () => {
     await TestBed.configureTestingModule({
       imports: [BrandOperations],
       providers: [
+        provideUploadPolicyFixtures(),
         { provide: AgriCatalogApiService, useValue: api },
         {
           provide: AuthService,

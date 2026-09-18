@@ -26,7 +26,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/post-types", "/post-topics",
                                 "/post-topics/trending").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/", "/{id}",
+                        .requestMatchers(HttpMethod.GET, "/", "/feed", "/{id}",
                                 "/{postId}/media", "/{postId}/media/{mediaId}",
                                 "/{postId}/comments", "/{postId}/reactions",
                                 "/{postId}/shares", "/{postId}/engagement").permitAll()

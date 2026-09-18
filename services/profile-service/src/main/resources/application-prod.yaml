@@ -20,7 +20,7 @@ spring:
       clients:
         location-service:
           url: ${PROFILE_LOCATION_SERVICE_URL}
-          api-key: ${PROFILE_LOCATION_SERVICE_API_KEY}
+          api-key: ${LOCATION_SERVICE_API_KEY}
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}

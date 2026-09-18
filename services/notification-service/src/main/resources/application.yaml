@@ -52,6 +52,17 @@ spring:
     async:
       request-timeout: ${NOTIFICATION_ASYNC_REQUEST_TIMEOUT:30m}
 
+messaging:
+  kafka:
+    topics:
+      brand-access-changed: ${KAFKA_TOPIC_BRAND_ACCESS_CHANGED:brand-access-changed}
+      brand-documents-requested: ${KAFKA_TOPIC_BRAND_DOCUMENTS_REQUESTED:brand-documents-requested}
+      brand-needs-revision: ${KAFKA_TOPIC_BRAND_NEEDS_REVISION:brand-needs-revision}
+      brand-profile-approved: ${KAFKA_TOPIC_BRAND_PROFILE_APPROVED:brand-profile-approved}
+      brand-profile-rejected: ${KAFKA_TOPIC_BRAND_PROFILE_REJECTED:brand-profile-rejected}
+      post-engagement: ${KAFKA_TOPIC_POST_ENGAGEMENT:post.engagement.v1}
+      profile-notifications: ${KAFKA_TOPIC_PROFILE_NOTIFICATIONS:profile.notifications.v1}
+
 cookie:
   access-token-name: access_token
 
@@ -60,7 +71,6 @@ in-app-notification:
 
 post-realtime:
   enabled: ${POST_REALTIME_ENABLED:true}
-  topic: ${POST_ENGAGEMENT_TOPIC:post.engagement.v1}
 
 management:
   endpoints:
@@ -79,3 +89,9 @@ logging:
   level:
     root: INFO
     com.nongthinh: DEBUG
+
+brand-access:
+  profile-service:
+    url: ${BRAND_ACCESS_PROFILE_SERVICE_URL:http://localhost:9092/profile}
+    connect-timeout-ms: ${BRAND_ACCESS_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${BRAND_ACCESS_READ_TIMEOUT_MS:3000}

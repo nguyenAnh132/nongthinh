@@ -1,3 +1,5 @@
+import { UploadPolicyService } from '../../../core/service/upload-policy.service';
+import { UploadPolicyHint } from '../../../shared/upload-policy-hint/upload-policy-hint';
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   ChangeDetectorRef,
@@ -36,14 +38,13 @@ interface LocalPreview {
 @Component({
   selector: 'app-farmer-diagnosis',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, DatePipe, RecommendedProducts],
+  imports: [UploadPolicyHint, CommonModule, ReactiveFormsModule, DatePipe, RecommendedProducts],
   templateUrl: './diagnosis.html',
   styleUrl: './diagnosis.scss',
 })
 export class FarmerDiagnosis implements OnDestroy {
+  readonly uploadPolicies = inject(UploadPolicyService).watch(['DIAGNOSIS_IMAGE']);
   private static readonly MAX_FILES = 5;
-  private static readonly MAX_FILE_BYTES = 5 * 1024 * 1024;
-  private static readonly ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly catalogApi = inject(AgriCatalogApiService);
@@ -138,12 +139,9 @@ export class FarmerDiagnosis implements OnDestroy {
         firstError ||= 'Mỗi lần chẩn đoán chỉ nhận tối đa 5 ảnh.';
         break;
       }
-      if (!FarmerDiagnosis.ALLOWED_TYPES.has(file.type)) {
-        firstError ||= 'Chỉ hỗ trợ ảnh JPEG, PNG hoặc WebP.';
-        continue;
-      }
-      if (file.size <= 0 || file.size > FarmerDiagnosis.MAX_FILE_BYTES) {
-        firstError ||= 'Mỗi ảnh phải có dung lượng từ 1 byte đến 5 MB.';
+      const validationError = this.uploadPolicies.validate(file, 'DIAGNOSIS_IMAGE');
+      if (validationError) {
+        firstError ||= validationError;
         continue;
       }
       if (

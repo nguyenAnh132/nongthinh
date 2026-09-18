@@ -1,10 +1,4 @@
-import {
-  ChangeDetectorRef,
-  Component,
-  NgZone,
-  afterNextRender,
-  inject,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, afterNextRender, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -36,12 +30,16 @@ import {
 } from '../../../core/models/api-response';
 import { ToastService } from '../../../shared/toast/toast.service';
 import {
+  approvalProcessStatusLabel,
+  brandDocumentReviewStatusLabel,
+  brandLifecycleActionLabel,
   brandStatusColor,
   brandStatusLabel,
   canRejectEarly,
   formatDateTime,
   taskKeyLabel,
   ticketBrandProfileId,
+  verificationResultLabel,
 } from './brand-status.util';
 
 @Component({
@@ -97,6 +95,10 @@ export class BrandDetail {
   statusColor = brandStatusColor;
   formatDate = formatDateTime;
   taskLabel = taskKeyLabel;
+  lifecycleActionLabel = brandLifecycleActionLabel;
+  documentReviewStatusLabel = brandDocumentReviewStatusLabel;
+  verificationLabel = verificationResultLabel;
+  processStatusLabel = approvalProcessStatusLabel;
 
   constructor() {
     afterNextRender(() => {
@@ -116,9 +118,9 @@ export class BrandDetail {
     this.loading = true;
 
     const detail$ = this.brandProfileApi.getDetail(this.brandId);
-    const process$ = this.brandTicketApi.getProcess(this.brandId).pipe(
-      catchError(() => of({ result: null })),
-    );
+    const process$ = this.brandTicketApi
+      .getProcess(this.brandId)
+      .pipe(catchError(() => of({ result: null })));
     const tickets$ = this.canManageTickets
       ? this.brandTicketApi.listTickets().pipe(catchError(() => of({ result: [] as TicketView[] })))
       : of({ result: [] as TicketView[] });
@@ -136,8 +138,7 @@ export class BrandDetail {
           this.detail = unwrapApiResult<AdminBrandProfileDetailView>(detail);
           this.process = unwrapApiResult<BrandApprovalProcessView>(process);
           const allTickets = unwrapApiResult<TicketView[]>(tickets) ?? [];
-          this.ticket =
-            allTickets.find((t) => ticketBrandProfileId(t) === this.brandId) ?? null;
+          this.ticket = allTickets.find((t) => ticketBrandProfileId(t) === this.brandId) ?? null;
 
           if (this.detail?.profile.phone && !this.phoneCalled) {
             this.phoneCalled =
@@ -176,12 +177,15 @@ export class BrandDetail {
 
   claimTicket(): void {
     if (!this.ticket) return;
-    this.runAction(this.brandTicketApi.claim(this.ticket.taskId), 'Đã nhận ticket để xử lý.');
+    this.runAction(this.brandTicketApi.claim(this.ticket.taskId), 'Đã nhận công việc để xử lý.');
   }
 
   unclaimTicket(): void {
     if (!this.ticket) return;
-    this.runAction(this.brandTicketApi.unclaim(this.ticket.taskId), 'Đã trả ticket về pool.');
+    this.runAction(
+      this.brandTicketApi.unclaim(this.ticket.taskId),
+      'Đã trả công việc về danh sách chờ.',
+    );
   }
 
   submitEarlyReject(): void {
@@ -238,8 +242,7 @@ export class BrandDetail {
     this.runAction(
       this.brandTicketApi.completeFinalDecision(this.ticket.taskId, {
         outcome: this.finalOutcome,
-        rejectionReason:
-          this.finalOutcome === 'REJECTED' ? this.finalRejectReason.trim() : null,
+        rejectionReason: this.finalOutcome === 'REJECTED' ? this.finalRejectReason.trim() : null,
       }),
       this.finalOutcome === 'APPROVED' ? 'Đã duyệt doanh nghiệp.' : 'Đã từ chối doanh nghiệp.',
     );

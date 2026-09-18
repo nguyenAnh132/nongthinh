@@ -5,26 +5,29 @@ import com.nongthinh.brand_service.application.event.BrandNeedsRevisionEvent;
 import com.nongthinh.brand_service.application.event.BrandProfileApprovedEvent;
 import com.nongthinh.brand_service.application.event.BrandProfileRejectedEvent;
 import com.nongthinh.brand_service.application.event.DomainEvent;
-import com.nongthinh.brand_service.common.constant.KafkaTopicConstant;
+import com.nongthinh.brand_service.configuration.KafkaTopicProperties;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-public final class KafkaTopicResolver {
+@Component
+@RequiredArgsConstructor
+public class KafkaTopicResolver {
 
-    public static String resolve(DomainEvent event) {
+    private final KafkaTopicProperties topics;
+
+    public String resolve(DomainEvent event) {
         if (event instanceof BrandDocumentsRequestedEvent) {
-            return KafkaTopicConstant.BRAND_DOCUMENTS_REQUESTED;
+            return topics.getBrandDocumentsRequested();
         }
         if (event instanceof BrandNeedsRevisionEvent) {
-            return KafkaTopicConstant.BRAND_NEEDS_REVISION;
+            return topics.getBrandNeedsRevision();
         }
         if (event instanceof BrandProfileApprovedEvent) {
-            return KafkaTopicConstant.BRAND_PROFILE_APPROVED;
+            return topics.getBrandProfileApproved();
         }
         if (event instanceof BrandProfileRejectedEvent) {
-            return KafkaTopicConstant.BRAND_PROFILE_REJECTED;
+            return topics.getBrandProfileRejected();
         }
         throw new IllegalArgumentException("Unknown event: " + event.getClass().getSimpleName());
-    }
-
-    private KafkaTopicResolver() {
     }
 }

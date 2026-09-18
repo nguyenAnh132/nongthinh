@@ -1,3 +1,4 @@
+import { brandFeatureGuard } from './core/guards/brand-feature.guard';
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
@@ -20,7 +21,8 @@ export const routes: Routes = [
   },
   {
     path: 'app',
-    canActivate: [authGuard, roleGuard(['FARMER', 'BRAND'])],
+    canActivate: [authGuard, roleGuard(['FARMER', 'BRAND', 'BRAND_PENDING'])],
+    canActivateChild: [brandFeatureGuard],
     loadComponent: () => import('./layouts/user-layout/user-layout').then((m) => m.UserLayout),
     children: [
       { path: '', redirectTo: 'community', pathMatch: 'full' },
@@ -36,7 +38,7 @@ export const routes: Routes = [
       },
       {
         path: 'diagnosis',
-        canActivate: [roleGuard(['FARMER'])],
+        canActivate: [roleGuard(['FARMER', 'BRAND'])],
         loadComponent: () =>
           import('./views/user/diagnosis/diagnosis').then((m) => m.FarmerDiagnosis),
       },

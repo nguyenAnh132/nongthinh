@@ -56,4 +56,13 @@ public interface KeycloakClient {
         @RequestBody List<RoleMapping> roles
         
     );
+    @GetMapping("/admin/realms/${keycloak.realm}/users/{userId}/role-mappings/realm")
+    List<RoleResponse> getRealmRoles(@RequestHeader("Authorization") String token, @PathVariable String userId);
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/admin/realms/${keycloak.realm}/users/{userId}/role-mappings/realm")
+    void removeRealmRoles(@RequestHeader("Authorization") String token, @PathVariable String userId,
+            @RequestBody List<RoleMapping> roles);
+
+    @PostMapping("/admin/realms/${keycloak.realm}/roles")
+    void createRole(@RequestHeader("Authorization") String token, @RequestBody java.util.Map<String, String> role);
 }

@@ -48,12 +48,12 @@
             </label>
 
             <div class="upload-zone">
-              <label class="upload-button" [class.is-disabled]="scanning || previews.length >= 5">
+              <label class="upload-button" [class.is-disabled]="scanning || previews.length >= 5 || uploadPolicies.unavailable('DIAGNOSIS_IMAGE')">
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  [accept]="uploadPolicies.accept('DIAGNOSIS_IMAGE')"
                   multiple
-                  [disabled]="scanning || previews.length >= 5"
+                  [disabled]="scanning || previews.length >= 5 || uploadPolicies.unavailable('DIAGNOSIS_IMAGE')"
                   (change)="onFilesSelected($event)"
                 />
                 <img
@@ -65,7 +65,8 @@
                 Chọn ảnh
               </label>
               <div class="upload-meta">
-                <span>{{ previews.length }}/5 ảnh · JPEG, PNG hoặc WebP · tối đa 5 MB/ảnh</span>
+                <span>{{ previews.length }}/5 ảnh</span>
+                <app-upload-policy-hint purpose="DIAGNOSIS_IMAGE" />
                 @if (previews.length) {
                   <button
                     class="text-button"

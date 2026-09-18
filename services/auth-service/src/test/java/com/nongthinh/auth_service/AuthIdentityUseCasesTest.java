@@ -60,6 +60,10 @@ class AuthIdentityUseCasesTest {
         prepareKeycloak(type);
 
         register(type);
+        if (type == AccountType.BRAND) {
+            verify(keycloak).getRoleByName("ROLE_BRAND_PENDING", "Bearer client-token");
+            verify(keycloak).assignRealmRoles(KEYCLOAK_ID, java.util.List.of("ROLE_BRAND_PENDING"), "Bearer client-token");
+        }
 
         // Non-default flags ensure removal of the local enabled column does not
         // accidentally change the account settings forwarded to Keycloak.
@@ -114,7 +118,7 @@ class AuthIdentityUseCasesTest {
                 "REJECTED", "Missing documents", deletionAt);
         when(profiles.getBrandProfile(USER_ID)).thenReturn(Optional.of(profile));
 
-        var me = new GetMeUseCaseImpl(users, profiles)
+        var me = new GetMeUseCaseImpl(users, profiles, mock(com.nongthinh.auth_service.application.port.in.user.SynchronizeBrandRoleUseCase.class))
                 .execute(USER_ID, Set.of("ROLE_BRAND"), null, Set.of());
 
         assertEquals(USER_ID, me.userId());
@@ -137,7 +141,7 @@ class AuthIdentityUseCasesTest {
         when(users.findById(USER_ID)).thenReturn(Optional.of(User.create(USER_ID, KEYCLOAK_ID, Email.of(EMAIL), NOW)));
         when(profiles.getFarmerProfile(USER_ID)).thenReturn(Optional.empty());
 
-        var me = new GetMeUseCaseImpl(users, profiles)
+        var me = new GetMeUseCaseImpl(users, profiles, mock(com.nongthinh.auth_service.application.port.in.user.SynchronizeBrandRoleUseCase.class))
                 .execute(USER_ID, Set.of("ROLE_FARMER"), null, Set.of());
 
         assertTrue(me.flags().requiresProfileCompletion());
@@ -169,7 +173,7 @@ class AuthIdentityUseCasesTest {
         when(keycloak.createUser(any(), anyString(), anyString(), anyBoolean(), anyBoolean(), anyString()))
                 .thenReturn(KEYCLOAK_ID);
         when(keycloak.getRoleByName(anyString(), anyString()))
-                .thenReturn(new RoleRecord(UUID.randomUUID(), "ROLE_" + type, false, false, null));
+                .thenReturn(new RoleRecord(UUID.randomUUID(), (type == AccountType.BRAND ? "ROLE_BRAND_PENDING" : "ROLE_" + type), false, false, null));
     }
 
     private void register(AccountType type) {

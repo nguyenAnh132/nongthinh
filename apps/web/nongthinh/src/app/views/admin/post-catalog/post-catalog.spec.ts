@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { PostApiService, PostTopicView, PostTypeView } from '../../../core/api/post-api.service';
 import { ToastService } from '../../../shared/toast/toast.service';
 import { AdminPostCatalog } from './post-catalog';
@@ -26,6 +27,21 @@ describe('AdminPostCatalog', () => {
         { provide: ToastService, useValue: { success: vi.fn(), error: vi.fn() } },
       ],
     }).compileComponents();
+  });
+
+  it('shows a friendly message when the post-topics backend returns 500', async () => {
+    api['listPostTopics'].mockReturnValue(throwError(() => new HttpErrorResponse({
+      status: 500, statusText: 'Internal Server Error',
+      url: 'http://localhost:4200/api/v1/posts/post-topics',
+      error: { message: 'Database connection failed' },
+    })));
+    const fixture = TestBed.createComponent(AdminPostCatalog);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.textContent).toContain('Đã có lỗi xảy ra. Vui lòng thử lại sau.');
+    expect(fixture.nativeElement.textContent).not.toContain('Http failure');
+    expect(fixture.nativeElement.textContent).not.toContain('localhost');
+    expect(fixture.nativeElement.textContent).not.toContain('Database');
   });
 
   it('loads both catalogs for the dashboard', async () => {

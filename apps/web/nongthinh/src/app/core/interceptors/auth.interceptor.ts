@@ -65,6 +65,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(cloned).pipe(
     catchError((err: HttpErrorResponse) => {
+      if (err.status === 403 && err.error?.code === 'BRAND_ACCESS_DENIED' && isApiRequest(req.url)) {
+        void router.navigate(['/app/profile']);
+        authService.loadMe().subscribe();
+        return throwError(() => err);
+      }
       if (err.status !== 401 || !isApiRequest(req.url) || shouldSkipAuth(req.url)) {
         return throwError(() => err);
       }

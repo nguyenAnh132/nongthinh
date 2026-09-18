@@ -8,7 +8,32 @@ import { AuthService } from '../../core/auth/auth.service';
 import { UserLayout } from './user-layout';
 
 describe('UserLayout community access', () => {
-  it('shows Community and search for a Brand while keeping Farmer diagnosis hidden', async () => {
+  for (const role of ['ROLE_BRAND', 'ROLE_BRAND_PENDING']) {
+    it('hides features and stops realtime for a rejected ' + role, async () => {
+      await TestBed.configureTestingModule({
+        imports: [UserLayout],
+        providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), {
+          provide: AuthService, useValue: {
+            currentUser: signal({ userId: 'brand-1', email: 'brand@example.com', role,
+              profile: { displayName: 'Brand', status: 'REJECTED' } }), logout: vi.fn(),
+          },
+        }],
+      }).compileComponents();
+      const fixture = TestBed.createComponent(UserLayout);
+      fixture.detectChanges();
+      expect(fixture.componentInstance.canUseCommunity()).toBe(false);
+      expect(fixture.componentInstance.canUseDiagnosis()).toBe(false);
+      expect(fixture.nativeElement.querySelector('.community-search')).toBeNull();
+      expect(fixture.nativeElement.querySelector('app-notification-popover')).toBeNull();
+      expect(fixture.nativeElement.querySelector('a[href="/app/products"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('a[href="/app/operations"]')).toBeNull();
+      expect(fixture.nativeElement.querySelector('a[href="/app/profile"]')).not.toBeNull();
+      TestBed.inject(HttpTestingController).expectNone('/api/v1/notification/events/config');
+      fixture.destroy();
+    });
+  }
+
+  it('shows Community, diagnosis and search for a Brand', async () => {
     const logout = vi.fn(() => of(undefined));
     await TestBed.configureTestingModule({
       imports: [UserLayout],
@@ -44,8 +69,12 @@ describe('UserLayout community access', () => {
     expect(links).toContain('Cộng đồng');
     expect(fixture.nativeElement.querySelector('a[href="/app/post-histories"]')).toBeNull();
     expect(fixture.nativeElement.textContent).not.toContain('Lịch sử bài viết');
-    expect(links).not.toContain('Quét bệnh cây trồng');
+    expect(links).toContain('Quét bệnh cây trồng');
+    expect(fixture.componentInstance.canUseDiagnosis()).toBe(true);
+    expect(fixture.nativeElement.querySelector('a[href="/app/diagnosis"]')).not.toBeNull();
     expect(links).toContain('Vận hành');
+    expect(fixture.nativeElement.querySelector('.user-nav a[href="/app/profile"]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.account-dropdown a[href="/app/profile"]')).not.toBeNull();
     expect(
       fixture.nativeElement
         .querySelector('a[href="/app/products"] .nav-icon')
@@ -85,6 +114,7 @@ describe('UserLayout community access', () => {
       .flush({}, { status: 503, statusText: 'Unavailable' });
     fixture.detectChanges();
     const bell = fixture.nativeElement.querySelector('.notification-button') as HTMLButtonElement;
+    expect(fixture.nativeElement.querySelector('.user-nav a[href="/app/profile"]')).not.toBeNull();
     expect(bell).not.toBeNull();
     bell.click();
     fixture.detectChanges();

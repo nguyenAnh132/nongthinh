@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import com.nongthinh.profile_service.application.event.BrandProfileCreationRequestedEvent;
 import com.nongthinh.profile_service.application.port.in.brand.HandleBrandProfileCreationRequestedUseCase;
 import com.nongthinh.profile_service.application.port.out.EventDeserializer;
-import com.nongthinh.profile_service.common.constant.KafkaTopicConstant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +16,7 @@ public class BrandProfileCreationRequestedEventListener {
     private final EventDeserializer eventDeserializer;
     private final HandleBrandProfileCreationRequestedUseCase handleBrandProfileCreationRequestedUseCase;
 
-    @KafkaListener(topics = KafkaTopicConstant.BRAND_PROFILE_CREATION_REQUESTED)
+    @KafkaListener(topics = "#{@kafkaTopicProperties.brandProfileCreationRequested}")
     public void consume(String message) {
         BrandProfileCreationRequestedEvent event =
                 eventDeserializer.deserialize(message, BrandProfileCreationRequestedEvent.class);

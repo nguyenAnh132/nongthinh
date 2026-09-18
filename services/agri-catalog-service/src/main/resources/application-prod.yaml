@@ -20,7 +20,7 @@ spring:
       clients:
         file-service:
           url: ${AGRI_CATALOG_FILE_SERVICE_URL}
-          api-key: ${AGRI_CATALOG_FILE_SERVICE_API_KEY}
+          api-key: ${FILE_SERVICE_API_KEY}
         rice-disease-diagnosis-service:
           url: ${AGRI_CATALOG_DIAGNOSIS_SERVICE_URL}
-          api-key: ${AGRI_CATALOG_DIAGNOSIS_SERVICE_API_KEY}
+          api-key: ${RICE_DISEASE_DIAGNOSIS_SERVICE_API_KEY}

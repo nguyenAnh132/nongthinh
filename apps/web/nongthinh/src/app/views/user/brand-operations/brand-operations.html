@@ -676,8 +676,8 @@
           <div class="image-upload">
             <label class="upload-zone">
               <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
+                type="file" [disabled]="uploadPolicies.unavailable('PRODUCT_IMAGE')"
+                [accept]="uploadPolicies.accept('PRODUCT_IMAGE')"
                 (change)="onImageSelected($event)"
               />
               @if (imagePreviewUrl || (activeTab === 'edit' && selectedProduct?.thumbnailUrl)) {
@@ -685,7 +685,7 @@
               } @else {
                 <span class="upload-icon">↑</span>
                 <strong>Chọn ảnh sản phẩm</strong>
-                <small>JPEG, PNG hoặc WebP · tối đa 5 MB</small>
+                <app-upload-policy-hint purpose="PRODUCT_IMAGE" />
               }
             </label>
             <div class="image-meta">

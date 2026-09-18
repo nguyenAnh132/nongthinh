@@ -83,6 +83,16 @@ public class RedisCachedKeycloak implements KeycloakIdp {
         keycloakIdp.assignRealmRoles(keycloakUserId, roleNames, token);
     }
 
+    @Override
+    public java.util.Set<String> getRealmRoleNames(String keycloakUserId, String token) {
+        return keycloakIdp.getRealmRoleNames(keycloakUserId, token);
+    }
+
+    @Override
+    public void removeRealmRoles(String keycloakUserId, java.util.Collection<String> roleNames, String token) {
+        keycloakIdp.removeRealmRoles(keycloakUserId, roleNames, token);
+    }
+
     private RoleRecord fetchAndCacheRole(String name, String token) {
         RoleRecord role = keycloakIdp.getRoleByName(name, token);
         try {

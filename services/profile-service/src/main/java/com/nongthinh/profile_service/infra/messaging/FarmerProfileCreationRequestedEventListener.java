@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import com.nongthinh.profile_service.application.event.FarmerProfileCreationRequestedEvent;
 import com.nongthinh.profile_service.application.port.in.farmer.HandleFarmerProfileCreationRequestedUseCase;
 import com.nongthinh.profile_service.application.port.out.EventDeserializer;
-import com.nongthinh.profile_service.common.constant.KafkaTopicConstant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +16,7 @@ public class FarmerProfileCreationRequestedEventListener {
     private final EventDeserializer eventDeserializer;
     private final HandleFarmerProfileCreationRequestedUseCase handleFarmerProfileCreationRequestedUseCase;
 
-    @KafkaListener(topics = KafkaTopicConstant.FARMER_PROFILE_CREATION_REQUESTED)
+    @KafkaListener(topics = "#{@kafkaTopicProperties.farmerProfileCreationRequested}")
     public void consume(String message) {
         FarmerProfileCreationRequestedEvent event =
                 eventDeserializer.deserialize(message, FarmerProfileCreationRequestedEvent.class);

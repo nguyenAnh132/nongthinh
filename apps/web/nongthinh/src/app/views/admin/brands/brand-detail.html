@@ -98,7 +98,7 @@
                     </a>
                     <div class="muted">{{ formatDate(doc.createdAt) }}</div>
                   </div>
-                  <nz-tag>{{ doc.reviewStatus }}</nz-tag>
+                  <nz-tag>{{ documentReviewStatusLabel(doc.reviewStatus) }}</nz-tag>
                 </li>
               }
             </ul>
@@ -113,7 +113,7 @@
               @for (log of detail!.verificationLogs; track log.id) {
                 <li>
                   <div class="timeline-main">
-                    <strong>{{ log.result }}</strong>
+                    <strong>{{ verificationLabel(log.result) }}</strong>
                     <span>{{ log.phoneCalled }}</span>
                   </div>
                   <div class="muted">{{ formatDate(log.verifiedAt || log.createdAt) }}</div>
@@ -126,7 +126,7 @@
           }
         </nz-card>
 
-        <nz-card [nzBordered]="false" class="detail-card" nzTitle="Timeline hồ sơ">
+        <nz-card [nzBordered]="false" class="detail-card" nzTitle="Lịch sử hồ sơ">
           @if ((detail?.lifecycleLogs?.length ?? 0) === 0) {
             <p class="empty-hint">Chưa có sự kiện vòng đời.</p>
           } @else {
@@ -134,9 +134,10 @@
               @for (log of detail!.lifecycleLogs; track log.id) {
                 <li>
                   <div class="timeline-main">
-                    <strong>{{ log.action }}</strong>
+                    <strong>{{ lifecycleActionLabel(log.action) }}</strong>
                     <span>
-                      {{ log.fromStatus || '—' }} → {{ log.toStatus || '—' }}
+                      {{ log.fromStatus ? statusLabel(log.fromStatus) : '—' }} →
+                      {{ log.toStatus ? statusLabel(log.toStatus) : '—' }}
                     </span>
                   </div>
                   <div class="muted">{{ formatDate(log.createdAt) }}</div>
@@ -149,14 +150,14 @@
 
       <aside class="brand-detail-side">
         @if (canManageTickets) {
-          <nz-card [nzBordered]="false" class="detail-card" nzTitle="Ticket xét duyệt">
+          <nz-card [nzBordered]="false" class="detail-card" nzTitle="Phiếu xét duyệt">
             @if (process) {
               <div class="info-item">
-                <span class="label">Process</span>
-                <span class="value">{{ process.status }}</span>
+                <span class="label">Quy trình</span>
+                <span class="value">{{ processStatusLabel(process.status) }}</span>
               </div>
               @if (process.activeTaskDefinitionKeys?.length) {
-                <div class="info-item" style="margin-top: 8px;">
+                <div class="info-item" style="margin-top: 8px">
                   <span class="label">Bước hiện tại</span>
                   <span class="value">
                     @for (key of process.activeTaskDefinitionKeys; track key) {
@@ -168,19 +169,18 @@
             }
 
             @if (!ticket) {
-              <p class="empty-hint" style="margin-top: 12px;">
-                Không có ticket đang mở cho hồ sơ này
-                (có thể đang chờ doanh nghiệp nộp giấy tờ, hoặc process đã kết thúc).
+              <p class="empty-hint" style="margin-top: 12px">
+                Hiện không có công việc xét duyệt nào đang mở cho hồ sơ này.
               </p>
             } @else {
               <div class="ticket-box">
                 <div class="info-item">
-                  <span class="label">Task</span>
-                  <span class="value">{{ ticket.taskName || taskLabel(ticket.taskDefinitionKey) }}</span>
+                  <span class="label">Công việc</span>
+                  <span class="value">{{ taskLabel(ticket.taskDefinitionKey) }}</span>
                 </div>
                 <div class="info-item">
-                  <span class="label">Assignee</span>
-                  <span class="value">{{ ticket.assignee || 'Chưa claim' }}</span>
+                  <span class="label">Người xử lý</span>
+                  <span class="value">{{ ticket.assignee || 'Chưa có người nhận' }}</span>
                 </div>
 
                 <div class="action-row">
@@ -191,16 +191,12 @@
                       [nzLoading]="actionLoading"
                       (click)="claimTicket()"
                     >
-                      Claim ticket
+                      Nhận xử lý
                     </button>
                   }
                   @if (isAssignee) {
-                    <button
-                      nz-button
-                      [nzLoading]="actionLoading"
-                      (click)="unclaimTicket()"
-                    >
-                      Unclaim
+                    <button nz-button [nzLoading]="actionLoading" (click)="unclaimTicket()">
+                      Bỏ nhận xử lý
                     </button>
                   }
                 </div>
@@ -211,7 +207,7 @@
                   <label class="field-label">Số đã gọi</label>
                   <input nz-input [(ngModel)]="phoneCalled" maxlength="10" />
                   <label class="field-label">Kết quả</label>
-                  <nz-select [(ngModel)]="phoneResult" style="width: 100%;">
+                  <nz-select [(ngModel)]="phoneResult" style="width: 100%">
                     <nz-option nzValue="VERIFIED" nzLabel="Đã xác minh"></nz-option>
                     <nz-option nzValue="UNREACHABLE" nzLabel="Không liên lạc được"></nz-option>
                     <nz-option nzValue="NEED_MORE_INFO" nzLabel="Cần thêm thông tin"></nz-option>
@@ -274,8 +270,8 @@
                 }
 
                 @if (ticket.assignee && !isAssignee) {
-                  <p class="empty-hint" style="margin-top: 12px;">
-                    Ticket đang được xử lý bởi admin khác.
+                  <p class="empty-hint" style="margin-top: 12px">
+                    Công việc đang được xử lý bởi quản trị viên khác.
                   </p>
                 }
               </div>
@@ -285,9 +281,6 @@
 
         @if (canEarlyReject) {
           <nz-card [nzBordered]="false" class="detail-card danger-card" nzTitle="Từ chối sớm">
-            <p class="empty-hint">
-              Từ chối hồ sơ mà không cần hoàn tất quy trình Camunda. Lý do sẽ được gửi email cho doanh nghiệp.
-            </p>
             <label class="field-label">Lý do từ chối</label>
             <textarea nz-input rows="4" [(ngModel)]="rejectReason" maxlength="1000"></textarea>
             <button

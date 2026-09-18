@@ -21,6 +21,35 @@ export const TASK_KEY_LABELS: Record<string, string> = {
   'final-decision': 'Quyết định cuối',
 };
 
+export const BRAND_LIFECYCLE_ACTION_LABELS: Record<string, string> = {
+  STATUS_CHANGED: 'Thay đổi trạng thái',
+  DOCUMENT_UPLOADED: 'Tải lên giấy tờ',
+  DOCUMENTS_SUBMITTED: 'Nộp giấy tờ',
+  DOCUMENTS_REQUESTED: 'Yêu cầu bổ sung giấy tờ',
+  DOCUMENT_REVIEWED: 'Rà soát giấy tờ',
+  VERIFICATION_RECORDED: 'Ghi nhận kết quả xác minh',
+  EARLY_REJECTED: 'Từ chối sớm',
+};
+
+export const BRAND_DOCUMENT_REVIEW_STATUS_LABELS: Record<string, string> = {
+  PENDING_REVIEW: 'Chờ rà soát',
+  APPROVED: 'Đã duyệt',
+  REJECTED: 'Đã từ chối',
+  NEEDS_REVISION: 'Cần bổ sung',
+};
+
+export const VERIFICATION_RESULT_LABELS: Record<string, string> = {
+  VERIFIED: 'Đã xác minh',
+  UNREACHABLE: 'Không liên lạc được',
+  NEED_MORE_INFO: 'Cần thêm thông tin',
+};
+
+export const APPROVAL_PROCESS_STATUS_LABELS: Record<string, string> = {
+  STARTED: 'Đang xử lý',
+  COMPLETED: 'Đã hoàn tất',
+  CANCELLED: 'Đã hủy',
+};
+
 export function brandStatusLabel(status: string): string {
   return BRAND_STATUS_LABELS[status] ?? status;
 }
@@ -46,6 +75,22 @@ export function brandStatusColor(status: string): string {
 
 export function taskKeyLabel(key: string): string {
   return TASK_KEY_LABELS[key] ?? key;
+}
+
+export function brandLifecycleActionLabel(action: string): string {
+  return BRAND_LIFECYCLE_ACTION_LABELS[action] ?? action;
+}
+
+export function brandDocumentReviewStatusLabel(status: string): string {
+  return BRAND_DOCUMENT_REVIEW_STATUS_LABELS[status] ?? status;
+}
+
+export function verificationResultLabel(result: string): string {
+  return VERIFICATION_RESULT_LABELS[result] ?? result;
+}
+
+export function approvalProcessStatusLabel(status: string): string {
+  return APPROVAL_PROCESS_STATUS_LABELS[status] ?? status;
 }
 
 export function canRejectEarly(status: string): boolean {

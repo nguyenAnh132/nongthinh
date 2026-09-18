@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class PostRealtimeEventListener {
     private final PostEngagementEventDecoder decoder;
     private final SseConnectionRegistry registry;
-    @KafkaListener(topics = "${post-realtime.topic:post.engagement.v1}",
+    @KafkaListener(topics = "#{@kafkaTopicProperties.postEngagement}",
             groupId = "post-sse-${post-realtime.instance-id:${random.uuid}}",
             containerFactory = "postEngagementKafkaListenerContainerFactory", properties = {"auto.offset.reset=latest"})
     public void receive(String value) { registry.broadcast(decoder.decode(value)); }

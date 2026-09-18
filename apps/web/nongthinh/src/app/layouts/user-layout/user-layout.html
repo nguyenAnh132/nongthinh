@@ -47,7 +47,7 @@
             Sản phẩm
           </a>
         }
-        @if (isFarmer()) {
+        @if (canUseDiagnosis()) {
           <a routerLink="/app/diagnosis" routerLinkActive="active">
             <span
               class="nav-icon"
@@ -57,14 +57,16 @@
             Quét bệnh cây trồng
           </a>
         }
-        <a routerLink="/app/profile" routerLinkActive="active">
-          <span
-            class="nav-icon"
-            style="--nav-icon: url('/icons/community/user.png')"
-            aria-hidden="true"
-          ></span>
-          Hồ sơ
-        </a>
+        @if (!isBrand()) {
+          <a routerLink="/app/profile" routerLinkActive="active">
+            <span
+              class="nav-icon"
+              style="--nav-icon: url('/icons/community/user.png')"
+              aria-hidden="true"
+            ></span>
+            Hồ sơ
+          </a>
+        }
         @if (isBrandActive()) {
           <a routerLink="/app/operations" routerLinkActive="active">
             <span
@@ -78,7 +80,9 @@
       </nav>
 
       <div class="user-header-right">
-        <app-notification-popover />
+        @if (canUseCommunity()) {
+          <app-notification-popover />
+        }
 
         @if (currentUser(); as user) {
           <details class="account-menu">
@@ -96,7 +100,9 @@
                 <span>{{ user.email }}</span>
               </div>
               <a routerLink="/app/profile">Xem hồ sơ cá nhân</a>
-              <a routerLink="/app/products">Khám phá sản phẩm</a>
+              @if (canUseCommunity()) {
+                <a routerLink="/app/products">Khám phá sản phẩm</a>
+              }
               <button type="button" (click)="logout()">Đăng xuất</button>
             </div>
           </details>

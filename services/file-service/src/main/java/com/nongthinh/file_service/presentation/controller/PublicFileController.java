@@ -1,8 +1,10 @@
 package com.nongthinh.file_service.presentation.controller;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +38,12 @@ public class PublicFileController {
         }
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getOriginalFileName() + "\"")
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.inline()
+                                .filename(file.getOriginalFileName(), StandardCharsets.UTF_8)
+                                .build()
+                                .toString())
                 .contentType(MediaType.parseMediaType(file.getContentType()))
                 .contentLength(file.getSizeBytes())
                 .body(new InputStreamResource(inputStream));

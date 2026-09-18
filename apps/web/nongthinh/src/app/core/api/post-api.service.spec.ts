@@ -17,6 +17,18 @@ describe('PostApiService', () => {
 
   afterEach(() => http.verify());
 
+  it('loads cursor feed with optional following and author filters without offset pagination', () => {
+    service.getFeed({ cursor: 'cursor-1', followingOnly: true, authorUserId: 'author-1', keyword: ' rice ' }).subscribe();
+    const request = http.expectOne(candidate => candidate.url === '/api/v1/posts/feed');
+    expect(request.request.params.get('cursor')).toBe('cursor-1');
+    expect(request.request.params.get('followingOnly')).toBe('true');
+    expect(request.request.params.get('authorUserId')).toBe('author-1');
+    expect(request.request.params.get('keyword')).toBe('rice');
+    expect(request.request.params.has('page')).toBe(false);
+    expect(request.request.params.has('size')).toBe(false);
+    request.flush({ result: { items: [], nextCursor: null, hasNext: false } });
+  });
+
   it('loads the requested page of users who reacted to a post', () => {
     service.listPostReactions('post-1', 2, 10, 'LOVE').subscribe();
     const request = http.expectOne(

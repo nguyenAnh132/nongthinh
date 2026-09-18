@@ -1,3 +1,4 @@
+import { canUseAppFeatures, isBrandAccount } from '../../core/auth/brand-access';
 import { Component, DestroyRef, effect, inject, signal, untracked } from '@angular/core';
 import { RealtimeService } from '../../core/realtime/realtime.service';
 import { NotificationStore } from '../../core/realtime/notification.store';
@@ -43,7 +44,7 @@ export class UserLayout {
 
   constructor() {
     effect(() => {
-      const userId = this.currentUser()?.userId ?? null;
+      const userId = canUseAppFeatures(this.currentUser()) ? this.currentUser()?.userId ?? null : null;
       untracked(() => {
         this.notifications.setSession(userId);
         if (userId) this.realtime.start(userId);
@@ -65,18 +66,17 @@ export class UserLayout {
     return this.currentUser()?.profile?.avatarUrl ?? null;
   }
 
-  isFarmer(): boolean {
-    return this.roleNormalized() === 'FARMER';
+  canUseDiagnosis(): boolean {
+    return canUseAppFeatures(this.currentUser());
   }
 
   canUseCommunity(): boolean {
-    const role = this.roleNormalized();
-    return role === 'FARMER' || role === 'BRAND';
+    return canUseAppFeatures(this.currentUser());
   }
 
   roleLabel(): string {
     const role = this.roleNormalized();
-    if (role === 'BRAND') return 'Thương hiệu';
+    if (role === 'BRAND' || role === 'BRAND_PENDING') return 'Thương hiệu';
     if (role === 'FARMER') return 'Nông dân';
     return 'Thành viên';
   }
@@ -100,21 +100,26 @@ export class UserLayout {
     return this.roleNormalized() === 'BRAND' && this.brandStatus() === 'ACTIVE';
   }
 
+  isBrand(): boolean {
+    return isBrandAccount(this.currentUser());
+  }
+
   brandBannerText(): string {
     const status = this.brandStatus();
     if (!status) return '';
     if (status === 'NEEDS_REVISION') {
-      return 'Hồ sơ cần bổ sung. Vào Hồ sơ để cập nhật thông tin và nộp lại giấy phép kinh doanh.';
+      return 'Hồ sơ cần bổ sung. Nhấn vào avatar → Xem hồ sơ cá nhân để cập nhật thông tin và nộp lại giấy phép kinh doanh.';
     }
-    return `Hồ sơ đang ở trạng thái «${brandUserStatusLabel(status)}». Vào Hồ sơ để xác thực thông tin và nộp giấy phép kinh doanh.`;
+    return `Hồ sơ đang ở trạng thái «${brandUserStatusLabel(status)}». Nhấn vào avatar → Xem hồ sơ cá nhân để xác thực thông tin và nộp giấy phép kinh doanh.`;
   }
 
   private brandStatus(): string | null {
-    if (this.roleNormalized() !== 'BRAND') return null;
+    if (!this.isBrand()) return null;
     return this.currentUser()?.profile?.status ?? null;
   }
 
   searchCommunity(): void {
+    if (!this.canUseCommunity()) return;
     const query = this.searchTerm.trim();
     void this.router.navigate(['/app/community'], {
       queryParams: query ? { q: query } : {},

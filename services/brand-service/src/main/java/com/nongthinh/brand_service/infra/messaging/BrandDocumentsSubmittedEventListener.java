@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 import com.nongthinh.brand_service.application.event.BrandDocumentsSubmittedEvent;
 import com.nongthinh.brand_service.application.port.in.workflow.CorrelateDocumentsSubmittedUseCase;
 import com.nongthinh.brand_service.application.port.out.EventDeserializer;
-import com.nongthinh.brand_service.common.constant.KafkaTopicConstant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +16,7 @@ public class BrandDocumentsSubmittedEventListener {
     private final EventDeserializer eventDeserializer;
     private final CorrelateDocumentsSubmittedUseCase correlateDocumentsSubmittedUseCase;
 
-    @KafkaListener(topics = KafkaTopicConstant.BRAND_DOCUMENTS_SUBMITTED)
+    @KafkaListener(topics = "#{@kafkaTopicProperties.brandDocumentsSubmitted}")
     public void onDocumentsSubmitted(String payload) {
         BrandDocumentsSubmittedEvent event = eventDeserializer.deserialize(payload, BrandDocumentsSubmittedEvent.class);
 

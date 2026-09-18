@@ -90,6 +90,9 @@ public final class CurrentUserProviderImpl implements CurrentUserProvider {
         if (roles.contains(RoleConstant.ROLE_BRAND)) {
             return RoleConstant.ROLE_BRAND;
         }
+        if (roles.contains(RoleConstant.ROLE_BRAND_PENDING)) {
+            return RoleConstant.ROLE_BRAND_PENDING;
+        }
         if (roles.contains(RoleConstant.ROLE_FARMER)) {
             return RoleConstant.ROLE_FARMER;
         }

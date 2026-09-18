@@ -1,3 +1,4 @@
+import { canUseAppFeatures, isBrandAccount } from '../auth/brand-access';
 import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
@@ -122,7 +123,9 @@ export class RealtimeService {
         this.retryTimer = undefined;
         const generation = this.generation;
         this.sessionProbe = this.authApi.me().subscribe({
-          next: () => {
+          next: (response) => {
+            if (generation !== this.generation) return;
+            if (isBrandAccount(response.result) && !canUseAppFeatures(response.result)) { this.stop(); return; }
             if (generation === this.generation && this.session && this.connectionState() !== 'open') this.connect();
           },
           error: () => {

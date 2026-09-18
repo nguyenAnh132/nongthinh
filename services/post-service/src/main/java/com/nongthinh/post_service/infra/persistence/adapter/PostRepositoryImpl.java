@@ -1,6 +1,7 @@
 package com.nongthinh.post_service.infra.persistence.adapter;
 
 import com.nongthinh.post_service.application.model.PostPage;
+import com.nongthinh.post_service.application.model.PostFeedCursor;
 import com.nongthinh.post_service.application.port.out.repository.PostRepository;
 import com.nongthinh.post_service.configuration.PostLimitsProperties;
 import com.nongthinh.post_service.domain.post.Post;
@@ -89,6 +90,43 @@ public class PostRepositoryImpl implements PostRepository {
                 cropTypes.findAllByIdPostId(entity.getId()),
                 limits
         ));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Post> findFeed(UUID postTypeId, UUID topicId, UUID cropTypeId, UUID authorUserId,
+                               String keyword, Set<UUID> followingUserIds, Instant snapshotAt,
+                               PostFeedCursor cursor, int limit) {
+        if (followingUserIds != null && followingUserIds.isEmpty()) return List.of();
+        Specification<JpaPostEntity> spec = (root, query, cb) -> cb.and(
+                cb.isNull(root.get("deletedAt")), cb.equal(root.get("status"), "PUBLISHED"),
+                cb.equal(root.get("visibility"), "PUBLIC"),
+                cb.lessThanOrEqualTo(root.get("publishedAt"), snapshotAt));
+        if (postTypeId != null) spec = spec.and((root, query, cb) -> cb.equal(root.get("postTypeId"), postTypeId));
+        if (topicId != null) spec = spec.and((root, query, cb) -> cb.equal(root.get("topicId"), topicId));
+        if (authorUserId != null) spec = spec.and((root, query, cb) -> cb.equal(root.get("authorUserId"), authorUserId));
+        if (followingUserIds != null) spec = spec.and((root, query, cb) -> root.get("authorUserId").in(followingUserIds));
+        if (cropTypeId != null) spec = spec.and((root, query, cb) -> {
+            var subquery = query.subquery(UUID.class);
+            var crop = subquery.from(JpaPostCropTypeEntity.class);
+            subquery.select(crop.get("id").get("postId")).where(
+                    cb.equal(crop.get("id").get("postId"), root.get("id")),
+                    cb.equal(crop.get("id").get("cropTypeId"), cropTypeId));
+            return cb.exists(subquery);
+        });
+        if (keyword != null) {
+            String pattern = "%" + escapeLike(keyword.toLowerCase(Locale.ROOT)) + "%";
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("content")), pattern, '\\'));
+        }
+        if (cursor != null) spec = spec.and((root, query, cb) -> cb.or(
+                cb.lessThan(root.get("publishedAt"), cursor.publishedAt()),
+                cb.and(cb.equal(root.get("publishedAt"), cursor.publishedAt()),
+                        cb.lessThan(root.<UUID>get("id"), cursor.postId()))));
+        // Fluent limit/all fetches limit+1 rows without an OFFSET or COUNT query.
+        List<JpaPostEntity> entities = posts.findBy(spec, query -> query
+                .sortBy(Sort.by(Sort.Order.desc("publishedAt"), Sort.Order.desc("id")))
+                .limit(limit).all());
+        return toDomainPosts(entities);
     }
 
     @Override
@@ -226,11 +264,14 @@ public class PostRepositoryImpl implements PostRepository {
     }
 
     private PostPage toPage(Page<JpaPostEntity> result) {
-        List<JpaPostEntity> entities = result.getContent();
+        return new PostPage(toDomainPosts(result.getContent()), result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages(), result.hasNext());
+    }
+
+    private List<Post> toDomainPosts(List<JpaPostEntity> entities) {
         List<UUID> postIds = entities.stream().map(JpaPostEntity::getId).toList();
         if (postIds.isEmpty()) {
-            return new PostPage(List.of(), result.getNumber(), result.getSize(),
-                    result.getTotalElements(), result.getTotalPages(), result.hasNext());
+            return List.of();
         }
 
         Map<UUID, List<JpaPostMediaEntity>> mediaByPost = media
@@ -242,7 +283,7 @@ public class PostRepositoryImpl implements PostRepository {
                 .stream()
                 .collect(Collectors.groupingBy(item -> item.getId().getPostId()));
 
-        List<Post> domainPosts = entities.stream()
+        return entities.stream()
                 .map(entity -> mapper.toDomain(
                         entity,
                         mediaByPost.getOrDefault(entity.getId(), List.of()),
@@ -250,8 +291,6 @@ public class PostRepositoryImpl implements PostRepository {
                         limits
                 ))
                 .toList();
-        return new PostPage(domainPosts, result.getNumber(), result.getSize(),
-                result.getTotalElements(), result.getTotalPages(), result.hasNext());
     }
 
     private static String escapeLike(String value) {

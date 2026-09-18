@@ -33,6 +33,11 @@ spring:
   kafka:
     bootstrap-servers: 127.0.0.1:1
 
+messaging:
+  kafka:
+    topics:
+      post-engagement: post.engagement.v1
+
 cookie:
   access-token-name: access_token
 
@@ -47,6 +52,5 @@ post:
 
 post-outbox:
   enabled: false
-  topic: post.engagement.v1
   poll-ms: 500
   batch-size: 50

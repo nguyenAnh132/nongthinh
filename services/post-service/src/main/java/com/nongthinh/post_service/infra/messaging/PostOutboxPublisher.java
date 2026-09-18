@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.nongthinh.post_service.configuration.PostOutboxProperties;
+import com.nongthinh.post_service.configuration.KafkaTopicProperties;
 import java.util.concurrent.atomic.AtomicLong;
 import jakarta.annotation.PostConstruct;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,6 +26,7 @@ public class PostOutboxPublisher {
     private final TransactionTemplate transactions;
     private final MeterRegistry meters;
     private final PostOutboxProperties properties;
+    private final KafkaTopicProperties topics;
     private final AtomicLong pending = new AtomicLong();
     @PostConstruct
     void registerMetrics() { meters.gauge("post.outbox.pending", pending); }
@@ -46,7 +48,7 @@ public class PostOutboxPublisher {
                 var row = rows.getFirst();
                 UUID id = (UUID) row.get("id");
                 try {
-                    kafka.send(properties.topic(), row.get("aggregate_id").toString(), row.get("payload").toString())
+                    kafka.send(topics.postEngagement(), row.get("aggregate_id").toString(), row.get("payload").toString())
                             .get(10, TimeUnit.SECONDS);
                     jdbc.update("UPDATE post_outbox_events SET published_at=NOW(), attempt_count=attempt_count+1 WHERE id=?", id);
                     meters.counter("post.outbox.published").increment();

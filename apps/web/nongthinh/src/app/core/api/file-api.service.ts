@@ -1,7 +1,9 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, switchMap, throwError } from 'rxjs';
+import { UploadPolicyService } from '../service/upload-policy.service';
 import { ApiResponse } from '../models/api-response';
+import { UserFacingError } from '../models/user-facing-error';
 
 export type FilePurpose =
   | 'AVATAR'
@@ -35,6 +37,7 @@ export interface FileView {
 @Injectable({ providedIn: 'root' })
 export class FileApiService {
   private readonly http = inject(HttpClient);
+  private readonly policies = inject(UploadPolicyService);
   /** Gateway: /api/v1/files/** → file-service (/files) */
   private readonly baseUrl = '/api/v1/files';
 
@@ -43,7 +46,14 @@ export class FileApiService {
     formData.append('file', file, file.name);
     formData.append('purpose', purpose);
     // Không set Content-Type — browser tự gắn multipart boundary.
-    return this.http.post<ApiResponse<FileView>>(`${this.baseUrl}/upload`, formData);
+    return this.policies.ensure(purpose).pipe(
+      switchMap(() => {
+        const error = this.policies.validate(file, purpose);
+        return error
+          ? throwError(() => new UserFacingError(error))
+          : this.http.post<ApiResponse<FileView>>(`${this.baseUrl}/upload`, formData);
+      }),
+    );
   }
 
   listMine(purpose: FilePurpose): Observable<ApiResponse<FileView[]>> {

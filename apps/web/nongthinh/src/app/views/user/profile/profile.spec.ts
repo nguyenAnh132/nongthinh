@@ -1,3 +1,4 @@
+import { provideUploadPolicyFixtures } from '../../../core/service/upload-policy.testing';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject, of } from 'rxjs';
@@ -29,6 +30,7 @@ describe('UserProfile', () => {
     await TestBed.configureTestingModule({
       imports: [UserProfile],
       providers: [
+        provideUploadPolicyFixtures(),
         { provide: FollowApiService, useValue: {
           revision: signal(0), profile: vi.fn(() => of({ result: null })),
         } },

@@ -1,7 +1,7 @@
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
-import { Observable, catchError, finalize, map, of, shareReplay, tap } from 'rxjs';
+import { Observable, catchError, finalize, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { AuthApiService, MeView } from '../api/auth-api.service';
 
 @Injectable({ providedIn: 'root' })
@@ -53,6 +53,16 @@ export class AuthService {
       return this.meInFlight$;
     }
     this.meInFlight$ = this.authApi.me().pipe(
+      switchMap((res) => {
+        const user = res.result;
+        const role = user?.role?.replace(/^ROLE_/, '');
+        const active = user?.profile?.status === 'ACTIVE';
+        if ((role === 'BRAND_PENDING' && active) || (role === 'BRAND' && !active)) {
+          // /me reconciles Keycloak roles; obtain a token carrying the current role once.
+          return this.authApi.refresh().pipe(switchMap(() => this.authApi.me()));
+        }
+        return of(res);
+      }),
       map((res) => res.result ?? null),
       tap((user) => {
         this.currentUserSignal.set(user);
@@ -140,7 +150,7 @@ export class AuthService {
       void this.router.navigate(['/app/community']);
       return;
     }
-    if (this.hasRole('BRAND')) {
+    if (this.hasAnyRole(['BRAND', 'BRAND_PENDING'])) {
       void this.router.navigate(['/app/profile']);
       return;
     }

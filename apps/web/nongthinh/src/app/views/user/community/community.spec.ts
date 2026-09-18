@@ -1,3 +1,4 @@
+import { provideUploadPolicyFixtures } from '../../../core/service/upload-policy.testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
@@ -155,7 +156,7 @@ describe('Community interaction state', () => {
   let updatePostComment: ReturnType<typeof vi.fn>;
   let deletePostComment: ReturnType<typeof vi.fn>;
   let listActiveCropTypes: ReturnType<typeof vi.fn>;
-  let listPublicPosts: ReturnType<typeof vi.fn>;
+  let getFeed: ReturnType<typeof vi.fn>;
   let listMyBookmarkedPosts: ReturnType<typeof vi.fn>;
   let getPostBookmarkStatus: ReturnType<typeof vi.fn>;
   let savePostBookmark: ReturnType<typeof vi.fn>;
@@ -196,7 +197,7 @@ describe('Community interaction state', () => {
     );
     deletePostComment = vi.fn(() => of({ result: undefined }));
     listActiveCropTypes = vi.fn(() => of({ result: [cropType()] }));
-    listPublicPosts = vi.fn(() => of({ result: postPage() }));
+    getFeed = vi.fn(() => of({ result: { ...postPage(), nextCursor: null } }));
     listMyBookmarkedPosts = vi.fn(() => of({ result: postPage() }));
     getPostBookmarkStatus = vi.fn(() => of({ result: { postId: 'post-1', bookmarked: false } }));
     savePostBookmark = vi.fn(() =>
@@ -243,6 +244,7 @@ describe('Community interaction state', () => {
     await TestBed.configureTestingModule({
       imports: [Community],
       providers: [
+        provideUploadPolicyFixtures(),
         provideRouter([]),
         { provide: FollowApiService, useValue: {
           following: signal({}), pending: signal({}), statuses: vi.fn(() => of({ result: [] })),
@@ -270,7 +272,7 @@ describe('Community interaction state', () => {
             listActivePostTypes: vi.fn(() => of({ result: [postType()] })),
             listActivePostTopics: vi.fn(() => of({ result: [] })),
             listTrendingPostTopics: vi.fn(() => of({ result: [] })),
-            listPublicPosts,
+            getFeed,
             listMyPosts: vi.fn(() => of({ result: postPage() })),
             listMyBookmarkedPosts,
             getPostReactionSummary: vi.fn(() => of({ result: reactionSummary() })),
@@ -328,17 +330,17 @@ describe('Community interaction state', () => {
 
   it('filters an embedded profile feed by author and keeps post interactions enabled', async () => {
     const fixture = TestBed.createComponent(Community);
-    listPublicPosts.mockClear();
+    getFeed.mockClear();
     fixture.componentRef.setInput('embedded', true);
     fixture.componentRef.setInput('authorUserId', 'user-1');
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(listPublicPosts).toHaveBeenLastCalledWith(expect.objectContaining({
+    expect(getFeed).toHaveBeenLastCalledWith(expect.objectContaining({
       authorUserId: 'user-1',
-      page: 0,
-      size: 20,
+      cursor: null,
+      followingOnly: false,
     }));
     const ownPost = fixture.componentInstance.posts()[0];
     fixture.componentInstance.posts.set([
@@ -362,7 +364,7 @@ describe('Community interaction state', () => {
     const fixture = TestBed.createComponent(Community);
     fixture.detectChanges();
     expect(getPost).toHaveBeenCalledWith('post-1');
-    expect(listPublicPosts).not.toHaveBeenCalled();
+    expect(getFeed).not.toHaveBeenCalled();
     expect(listPostComments).toHaveBeenCalledWith('post-1', 0, 10);
     expect(listPostReactions).not.toHaveBeenCalled();
     expect(fixture.nativeElement.querySelector('.comments')).not.toBeNull();
@@ -497,6 +499,7 @@ describe('Community interaction state', () => {
       caption: null,
     });
     expect(publishPost).toHaveBeenCalledWith('draft-1');
+    expect(getFeed).toHaveBeenCalledTimes(1);
   });
 
   it('maps each post type by id and keeps the backend type name for display', () => {
@@ -522,7 +525,7 @@ describe('Community interaction state', () => {
   it('renders an unclassified post as a general community post', () => {
     const page = postPage();
     page.items = [{ ...postView(), postTypeId: null }];
-    listPublicPosts.mockReturnValue(of({ result: page }));
+    getFeed.mockReturnValue(of({ result: { ...page, nextCursor: null } }));
     const fixture = TestBed.createComponent(Community);
     fixture.detectChanges();
 
@@ -534,7 +537,7 @@ describe('Community interaction state', () => {
 
   it('renders post-shaped skeletons while the initial feed request is pending', () => {
     const feedRequest = new Subject<{ result: ReturnType<typeof postPage> }>();
-    listPublicPosts.mockReturnValue(feedRequest);
+    getFeed.mockReturnValue(feedRequest);
     const fixture = TestBed.createComponent(Community);
     fixture.detectChanges();
 
@@ -593,7 +596,7 @@ describe('Community interaction state', () => {
 
     component.selectFilter('SAVED');
 
-    expect(listMyBookmarkedPosts).toHaveBeenCalledWith({ page: 0, size: 20 });
+    expect(listMyBookmarkedPosts).toHaveBeenCalledWith({ page: 0, size: 10 });
     expect(component.posts()[0].saved).toBe(true);
     expect(getPostBookmarkStatus).toHaveBeenCalledOnce();
   });
@@ -702,7 +705,7 @@ describe('Community interaction state', () => {
     expect(component.announcement()).toBe('Đã xóa bài viết.');
   });
 
-  it('keeps an owned post visible and exposes the API error when deletion fails', () => {
+  it('keeps an owned post visible and shows a friendly error when deletion fails', () => {
     deletePost.mockReturnValue(throwError(() => new Error('Post service unavailable')));
     const fixture = TestBed.createComponent(Community);
     fixture.detectChanges();
@@ -714,7 +717,7 @@ describe('Community interaction state', () => {
 
     expect(component.posts()).toHaveLength(1);
     expect(component.posts()[0].deletePending).toBe(false);
-    expect(component.posts()[0].deleteError).toContain('Post service unavailable');
+    expect(component.posts()[0].deleteError).toBe('Không thể xóa bài viết. Vui lòng thử lại.');
   });
 
   function reactionSummary(): PostReactionSummaryView {
@@ -724,6 +727,90 @@ describe('Community interaction state', () => {
       currentUserReaction: 'LIKE',
     };
   }
+
+  it('loads at 70 percent, prevents concurrent calls and appends unique posts with the cursor', () => {
+    getFeed.mockReturnValueOnce(of({ result: { items: [postView()], nextCursor: 'cursor-1', hasNext: true } }));
+    const pending = new Subject<unknown>();
+    getFeed.mockReturnValueOnce(pending);
+    const fixture = TestBed.createComponent(Community);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    const scrollHeight = vi.spyOn(document.documentElement, 'scrollHeight', 'get').mockReturnValue(1000);
+    const height = vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(200);
+    const scroll = vi.spyOn(window, 'scrollY', 'get').mockReturnValue(499);
+    component.loadMoreOnScroll();
+    expect(getFeed).toHaveBeenCalledTimes(1);
+    scroll.mockReturnValue(500);
+    component.loadMoreOnScroll();
+    component.loadMoreOnScroll();
+    expect(getFeed).toHaveBeenCalledTimes(2);
+    expect(getFeed).toHaveBeenLastCalledWith(expect.objectContaining({ cursor: 'cursor-1' }));
+    pending.next({ result: { items: [postView(), { ...postView(), id: 'post-2' }], nextCursor: null, hasNext: false } });
+    pending.complete();
+    expect(component.posts().map(post => post.id)).toEqual(['post-1', 'post-2']);
+    component.loadMoreOnScroll();
+    expect(getFeed).toHaveBeenCalledTimes(2);
+    scrollHeight.mockRestore(); height.mockRestore(); scroll.mockRestore();
+  });
+
+  it('refreshes on the active Home tab and cancels an old append response', () => {
+    getFeed.mockReturnValueOnce(of({ result: { items: [postView()], nextCursor: 'old-cursor', hasNext: true } }));
+    const pending = new Subject<unknown>();
+    getFeed.mockReturnValueOnce(pending);
+    getFeed.mockReturnValueOnce(of({ result: { items: [{ ...postView(), id: 'new-post' }], nextCursor: null, hasNext: false } }));
+    const fixture = TestBed.createComponent(Community);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.loadMore();
+    component.selectFilter('HOME');
+    pending.next({ result: { items: [{ ...postView(), id: 'old-post' }], nextCursor: 'stale', hasNext: true } });
+    pending.complete();
+    expect(getFeed).toHaveBeenLastCalledWith(expect.objectContaining({ cursor: null }));
+    expect(component.posts().map(post => post.id)).toEqual(['new-post']);
+    expect(component.loadingMore()).toBe(false);
+    expect(component.hasNextPage()).toBe(false);
+  });
+
+  it('keeps loaded posts on append failure and retries the same cursor', () => {
+    getFeed.mockReturnValueOnce(of({ result: { items: [postView()], nextCursor: 'cursor-1', hasNext: true } }));
+    getFeed.mockReturnValueOnce(throwError(() => new Error('Offline')));
+    const fixture = TestBed.createComponent(Community);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    component.loadMore();
+    fixture.detectChanges();
+    expect(component.posts()).toHaveLength(1);
+    expect(component.feedError()).toBe('');
+    expect(component.loadMoreError()).not.toBe('');
+    expect(fixture.nativeElement.querySelector('app-post-feed')).not.toBeNull();
+    component.loadMoreOnScroll();
+    expect(getFeed).toHaveBeenCalledTimes(2);
+    component.loadMore();
+    expect(getFeed).toHaveBeenLastCalledWith(expect.objectContaining({ cursor: 'cursor-1' }));
+  });
+
+  it('starts a fresh cursor when switching to following-only feed', () => {
+    const fixture = TestBed.createComponent(Community);
+    fixture.detectChanges();
+    fixture.componentInstance.selectFeedSource(true);
+    expect(getFeed).toHaveBeenLastCalledWith(expect.objectContaining({ followingOnly: true, cursor: null }));
+  });
+
+  it('refreshes only after a downward pull past the threshold at the top', () => {
+    const fixture = TestBed.createComponent(Community);
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    const scroll = vi.spyOn(window, 'scrollY', 'get').mockReturnValue(0);
+    const touch = (y: number) => ({ touches: [{ clientX: 50, clientY: y }], cancelable: true, preventDefault: vi.fn() }) as unknown as TouchEvent;
+    component.startPull(touch(20)); component.movePull(touch(70)); component.endPull();
+    expect(getFeed).toHaveBeenCalledTimes(1);
+    component.startPull(touch(20)); component.movePull(touch(110)); component.endPull();
+    expect(getFeed).toHaveBeenCalledTimes(2);
+    scroll.mockReturnValue(100);
+    component.startPull(touch(20)); component.movePull(touch(110)); component.endPull();
+    expect(getFeed).toHaveBeenCalledTimes(2);
+    scroll.mockRestore();
+  });
 
   function postPage() {
     return {

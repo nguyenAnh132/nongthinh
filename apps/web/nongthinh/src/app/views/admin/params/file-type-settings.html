@@ -1,0 +1,45 @@
+<section class="file-settings" aria-labelledby="file-settings-title">
+  <div class="file-settings__header">
+    <div>
+      <h3 id="file-settings-title">Định dạng tệp được chấp nhận</h3>
+    </div>
+    @if (canWrite) {
+      <button type="button" class="save-types" [disabled]="loading() || saving() || !changedCount" (click)="save()">
+        {{ saving() ? 'Đang lưu...' : 'Lưu định dạng' }} @if (changedCount) { ({{ changedCount }}) }
+      </button>
+    }
+  </div>
+  @if (loading()) {
+    <p role="status">Đang tải định dạng tệp...</p>
+  }
+  @if (error()) {
+    <div class="settings-error" role="alert">
+      {{ error() }}
+      @if (!configurations().length) {
+        <button type="button" [disabled]="loading()" (click)="load()">Thử lại</button>
+      }
+    </div>
+  }
+  <div class="purpose-grid">
+    @for (policy of configurations(); track policy.purpose) {
+      <fieldset class="purpose-card" [disabled]="!canWrite || saving() || loading()">
+        <legend>{{ labels[policy.purpose] }}</legend>
+        <div class="type-options">
+          @for (type of policy.fileTypes; track type.code) {
+            <label class="type-option" [class.type-option--enabled]="type.enabled">
+              <input type="checkbox"
+                [attr.aria-label]="labels[policy.purpose] + ': ' + type.code"
+                [ngModel]="type.enabled" (ngModelChange)="setEnabled(policy.purpose, type.code, $event)" />
+              <span>{{ type.code }}</span>
+            </label>
+          } @empty {
+            <span>Chưa có cấu hình định dạng.</span>
+          }
+        </div>
+        @if (policy.fileTypes.length && !enabledCount(policy)) {
+          <small class="disabled-notice">Đã tắt tất cả định dạng: người dùng không thể tải tệp cho mục đích này.</small>
+        }
+      </fieldset>
+    }
+  </div>
+</section>

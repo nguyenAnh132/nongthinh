@@ -4,7 +4,14 @@
       <app-community-sidebar [activeFilter]="activeFilter()" (filterChange)="selectFilter($event)" />
     }
 
-    <main class="feed-column">
+    <main class="feed-column"
+      (touchstart)="startPull($event)" (touchmove)="movePull($event)"
+      (touchend)="endPull()" (touchcancel)="cancelPull()">
+      @if (pullDistance() > 10) {
+        <div class="feed-pull-status" role="status">
+          {{ pullDistance() >= 80 ? 'Thả tay để làm mới bảng tin' : 'Kéo xuống để làm mới bảng tin' }}
+        </div>
+      }
       @if (detailMode()) {
         <a class="back-to-community" routerLink="/app/community">
           <img src="/icons/business/left.png" alt="" aria-hidden="true" />
@@ -47,11 +54,15 @@
         />
 
         <div class="feed-toolbar">
+          @if (activeFilter() === 'HOME') {
+            <button type="button" [attr.aria-pressed]="!followingOnly()" (click)="selectFeedSource(false)">Tất cả</button>
+            <button type="button" [attr.aria-pressed]="followingOnly()" (click)="selectFeedSource(true)">Đang theo dõi</button>
+          }
           @if (searchTerm()) {
             <span class="feed-filter-status">Đang lọc theo từ khóa tìm kiếm</span>
           }
-          <button type="button" disabled aria-label="Bài viết đang sắp xếp mới nhất trước">
-            Mới nhất <span aria-hidden="true">⌄</span>
+          <button type="button" [disabled]="feedLoading()" (click)="refreshFeed()">
+            Làm mới bảng tin
           </button>
         </div>
       }
@@ -139,6 +150,9 @@
           (reportRequested)="reportPost($event)"
         />
 
+        @if (loadMoreError()) {
+          <p class="feed-load-error" role="alert">{{ loadMoreError() }}</p>
+        }
         @if (hasNextPage()) {
           <button
             type="button"
@@ -146,8 +160,10 @@
             [disabled]="loadingMore()"
             (click)="loadMore()"
           >
-            {{ loadingMore() ? 'Đang tải...' : 'Xem thêm bài viết' }}
+            {{ loadingMore() ? 'Đang tải...' : loadMoreError() ? 'Thử tải tiếp' : 'Xem thêm bài viết' }}
           </button>
+        } @else if (!detailMode() && filteredPosts().length) {
+          <p class="feed-end" role="status">Đã hết bài viết trong lượt xem này. Làm mới để xem bài mới.</p>
         }
       }
     </main>

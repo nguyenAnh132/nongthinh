@@ -1,3 +1,6 @@
+import { isBrandAccount } from '../../../core/auth/brand-access';
+import { UploadPolicyService } from '../../../core/service/upload-policy.service';
+import { UploadPolicyHint } from '../../../shared/upload-policy-hint/upload-policy-hint';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -20,17 +23,16 @@ import { ToastService } from '../../../shared/toast/toast.service';
 import { BrandVerification } from '../brand-verification/brand-verification';
 import { FollowPanel } from '../../../shared/follow-panel/follow-panel';
 
-const AVATAR_ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
-const AVATAR_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
 @Component({
   selector: 'app-user-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, BrandVerification, FollowPanel],
+  imports: [UploadPolicyHint, CommonModule, ReactiveFormsModule, BrandVerification, FollowPanel],
   templateUrl: './profile.html',
   styleUrl: './profile.scss',
 })
 export class UserProfile implements OnInit {
+  readonly uploadPolicies = inject(UploadPolicyService).watch(isBrandAccount(inject(AuthService).currentUser()) ? [] : ['AVATAR']);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly profileApi = inject(ProfileApiService);
@@ -113,7 +115,7 @@ export class UserProfile implements OnInit {
     const user = this.authService.currentUser();
     const role = (user?.role ?? '').replace(/^ROLE_/, '');
     if (role === 'ADMIN') return 'ADMIN';
-    if (role === 'BRAND') return 'BRAND';
+    if (role === 'BRAND' || role === 'BRAND_PENDING') return 'BRAND';
     return 'FARMER';
   }
 
@@ -195,14 +197,10 @@ export class UserProfile implements OnInit {
     const file = input.files?.[0] ?? null;
     if (!file) return;
 
-    if (!AVATAR_ALLOWED_TYPES.has(file.type.toLowerCase())) {
+    const validationError = this.uploadPolicies.validate(file, 'AVATAR');
+    if (validationError) {
       input.value = '';
-      this.toast.error('Chỉ chấp nhận ảnh JPEG, PNG hoặc WebP.');
-      return;
-    }
-    if (file.size > AVATAR_MAX_SIZE_BYTES) {
-      input.value = '';
-      this.toast.error('Ảnh đại diện không được vượt quá 2 MB.');
+      this.toast.error(validationError);
       return;
     }
 
@@ -229,7 +227,7 @@ export class UserProfile implements OnInit {
         next: (response) => {
           const updatedProfile = response.result;
           if (!updatedProfile) {
-            this.toast.error('Profile-service không trả về hồ sơ sau khi cập nhật ảnh.');
+            this.toast.error('Chưa thể xác nhận ảnh đại diện đã được cập nhật. Vui lòng tải lại trang.');
             return;
           }
           const updatedProfileWithLocation = this.withLocationNames(updatedProfile);
@@ -240,7 +238,7 @@ export class UserProfile implements OnInit {
         },
         error: (err) => {
           if (err instanceof Error && err.message === 'UPLOAD_URL_MISSING') {
-            this.toast.error('Upload ảnh thành công nhưng file-service không trả về publicUrl.');
+          this.toast.error('Chưa thể sử dụng ảnh vừa tải lên. Vui lòng thử lại.');
             return;
           }
           this.toast.error(apiErrorMessage(err, 'Không thể cập nhật ảnh đại diện.'));

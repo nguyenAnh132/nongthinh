@@ -48,9 +48,14 @@ public class ProfileQueryImpl implements ProfileQuery {
     public Optional<ProfileView> getBrandProfile(UUID userId) {
         try {
             ApiResponse<BrandProfileDto> response = profileClient.getBrandProfile(userId, apiKey);
-            return Optional.of(profileViewMapper.fromBrand(response.getResult()));
+            if (response == null || response.getResult() == null) {
+                throw new InfrastructureException(ErrorCode.PROFILE_SERVICE_GET_BRAND_PROFILE_FAILED);
+            }
+            return Optional.ofNullable(profileViewMapper.fromBrand(response.getResult()));
+        } catch (FeignException.NotFound ex) {
+            return Optional.empty();
         } catch (FeignException ex) {
-            throw ex;
+            throw new InfrastructureException(ErrorCode.PROFILE_SERVICE_GET_BRAND_PROFILE_FAILED, ex);
         }
     }
 

@@ -124,7 +124,8 @@ class PostEngagementPersistenceTest {
                 .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("Broker unavailable")))
                 .thenReturn(CompletableFuture.completedFuture(null));
         var publisher = new PostOutboxPublisher(jdbc, kafka, transactions, new SimpleMeterRegistry(),
-                new com.nongthinh.post_service.configuration.PostOutboxProperties(true, "post.engagement.v1", 1));
+                new com.nongthinh.post_service.configuration.PostOutboxProperties(true, 1),
+                new com.nongthinh.post_service.configuration.KafkaTopicProperties("post.engagement.v1"));
         publisher.publish();
         var failed = jdbc.queryForMap("SELECT published_at, attempt_count FROM post_outbox_events WHERE aggregate_id=?", postId);
         assertThat(failed.get("published_at")).isNull();
