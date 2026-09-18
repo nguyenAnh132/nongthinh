@@ -1,0 +1,69 @@
+pipeline {
+    agent any
+    options {
+        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
+        timestamps()
+        timeout(time: 120, unit: 'MINUTES')
+    }
+    parameters {
+        booleanParam(name: 'RUN_TESTS', defaultValue: true,
+            description: 'Run Maven tests for all eight services. Failures stop publication.')
+        booleanParam(name: 'DEPLOY', defaultValue: false,
+            description: 'Deploy after build. First prepare env/batch on the VPS with prepare.py.')
+    }
+    stages {
+        stage('Checkout main') {
+            steps {
+                git branch: 'main', credentialsId: 'nongthinh',
+                    url: 'https://github.com/nguyenAnh132/nongthinh.git'
+                script {
+                    def commit = sh(script: 'git rev-parse --short=12 HEAD', returnStdout: true).trim()
+                    env.IMAGE_TAG = "batch-${env.BUILD_NUMBER}-${commit}"
+                    env.RUN_TESTS = params.RUN_TESTS.toString()
+                }
+            }
+        }
+        stage('Test, build and push remaining backends') {
+            steps {
+                sh 'python3 -B deploy/batch/tests/test_prepare.py'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-nongthinh',
+                    usernameVariable: 'DOCKERHUB_USER', passwordVariable: 'DOCKERHUB_TOKEN')]) {
+                    sh 'bash ci/build-remaining.sh'
+                }
+                archiveArtifacts artifacts: "nongthinh-backends-${env.IMAGE_TAG}.tar.gz", fingerprint: true
+            }
+        }
+        stage('Deploy to Ubuntu') {
+            when { expression { params.DEPLOY } }
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'nongthinh-deploy-ssh',
+                    keyFileVariable: 'DEPLOY_KEY', usernameVariable: 'DEPLOY_USER')]) {
+                    sh '''
+                        set +x
+                        set -eu
+                        remote="$DEPLOY_USER@160.250.186.236"
+                        ssh -i "$DEPLOY_KEY" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes "$remote" \
+                            "test -d /opt/nongthinh/env/batch && mkdir -p /opt/nongthinh/releases/$IMAGE_TAG"
+                        scp -i "$DEPLOY_KEY" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+                            "nongthinh-backends-$IMAGE_TAG.tar.gz" "$remote:/opt/nongthinh/releases/$IMAGE_TAG/bundle.tar.gz"
+                        ssh -i "$DEPLOY_KEY" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes "$remote" \
+                            "cd /opt/nongthinh/releases/$IMAGE_TAG && tar -xzf bundle.tar.gz && bash deploy.sh"
+                    '''
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                if (env.IMAGE_TAG) {
+                    junit allowEmptyResults: true, testResults: "batch-test-reports/${env.IMAGE_TAG}/**/*.xml"
+                }
+            }
+        }
+        success {
+            echo "BATCH_IMAGES_PUSHED: ${env.IMAGE_TAG}; tests=${params.RUN_TESTS}; deploy=${params.DEPLOY}"
+        }
+    }
+}

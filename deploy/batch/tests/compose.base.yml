@@ -1,0 +1,11 @@
+# Structural validation fixture only. Never deploy this file.
+name: nongthinh
+services:
+  postgres:
+    image: postgres:18-bookworm
+  auth-service:
+    image: nguyenanh132/nongthinh-auth-service:build-5-514ad7d7f6ed
+  profile-service:
+    image: nguyenanh132/nongthinh-profile-service:build-7-cfa31d6cf83f
+networks:
+  backend:

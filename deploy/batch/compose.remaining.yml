@@ -1,0 +1,118 @@
+# Merge with the EXISTING /opt/nongthinh/compose.prod.yml on the VPS.
+# Do not use this file alone or replace the existing base file.
+x-app: &app
+  restart: unless-stopped
+  networks: [backend]
+  depends_on:
+    postgres:
+      condition: service_healthy
+  stop_grace_period: 30s
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  auth-service:
+    environment:
+      AUTH_PROFILE_SERVICE_URL: http://profile-service:9092/profile
+  profile-service:
+    environment:
+      PROFILE_LOCATION_SERVICE_URL: http://location-service:9094/location
+
+  location-service:
+    <<: *app
+    image: nguyenanh132/nongthinh-location-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    env_file:
+      - path: ./env/batch/location-service.env
+        format: raw
+    mem_limit: 256m
+    ports:
+      - "127.0.0.1:9094:9094"
+
+  bo-portal-service:
+    <<: *app
+    image: nguyenanh132/nongthinh-bo-portal-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    env_file:
+      - path: ./env/batch/bo-portal-service.env
+        format: raw
+    mem_limit: 320m
+    ports:
+      - "127.0.0.1:9096:9096"
+
+  notification-service:
+    <<: *app
+    image: nguyenanh132/nongthinh-notification-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    env_file:
+      - path: ./env/batch/notification-service.env
+        format: raw
+    mem_limit: 384m
+    ports:
+      - "127.0.0.1:9093:9093"
+
+  brand-service:
+    <<: *app
+    image: nguyenanh132/nongthinh-brand-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    env_file:
+      - path: ./env/batch/brand-service.env
+        format: raw
+    mem_limit: 448m
+    ports:
+      - "127.0.0.1:9097:9097"
+
+  file-service:
+    <<: *app
+    image: nguyenanh132/nongthinh-file-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    env_file:
+      - path: ./env/batch/file-service.env
+        format: raw
+    mem_limit: 384m
+    ports:
+      - "127.0.0.1:9095:9095"
+    volumes:
+      - type: bind
+        source: ./data/files
+        target: /data/storage
+        bind:
+          create_host_path: false
+
+  agri-catalog-service:
+    <<: *app
+    image: nguyenanh132/nongthinh-agri-catalog-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    env_file:
+      - path: ./env/batch/agri-catalog-service.env
+        format: raw
+    mem_limit: 448m
+    ports:
+      - "127.0.0.1:9098:9098"
+
+  post-service:
+    <<: *app
+    image: nguyenanh132/nongthinh-post-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    env_file:
+      - path: ./env/batch/post-service.env
+        format: raw
+    mem_limit: 448m
+    ports:
+      - "127.0.0.1:9100:9100"
+
+  rice-disease-diagnosis-service:
+    <<: *app
+    image: nguyenanh132/nongthinh-rice-disease-diagnosis-service:${REMAINING_TAG:?Missing REMAINING_TAG}
+    env_file:
+      - path: ./env/batch/rice-disease-diagnosis-service.env
+        format: raw
+    mem_limit: 1024m
+    ports:
+      - "127.0.0.1:9099:9099"
+
+  api-gateway:
+    <<: *app
+    image: nguyenanh132/nongthinh-api-gateway:${GATEWAY_TAG:-build-3-e90ec03641f7}
+    env_file:
+      - path: ./env/batch/api-gateway.env
+        format: raw
+    mem_limit: 256m
+    ports:
+      - "127.0.0.1:8888:8888"
