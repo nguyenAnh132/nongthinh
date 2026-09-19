@@ -7,6 +7,10 @@ import { activeBrandGuard } from './core/guards/active-brand.guard';
 
 export const routes: Routes = [
   {
+    path: 'complete-registration',
+    loadComponent: () => import('./views/auth/complete-registration').then((m) => m.CompleteRegistration),
+  },
+  {
     path: '',
     loadComponent: () =>
       import('./views/landing/landing.component').then((m) => m.LandingComponent),

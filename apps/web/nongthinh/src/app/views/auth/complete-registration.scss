@@ -1,0 +1,74 @@
+﻿:host {
+  display: block;
+}
+
+.brand-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.auth-forms, .form-wrapper {
+  min-width: 0;
+}
+
+.form-header h1 {
+  font-size: var(--font-size-3xl, 1.875rem);
+  font-weight: 800;
+  color: var(--color-text, #1f2937);
+  margin-bottom: var(--space-2);
+}
+
+.form-header .account-email {
+  margin-top: var(--space-2);
+  color: var(--color-primary-600, #16a34a);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.input-group input.ng-invalid.ng-touched {
+  border-color: #dc2626;
+}
+
+.approval-hint {
+  margin-bottom: var(--space-5);
+}
+
+.completion-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-6);
+  margin-top: var(--space-6);
+}
+
+.completion-actions button {
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary-600, #16a34a);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.completion-actions button:hover {
+  text-decoration: underline;
+}
+
+.completion-actions button:disabled, fieldset:disabled .input-group {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.completion-actions button:focus-visible, .btn:focus-visible, .back-link:focus-visible {
+  outline: 2px solid var(--color-primary-600, #16a34a);
+  outline-offset: 4px;
+}

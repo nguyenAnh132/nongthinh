@@ -11,7 +11,6 @@ import com.nongthinh.auth_service.application.port.in.auth.LogoutUseCase;
 import com.nongthinh.auth_service.application.view.MeView;
 import com.nongthinh.auth_service.common.currentuser.CurrentUserProvider;
 import com.nongthinh.auth_service.common.cookie.CookieWriter;
-import com.nongthinh.auth_service.common.currentuser.CurrentUser;
 import com.nongthinh.auth_service.common.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -79,14 +78,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<MeView>> getMe(
             Authentication authentication
     ) {
-        CurrentUser currentUser = currentUserProvider.getCurrentUser();
-
-        MeView meView = getMeUseCase.execute(
-            currentUser.getUserId(),
-            currentUser.getRoles(),
-            currentUser.getAdminGroup(),
-            currentUser.getPermissions()
-        );
+        MeView meView = getMeUseCase.execute(currentUserProvider.getRegistrationPrincipal());
 
         return ResponseEntity.ok(ApiResponse.<MeView>builder()
                 .message("Current user retrieved successfully")

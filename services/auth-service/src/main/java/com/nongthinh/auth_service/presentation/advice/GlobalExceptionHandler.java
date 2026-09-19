@@ -35,6 +35,15 @@ public class GlobalExceptionHandler {
 
     private final TraceContextProvider traceContextProvider;
 
+    @ExceptionHandler(com.nongthinh.auth_service.application.exception.RegistrationRequiredException.class)
+    public ResponseEntity<ApiResponse<com.nongthinh.auth_service.application.view.RegistrationRequiredView>> handleRegistrationRequired(
+            com.nongthinh.auth_service.application.exception.RegistrationRequiredException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+                ApiResponse.<com.nongthinh.auth_service.application.view.RegistrationRequiredView>builder()
+                        .code(ex.getErrorCode().getCode()).message(ex.getMessage()).result(ex.getRegistration())
+                        .traceId(traceContextProvider.currentTraceId().orElse(null)).build());
+    }
+
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ApiResponse<Void>> handleAppException(AppException ex) {
         ErrorCode errorCode = ex.getErrorCode();

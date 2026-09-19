@@ -38,4 +38,15 @@ public class UserRepositoryImpl implements UserRepository {
         JpaUserEntity saved = jpaUserRepository.save(entity);
         return userPersistenceMapper.toDomain(saved);
     }
+
+    @Override
+    public Optional<User> findByKeycloakId(UUID keycloakId) {
+        return jpaUserRepository.findByKeycloakId(keycloakId).map(userPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public void insertIfAbsent(User user) {
+        jpaUserRepository.insertIfAbsent(user.getId(), UUID.fromString(user.getKeycloakId()),
+                user.getEmail().getValue(), user.getCreatedAt());
+    }
 }

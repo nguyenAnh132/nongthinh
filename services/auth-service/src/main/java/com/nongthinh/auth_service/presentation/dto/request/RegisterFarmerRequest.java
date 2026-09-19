@@ -22,7 +22,7 @@ RegisterFarmerRequest(
     @Size(min = 1, max = 255, message = "FIRST_NAME_LENGTH_INVALID")
     String firstName,
     @NotBlank(message = "LAST_NAME_REQUIRED")
-    @Size(min = 3, max = 255, message = "LAST_NAME_LENGTH_INVALID")
+    @Size(min = 1, max = 255, message = "LAST_NAME_LENGTH_INVALID")
     String lastName,
     @NotBlank(message = "GENDER_REQUIRED")
     @Pattern(regexp = "^(MALE|FEMALE|OTHER)$", message = "GENDER_INVALID")

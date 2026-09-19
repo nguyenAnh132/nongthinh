@@ -5,6 +5,10 @@ import com.nongthinh.auth_service.application.view.RefreshTokenView;
 
 public interface KeycloakIdp {
 
+    KeycloakIdentity getIdentity(UUID keycloakId, String token);
+
+    void updateNongThinhIdUser(UUID keycloakId, UUID applicationUserId, String token);
+
     String createUser(UUID userId, String email, String password, boolean temporary, boolean enabled, String token);
 
     String exchangeClientToken();

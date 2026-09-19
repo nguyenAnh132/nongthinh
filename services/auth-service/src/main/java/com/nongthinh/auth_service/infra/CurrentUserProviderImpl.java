@@ -28,6 +28,22 @@ public final class CurrentUserProviderImpl implements CurrentUserProvider {
     private static final String EMAIL_CLAIM = "email";
 
     @Override
+    public com.nongthinh.auth_service.application.view.RegistrationPrincipal getRegistrationPrincipal() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Jwt jwt = requireJwt(authentication);
+        String claim = jwt.getClaimAsString(ObservabilityConstants.JWT_USER_ID_CLAIM);
+        try {
+            return new com.nongthinh.auth_service.application.view.RegistrationPrincipal(
+                    UUID.fromString(extractKeycloakId(jwt)), extractEmail(jwt),
+                    claim == null || claim.isBlank() ? null : UUID.fromString(claim),
+                    extractPrimaryRole(authentication.getAuthorities()),
+                    extractAdminGroup(authentication.getAuthorities()), extractPermissions(authentication.getAuthorities()));
+        } catch (IllegalArgumentException ex) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+    }
+
+    @Override
     public CurrentUser getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = requireJwt(authentication);

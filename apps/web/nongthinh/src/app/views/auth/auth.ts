@@ -99,9 +99,9 @@ export class Auth implements OnInit, AfterViewInit {
     }
 
     this.authService.ensureMeLoaded().subscribe((isAuthenticated) => {
-      if (isAuthenticated) {
+      if (isAuthenticated || this.authService.registrationRequired()) {
         this.authService.navigateAfterLogin();
-      } else if (!isRegisterRoute) {
+      } else if (!isRegisterRoute && !this.authService.sessionError()) {
         this.redirectToKeycloak();
       }
     });

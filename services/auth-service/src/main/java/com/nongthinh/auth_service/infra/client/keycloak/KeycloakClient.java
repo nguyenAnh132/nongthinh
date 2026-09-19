@@ -1,26 +1,28 @@
 package com.nongthinh.auth_service.infra.client.keycloak;
 
 import java.util.List;
+import java.util.Map;
 
+import com.nongthinh.auth_service.infra.client.keycloak.dto.*;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.KeycloakUserRegisterParam;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.TokenExchangeParam;
+import org.springframework.web.bind.annotation.*;
 import feign.QueryMap;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestHeader;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.RefreshTokenParam;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.RoleMapping;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.TokenExchangeResponse;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.LogoutParam;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.RoleResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 @FeignClient(name = "keycloak-client", url = "${keycloak.url}")
 public interface KeycloakClient {
+
+    @GetMapping("/admin/realms/${keycloak.realm}/users/{userId}")
+    com.nongthinh.auth_service.infra.client.keycloak.dto.KeycloakIdentityResponse getIdentity(
+            @RequestHeader("Authorization") String token, @PathVariable String userId);
+
+    @PutMapping("/admin/realms/${keycloak.realm}/users/{userId}")
+    void updateNongThinhIdUser(
+            @RequestHeader("Authorization") String token,
+            @PathVariable String userId,
+            @RequestBody KeycloakUserUpdateNongThinhIdParam request
+    );
 
     @PostMapping(value = "/admin/realms/${keycloak.realm}/users", 
         consumes = MediaType.APPLICATION_JSON_VALUE)

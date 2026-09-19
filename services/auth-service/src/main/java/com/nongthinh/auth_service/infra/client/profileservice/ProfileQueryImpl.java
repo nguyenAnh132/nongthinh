@@ -38,7 +38,12 @@ public class ProfileQueryImpl implements ProfileQuery {
     public Optional<ProfileView> getFarmerProfile(UUID userId) {
         try {
             ApiResponse<FarmerProfileDto> response = profileClient.getFarmerProfile(userId, apiKey);
+            if (response == null || response.getResult() == null) {
+                throw new InfrastructureException(ErrorCode.PROFILE_SERVICE_GET_FARMER_PROFILE_FAILED);
+            }
             return Optional.of(profileViewMapper.fromFarmer(response.getResult()));
+        } catch (FeignException.NotFound ex) {
+            return Optional.empty();
         } catch (FeignException ex) {
             throw new InfrastructureException(ErrorCode.PROFILE_SERVICE_GET_FARMER_PROFILE_FAILED);
         }
@@ -63,7 +68,12 @@ public class ProfileQueryImpl implements ProfileQuery {
     public Optional<ProfileView> getAdminProfile(UUID userId) {
         try {
             ApiResponse<AdminProfileDto> response = profileClient.getAdminProfile(userId, apiKey);
+            if (response == null || response.getResult() == null) {
+                throw new InfrastructureException(ErrorCode.PROFILE_SERVICE_GET_ADMIN_PROFILE_FAILED);
+            }
             return Optional.of(profileViewMapper.fromAdmin(response.getResult()));
+        } catch (FeignException.NotFound ex) {
+            return Optional.empty();
         } catch (FeignException ex) {
             throw new InfrastructureException(ErrorCode.PROFILE_SERVICE_GET_ADMIN_PROFILE_FAILED);
         }

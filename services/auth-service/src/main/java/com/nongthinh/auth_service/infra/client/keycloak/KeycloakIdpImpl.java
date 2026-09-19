@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.nongthinh.auth_service.application.port.out.ClockProvider;
+import com.nongthinh.auth_service.infra.client.keycloak.dto.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -13,14 +14,6 @@ import com.nongthinh.auth_service.application.port.out.keycloak.KeycloakIdp;
 import com.nongthinh.auth_service.application.port.out.keycloak.RoleRecord;
 import com.nongthinh.auth_service.application.view.RefreshTokenView;
 import com.nongthinh.auth_service.common.exception.ErrorCode;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.Credentials;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.KeycloakUserRegisterParam;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.LogoutParam;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.RefreshTokenParam;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.RoleMapping;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.RoleResponse;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.TokenExchangeParam;
-import com.nongthinh.auth_service.infra.client.keycloak.dto.TokenExchangeResponse;
 import com.nongthinh.auth_service.infra.exception.InfrastructureException;
 
 import feign.FeignException;
@@ -31,6 +24,64 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class KeycloakIdpImpl implements KeycloakIdp {
+
+    @Override
+    public com.nongthinh.auth_service.application.port.out.keycloak.KeycloakIdentity getIdentity(UUID keycloakId, String token) {
+        try {
+            var response = keycloakClient.getIdentity(token, keycloakId.toString());
+            return new com.nongthinh.auth_service.application.port.out.keycloak.KeycloakIdentity(
+                    UUID.fromString(response.id()), response.email(), readApplicationId(response.attributes()), response.enabled());
+        } catch (FeignException ex) {
+            log.warn("[Infra - KeycloakIdentity] Read failed | keycloakId={} upstreamStatus={}", keycloakId, ex.status());
+            throw new InfrastructureException(ErrorCode.KEYCLOAK_IDENTITY_SYNC_FAILED);
+        } catch (IllegalArgumentException ex) {
+            log.warn("[Infra - KeycloakIdentity] Invalid identity response | keycloakId={}", keycloakId);
+            throw new InfrastructureException(ErrorCode.KEYCLOAK_IDENTITY_SYNC_FAILED);
+        }
+    }
+
+    @Override
+    public void updateNongThinhIdUser(UUID keycloakId, UUID applicationUserId, String token) {
+        String stage = "read_current_identity";
+        try {
+            var response = keycloakClient.getIdentity(token, keycloakId.toString());
+            UUID existing = readApplicationId(response.attributes());
+            if (existing != null && !existing.equals(applicationUserId)) {
+                throw new com.nongthinh.auth_service.domain.exception.BusinessException(ErrorCode.REGISTRATION_IDENTITY_CONFLICT);
+            }
+            if (applicationUserId.equals(existing)) return;
+            var attributes = new java.util.LinkedHashMap<String, List<String>>();
+            if (response.attributes() != null) attributes.putAll(response.attributes());
+            attributes.put(NONGTHINH_ID_ATTRIBUTE, List.of(applicationUserId.toString()));
+            // Keycloak validates the supplied profile when attributes are present, including root fields.
+            // Preserve values read from Keycloak; this operation only changes the application identity.
+            KeycloakUserUpdateNongThinhIdParam param = new KeycloakUserUpdateNongThinhIdParam(
+                    response.username(), response.email(), response.firstName(), response.lastName(), attributes
+            );
+            stage = "update_attributes";
+            keycloakClient.updateNongThinhIdUser(token, keycloakId.toString(), param);
+            stage = "verify_attributes";
+            if (!applicationUserId.equals(getIdentity(keycloakId, token).applicationUserId())) {
+                log.warn("[Infra - KeycloakIdentity] Updated identity not visible on read-back | keycloakId={} userId={} stage={}",
+                        keycloakId, applicationUserId, stage);
+                throw new InfrastructureException(ErrorCode.KEYCLOAK_IDENTITY_SYNC_FAILED);
+            }
+        } catch (FeignException ex) {
+            log.warn("[Infra - KeycloakIdentity] Link failed | keycloakId={} userId={} stage={} upstreamStatus={}",
+                    keycloakId, applicationUserId, stage, ex.status());
+            throw new InfrastructureException(ErrorCode.KEYCLOAK_IDENTITY_SYNC_FAILED);
+        } catch (IllegalArgumentException ex) {
+            log.warn("[Infra - KeycloakIdentity] Invalid identity response | keycloakId={} stage={}", keycloakId, stage);
+            throw new InfrastructureException(ErrorCode.KEYCLOAK_IDENTITY_SYNC_FAILED);
+        }
+    }
+
+    private UUID readApplicationId(Map<String, List<String>> attributes) {
+        var values = attributes == null ? null : attributes.get(NONGTHINH_ID_ATTRIBUTE);
+        if (values == null || values.isEmpty()) return null;
+        if (values.size() != 1) throw new IllegalArgumentException("Ambiguous application identity");
+        return UUID.fromString(values.getFirst());
+    }
 
     private static final String CREDENTIALS_TYPE = "password";
     private static final String EXCHANGE_CLIENT_TOKEN_GRANT_TYPE = "client_credentials";

@@ -36,7 +36,7 @@ export class LandingComponent implements OnInit {
       return;
     }
     this.authService.ensureMeLoaded().subscribe((isAuthenticated) => {
-      if (isAuthenticated) {
+      if (isAuthenticated || this.authService.registrationRequired()) {
         this.authService.navigateAfterLogin();
       }
     });
@@ -901,6 +901,5 @@ export class LandingComponent implements OnInit {
     });
   }
 }
-
 
 

@@ -22,6 +22,16 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class RedisCachedKeycloak implements KeycloakIdp {
 
+    @Override
+    public com.nongthinh.auth_service.application.port.out.keycloak.KeycloakIdentity getIdentity(UUID keycloakId, String token) {
+        return keycloakIdp.getIdentity(keycloakId, token);
+    }
+
+    @Override
+    public void updateNongThinhIdUser(UUID keycloakId, UUID applicationUserId, String token) {
+        keycloakIdp.updateNongThinhIdUser(keycloakId, applicationUserId, token);
+    }
+
     private final KeycloakIdp keycloakIdp;
     private final RedisStringCache redisStringCache;
     private final KeycloakCacheProperties keycloakCacheProperties;
