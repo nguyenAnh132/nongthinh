@@ -2,6 +2,12 @@ package com.nongthinh.auth_service.common.exception;
 
 public enum ErrorCode {
 
+    REGISTRATION_REQUIRED("AUTH_REGISTRATION_REQUIRED", "Complete your account registration", ErrorType.BUSINESS_RULE),
+    REGISTRATION_IDENTITY_CONFLICT("AUTH_REGISTRATION_IDENTITY_CONFLICT", "Account identity requires manual review", ErrorType.AUTHORIZATION),
+    REGISTRATION_PROFILE_INVALID("VAL_REGISTRATION_PROFILE_INVALID", "Invalid registration profile fields", ErrorType.VALIDATION),
+    KEYCLOAK_IDENTITY_SYNC_FAILED("INF_KEYCLOAK_IDENTITY_SYNC_FAILED", "Failed to synchronize account identity", ErrorType.INFRASTRUCTURE),
+    PROFILE_REGISTRATION_FAILED("INF_PROFILE_REGISTRATION_FAILED", "Failed to complete profile registration", ErrorType.INFRASTRUCTURE),
+
     //AUTHENTICATION ERROR
     INVALID_TOKEN("AUTH_INVALID_TOKEN", "Invalid token", ErrorType.AUTHENTICATION),
     INVALID_CREDENTIALS("AUTH_INVALID_CREDENTIALS", "Invalid credentials", ErrorType.AUTHENTICATION),
@@ -67,7 +73,7 @@ public enum ErrorCode {
     FIRST_NAME_REQUIRED("VAL_FIRST_NAME_REQUIRED", "First name is required", ErrorType.VALIDATION),
     LAST_NAME_REQUIRED("VAL_LAST_NAME_REQUIRED", "Last name is required", ErrorType.VALIDATION),
     FIRST_NAME_LENGTH_INVALID("VAL_FIRST_NAME_LENGTH_INVALID", "First name must be between 1 and 255 characters", ErrorType.VALIDATION),
-    LAST_NAME_LENGTH_INVALID("VAL_LAST_NAME_LENGTH_INVALID", "Last name must be between 3 and 255 characters", ErrorType.VALIDATION),
+    LAST_NAME_LENGTH_INVALID("VAL_LAST_NAME_LENGTH_INVALID", "Last name must be between 1 and 255 characters", ErrorType.VALIDATION),
     GENDER_REQUIRED("VAL_GENDER_REQUIRED", "Gender is required", ErrorType.VALIDATION),
     GENDER_INVALID("VAL_GENDER_INVALID", "Gender is invalid", ErrorType.VALIDATION),
     PHONE_REQUIRED("VAL_PHONE_REQUIRED", "Phone is required", ErrorType.VALIDATION),

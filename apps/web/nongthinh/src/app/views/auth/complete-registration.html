@@ -1,0 +1,105 @@
+﻿<main class="auth-page">
+  <div class="auth-container">
+    <div class="auth-visual">
+      <img src="images/rural-vietnam.png" alt="Nông nghiệp xanh" class="auth-bg-img" />
+      <div class="auth-bg-overlay"></div>
+      <a routerLink="/" class="back-link">Quay lại</a>
+      <div class="auth-visual-content">
+        <div class="brand">
+          <span class="nav-logo-icon">
+            <img src="images/nongthinh_logo.png" alt="Nông Thịnh Logo" class="brand-logo" />
+          </span>
+          <span class="nav-logo-text">Nông Thịnh</span>
+        </div>
+        <h2 class="visual-title">Kết nối Nông dân<br />với Tương lai</h2>
+        <p class="visual-desc">Phát triển bền vững cùng Nông Thịnh.</p>
+      </div>
+    </div>
+
+    <section class="auth-forms" aria-labelledby="completion-title">
+      <div class="form-wrapper">
+        <div class="form-header">
+          <h1 id="completion-title">Thông tin hồ sơ</h1>
+          <p>Bổ sung thông tin để hoàn tất đăng ký</p>
+          @if (auth.registrationRequired(); as registration) {
+            <p class="account-email">{{ registration.email }}</p>
+          }
+        </div>
+
+        @if (checking()) {
+          <p class="login-hint" role="status">Đang kiểm tra tài khoản…</p>
+        } @else if (auth.registrationRequired()) {
+          <form [formGroup]="form" (ngSubmit)="submit()" [attr.aria-busy]="busy()">
+            <fieldset [disabled]="busy()" aria-label="Thông tin hồ sơ">
+              @if (isBrand()) {
+                <div class="input-group">
+                  <label for="complete-brand-name">Tên thương hiệu</label>
+                  <input id="complete-brand-name" formControlName="brandName" placeholder="Nhập tên thương hiệu"
+                    maxlength="200" autocomplete="organization" required />
+                </div>
+                <div class="input-group">
+                  <label for="complete-representative-name">Người đại diện</label>
+                  <input id="complete-representative-name" formControlName="representativeName" placeholder="Nhập họ và tên người đại diện"
+                    maxlength="200" autocomplete="name" required />
+                </div>
+                <div class="input-group">
+                  <label for="complete-representative-phone">Số điện thoại người đại diện</label>
+                  <input id="complete-representative-phone" formControlName="representativePhone" placeholder="Nhập số điện thoại người đại diện"
+                    type="tel" inputmode="numeric" maxlength="10" required />
+                </div>
+                <div class="input-group">
+                  <label for="complete-representative-email">Email người đại diện</label>
+                  <input id="complete-representative-email" formControlName="representativeEmail" placeholder="Nhập email người đại diện"
+                    type="email" maxlength="255" required />
+                </div>
+              } @else {
+                <div class="input-group">
+                  <label for="complete-last-name">Họ và tên đệm</label>
+                  <input id="complete-last-name" formControlName="lastName" placeholder="Nhập họ và tên đệm"
+                    maxlength="200" minlength="1" autocomplete="family-name" required />
+                </div>
+                <div class="input-group">
+                  <label for="complete-first-name">Tên</label>
+                  <input id="complete-first-name" formControlName="firstName" placeholder="Nhập tên"
+                    maxlength="200" autocomplete="given-name" required />
+                </div>
+                @if (isFarmer()) {
+                  <div class="input-group">
+                    <label for="complete-gender">Giới tính</label>
+                    <select id="complete-gender" formControlName="gender">
+                      <option value="OTHER">Khác</option>
+                      <option value="MALE">Nam</option>
+                      <option value="FEMALE">Nữ</option>
+                    </select>
+                  </div>
+                }
+              }
+              <div class="input-group">
+                <label for="complete-phone">Số điện thoại</label>
+                <input id="complete-phone" formControlName="phone" placeholder="Nhập số điện thoại"
+                  type="tel" inputmode="numeric" maxlength="10" autocomplete="tel" required />
+              </div>
+              @if (isBrand()) {
+                <p class="login-hint approval-hint">Thương hiệu cần được xét duyệt trước khi sử dụng các chức năng kinh doanh.</p>
+              }
+              @if (error()) { <p role="alert" class="auth-error">{{ error() }}</p> }
+              <button type="submit" class="btn btn-primary btn-full" [disabled]="busy()">
+                {{ busy() ? 'Đang lưu…' : 'Hoàn tất đăng ký' }}
+              </button>
+            </fieldset>
+          </form>
+          <div class="auth-switch completion-actions">
+            <button type="button" [disabled]="busy()" (click)="checkSession()">Kiểm tra lại tài khoản</button>
+            <button type="button" [disabled]="busy()" (click)="logout()">Đăng xuất</button>
+          </div>
+        } @else {
+          <p class="login-hint" role="status">{{ auth.sessionError() || 'Vui lòng đăng nhập để tiếp tục.' }}</p>
+          <button type="button" class="btn btn-primary btn-full mt-6" (click)="auth.login()">Đăng nhập</button>
+          <div class="auth-switch completion-actions">
+            <button type="button" (click)="checkSession()">Thử lại</button>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+</main>

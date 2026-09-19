@@ -13,6 +13,11 @@ import com.nongthinh.auth_service.infra.client.profileservice.dto.FarmerProfileD
 @FeignClient(name = "profile-service", url = "${spring.security.api-key.clients.profile-service.url}")
 public interface ProfileClient {
 
+    @org.springframework.web.bind.annotation.PostMapping("/internal/registration-profiles")
+    void completeRegistration(@org.springframework.web.bind.annotation.RequestBody
+            com.nongthinh.auth_service.infra.client.profileservice.dto.CompleteProfileRegistrationParam request,
+            @RequestHeader("X-API-KEY") String apiKey);
+
     @GetMapping("/internal/farmer-profiles/users/{userId}")
     ApiResponse<FarmerProfileDto> getFarmerProfile(
             @PathVariable UUID userId,

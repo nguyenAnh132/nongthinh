@@ -19,7 +19,7 @@ public record FarmerProfileCreationRequest(
     String firstName,
 
     @NotBlank(message = "LAST_NAME_REQUIRED")
-    @PersonNameConstraint(min = 3, max = 255, type = "Last name", message = "PERSON_NAME_INVALID")
+    @PersonNameConstraint(min = 1, max = 255, type = "Last name", message = "PERSON_NAME_INVALID")
     String lastName,
 
     @NotBlank(message = "GENDER_REQUIRED")

@@ -75,6 +75,10 @@ export function apiResponseErrorMessage(
 
 /** Legacy numeric codes + auth-service string codes (BUS_*, VAL_*, …). */
 const ERROR_MESSAGES: Record<string, string> = {
+  AUTH_REGISTRATION_IDENTITY_CONFLICT: 'Thông tin liên kết tài khoản chưa khớp. Vui lòng liên hệ quản trị viên.',
+  VAL_REGISTRATION_PROFILE_INVALID: 'Vui lòng kiểm tra họ tên, tên thương hiệu và số điện thoại. Họ tên chỉ gồm chữ, khoảng trắng, dấu nháy hoặc gạch nối.',
+  INF_PROFILE_REGISTRATION_FAILED: 'Chưa lưu được hồ sơ. Vui lòng thử lại; thông tin đã lưu sẽ không bị tạo trùng.',
+  INF_KEYCLOAK_IDENTITY_SYNC_FAILED: 'Chưa đồng bộ được tài khoản. Vui lòng thử lại sau.',
   // Legacy numeric
   '2001': 'Email đã được sử dụng.',
   '2002': 'Email hoặc mật khẩu không đúng.',
@@ -188,7 +192,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   VAL_PHONE_REQUIRED: 'Vui lòng nhập số điện thoại.',
   VAL_FIRST_NAME_REQUIRED: 'Vui lòng nhập họ.',
   VAL_LAST_NAME_REQUIRED: 'Vui lòng nhập tên.',
-  VAL_LAST_NAME_LENGTH_INVALID: 'Tên phải từ 3 đến 255 ký tự.',
+  VAL_LAST_NAME_LENGTH_INVALID: 'Họ và tên đệm phải từ 1 đến 255 ký tự.',
   VAL_FIRST_NAME_LENGTH_INVALID: 'Họ phải từ 1 đến 255 ký tự.',
   VAL_BRAND_NAME_REQUIRED: 'Vui lòng nhập tên thương hiệu.',
   VAL_REPRESENTATIVE_NAME_REQUIRED: 'Vui lòng nhập tên người đại diện.',

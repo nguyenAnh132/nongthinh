@@ -141,11 +141,10 @@ class AuthIdentityUseCasesTest {
         when(users.findById(USER_ID)).thenReturn(Optional.of(User.create(USER_ID, KEYCLOAK_ID, Email.of(EMAIL), NOW)));
         when(profiles.getFarmerProfile(USER_ID)).thenReturn(Optional.empty());
 
-        var me = new GetMeUseCaseImpl(users, profiles, mock(com.nongthinh.auth_service.application.port.in.user.SynchronizeBrandRoleUseCase.class))
-                .execute(USER_ID, Set.of("ROLE_FARMER"), null, Set.of());
-
-        assertTrue(me.flags().requiresProfileCompletion());
-        assertNull(me.profile());
+        var useCase = new GetMeUseCaseImpl(users, profiles, mock(com.nongthinh.auth_service.application.port.in.user.SynchronizeBrandRoleUseCase.class));
+        var error = assertThrows(com.nongthinh.auth_service.application.exception.RegistrationRequiredException.class,
+                () -> useCase.execute(USER_ID, Set.of("ROLE_FARMER"), null, Set.of()));
+        assertEquals("ROLE_FARMER", error.getRegistration().role());
     }
 
     @Test

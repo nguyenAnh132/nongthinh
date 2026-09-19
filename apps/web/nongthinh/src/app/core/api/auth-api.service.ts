@@ -71,6 +71,27 @@ export interface RegisterBrandPayload {
 
 export type RegistrationType = 'FARMER' | 'BRAND';
 
+export interface RegistrationRequiredView {
+  email: string;
+  role: 'ROLE_ADMIN' | 'ROLE_FARMER' | 'ROLE_BRAND' | 'ROLE_BRAND_PENDING';
+}
+
+export interface CompleteRegistrationPayload {
+  phone: string;
+  firstName?: string;
+  lastName?: string;
+  gender?: string;
+  brandName?: string;
+  representativeName?: string;
+  representativePhone?: string;
+  representativeEmail?: string;
+}
+
+export interface CompleteRegistrationView {
+  userId: string;
+  refreshRequired: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Auth-service thông qua gateway
 // ---------------------------------------------------------------------------
@@ -83,6 +104,12 @@ export class AuthApiService {
   private readonly baseUrl = AUTH_SERVICE_URL;
 
   // ── Session ──────────────────────────────────────────────────────────
+
+  completeRegistration(payload: CompleteRegistrationPayload): Observable<ApiResponse<CompleteRegistrationView>> {
+    return this.http.post<ApiResponse<CompleteRegistrationView>>(
+      `${this.baseUrl}/me/complete-registration`, payload, { withCredentials: true },
+    );
+  }
 
   /** GET /me — lấy thông tin user hiện tại từ cookie JWT */
   me(): Observable<ApiResponse<MeView>> {

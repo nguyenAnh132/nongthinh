@@ -10,6 +10,7 @@ export function permissionGuard(requiredPermissions: string[]): CanActivateFn {
 
     return auth.ensureMeLoaded().pipe(
       map((ok) => {
+        if (auth.registrationRequired()) return router.createUrlTree(['/complete-registration']);
         if (!ok) {
           return router.createUrlTree(['/']);
         }

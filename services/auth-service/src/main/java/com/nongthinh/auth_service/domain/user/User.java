@@ -10,7 +10,6 @@ public final class User {
     private final UUID id;
     private final String keycloakId;
     private final Email email;
-    // Last password change observed by this backend, not synchronized from Keycloak.
     private final Instant passwordUpdatedAt;
     private final Instant createdAt;
     private Instant updatedAt;

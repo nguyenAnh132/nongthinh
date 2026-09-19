@@ -9,6 +9,7 @@ export const authGuard: CanActivateFn = () => {
 
   return auth.ensureMeLoaded().pipe(
     map((ok) => {
+      if (auth.registrationRequired()) return router.createUrlTree(['/complete-registration']);
       if (ok) {
         return true;
       }

@@ -41,6 +41,8 @@ describe('Auth', () => {
           provide: AuthService,
           useValue: {
             ensureMeLoaded: vi.fn(() => of(false)),
+            registrationRequired: vi.fn(() => null),
+            sessionError: vi.fn(() => null),
             navigateAfterLogin: vi.fn(),
             login: authServiceLogin,
           },

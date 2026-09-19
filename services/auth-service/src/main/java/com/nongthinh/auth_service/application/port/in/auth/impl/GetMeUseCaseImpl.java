@@ -3,6 +3,8 @@ package com.nongthinh.auth_service.application.port.in.auth.impl;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import com.nongthinh.auth_service.application.port.in.auth.GetMeUseCase;
+import com.nongthinh.auth_service.application.exception.RegistrationRequiredException;
+import com.nongthinh.auth_service.application.view.RegistrationPrincipal;
 import com.nongthinh.auth_service.application.port.out.ProfileQuery;
 import com.nongthinh.auth_service.application.port.out.repository.UserRepository;
 import com.nongthinh.auth_service.application.view.MeFlags;
@@ -24,19 +26,46 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
     private final com.nongthinh.auth_service.application.port.in.user.SynchronizeBrandRoleUseCase synchronizeBrandRoleUseCase;
 
     @Override
+    public MeView execute(RegistrationPrincipal principal) {
+        var user = userRepository.findByKeycloakId(principal.keycloakId());
+        if (user.isEmpty()) {
+            if (principal.applicationUserId() != null && userRepository.findById(principal.applicationUserId()).isPresent()) {
+                throw new BusinessException(ErrorCode.REGISTRATION_IDENTITY_CONFLICT);
+            }
+            throw new RegistrationRequiredException(principal.email(), principal.role());
+        }
+        if (user.get().getDeletedAt() != null) throw new BusinessException(ErrorCode.FORBIDDEN);
+        if (principal.applicationUserId() == null) {
+            throw new RegistrationRequiredException(principal.email(), principal.role());
+        }
+        if (!user.get().getId().equals(principal.applicationUserId())) {
+            throw new BusinessException(ErrorCode.REGISTRATION_IDENTITY_CONFLICT);
+        }
+        return execute(user.get().getId(), Set.of(principal.role()), principal.adminGroup(), principal.permissions());
+    }
+
+    @Override
     public MeView execute(UUID userId, Set<String> roles, String adminGroup, Set<String> permissions) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
 
         ProfileView profile = resolveProfile(user.getId(), roles);
 
+        if (user.getDeletedAt() != null) throw new BusinessException(ErrorCode.FORBIDDEN);
+        if (profile == null) {
+            throw new RegistrationRequiredException(
+                    user.getEmail().getValue(), roles.stream().findFirst().orElseThrow());
+        }
+        if (Set.of("LOCKED", "DISABLED", "DELETED").contains(profile.status())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
         boolean brandAccount = roles.contains(RoleConstant.ROLE_BRAND) || roles.contains(RoleConstant.ROLE_BRAND_PENDING);
-        boolean activeBrand = profile != null && "ACTIVE".equals(profile.status());
+        boolean activeBrand = "ACTIVE".equals(profile.status());
         if (brandAccount && activeBrand != roles.contains(RoleConstant.ROLE_BRAND)) {
             synchronizeBrandRoleUseCase.execute(userId);
         }
 
-        boolean requiresProfileCompletion = requiresProfileCompletion(roles, profile);
         boolean brandRejected = isBrandRejected(profile);
 
         return new MeView(
@@ -47,7 +76,7 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
                 permissions,
                 profile,
                 new MeFlags(
-                        requiresProfileCompletion,
+                        false,
                         brandRejected,
                         brandRejected ? profile.scheduledDeletionAt() : null));
     }
@@ -63,11 +92,6 @@ public class GetMeUseCaseImpl implements GetMeUseCase {
             return profileQuery.getAdminProfile(userId).orElse(null);
         }
         return null;
-    }
-
-    private boolean requiresProfileCompletion(Set<String> roles, ProfileView profile) {
-        boolean profileRequiredRole = roles.contains(RoleConstant.ROLE_FARMER) || (roles.contains(RoleConstant.ROLE_BRAND) || roles.contains(RoleConstant.ROLE_BRAND_PENDING));
-        return profileRequiredRole && profile == null;
     }
 
     private boolean isBrandRejected(ProfileView profile) {

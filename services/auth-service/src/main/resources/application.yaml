@@ -23,6 +23,15 @@ spring:
     locations: classpath:/db/migration
     baseline-on-migrate: true
 
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connectTimeout: ${INTERNAL_CLIENT_CONNECT_TIMEOUT_MS:2000}
+            readTimeout: ${INTERNAL_CLIENT_READ_TIMEOUT_MS:10000}
+            loggerLevel: none
+
   security:
     oauth2:
       client:

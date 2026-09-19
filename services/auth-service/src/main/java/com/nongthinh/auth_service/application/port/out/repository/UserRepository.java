@@ -9,6 +9,11 @@ public interface UserRepository {
 
     Optional<User> findByEmail(String email);
 
+    Optional<User> findByKeycloakId(UUID keycloakId);
+
+    // Atomically insert if neither the ID, Keycloak ID nor email is already reserved.
+    void insertIfAbsent(User user);
+
 
     Optional<User> findById(UUID id);
 

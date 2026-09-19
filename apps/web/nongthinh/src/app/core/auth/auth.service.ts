@@ -3,6 +3,9 @@ import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { Observable, catchError, finalize, map, of, shareReplay, switchMap, tap } from 'rxjs';
 import { AuthApiService, MeView } from '../api/auth-api.service';
+import { RegistrationRequiredView } from '../api/auth-api.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { apiErrorMessage } from '../models/api-response';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -11,6 +14,10 @@ export class AuthService {
   private readonly platformId = inject(PLATFORM_ID);
 
   private readonly currentUserSignal = signal<MeView | null>(null);
+  private readonly registrationSignal = signal<RegistrationRequiredView | null>(null);
+  private readonly sessionErrorSignal = signal<string | null>(null);
+  readonly registrationRequired = this.registrationSignal.asReadonly();
+  readonly sessionError = this.sessionErrorSignal.asReadonly();
   private meLoaded = false;
   private meInFlight$: Observable<MeView | null> | null = null;
 
@@ -66,11 +73,30 @@ export class AuthService {
       map((res) => res.result ?? null),
       tap((user) => {
         this.currentUserSignal.set(user);
+        this.registrationSignal.set(null);
+        this.sessionErrorSignal.set(null);
         this.meLoaded = true;
       }),
-      catchError(() => {
-        this.currentUserSignal.set(null);
-        this.meLoaded = true;
+      catchError((error: HttpErrorResponse) => {
+        const registration = error.error?.result as RegistrationRequiredView | undefined;
+        if (error.status === 409 && error.error?.code === 'AUTH_REGISTRATION_REQUIRED'
+          && registration && typeof registration.email === 'string'
+          && ['ROLE_ADMIN', 'ROLE_FARMER', 'ROLE_BRAND', 'ROLE_BRAND_PENDING'].includes(registration.role)) {
+          this.currentUserSignal.set(null);
+          this.registrationSignal.set(registration);
+          this.sessionErrorSignal.set(null);
+          this.meLoaded = true;
+        } else if (error.status === 401) {
+          this.clearSession();
+        } else {
+          // A downstream outage is not evidence that the user's session has ended.
+          if (error.status === 403) {
+            this.currentUserSignal.set(null);
+            this.registrationSignal.set(null);
+          }
+          this.sessionErrorSignal.set(apiErrorMessage(error, 'Không tải được tài khoản. Vui lòng thử lại.'));
+          this.meLoaded = false;
+        }
         return of(null);
       }),
       finalize(() => {
@@ -111,6 +137,8 @@ export class AuthService {
     this.explicitlyLoggedOut = false;
     this.meLoaded = false;
     this.currentUserSignal.set(null);
+    this.registrationSignal.set(null);
+    this.sessionErrorSignal.set(null);
     this.authApi.login();
   }
 
@@ -132,11 +160,17 @@ export class AuthService {
 
   clearSession(): void {
     this.currentUserSignal.set(null);
+    this.registrationSignal.set(null);
+    this.sessionErrorSignal.set(null);
     this.meLoaded = true; // Set to true so we don't try to load again after logout
     this.meInFlight$ = null;
   }
 
   navigateAfterLogin(): void {
+    if (this.registrationSignal()) {
+      void this.router.navigate(['/complete-registration']);
+      return;
+    }
     const user = this.currentUserSignal();
     if (!user) {
       void this.router.navigate(['/login']);
